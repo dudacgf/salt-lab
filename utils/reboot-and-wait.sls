@@ -1,27 +1,19 @@
-{#
-reboot_minions:
-  salt.function:
-    - name: system.reboot
-    - at_time: 1
-    - timeout: 5
-    - in_seconds: True
-    - tgt: {{pillar['match']|join(',')}}
-    - tgt_type: list
-    - kwargs:
-      - bg: true
-#}
+#
+# reboot and wait - sends a reboot command to a list of minions and waits 
+#                   salt-minion service start event.
+#
 reboot_minions:
   salt.function:
     - name: cmd.run_bg
     - arg:
-      - 'salt-call system.reboot 1'
-    - tgt: {{pillar['match']|join(',')}}
+      - 'salt-call system.reboot'
+    - tgt: [ {{pillar['match']|join(',')}} ]
     - tgt_type: list
 
 wait_for_reboots:
   salt.wait_for_event:
     - name: salt/minion/*/start
-    - id_list: {{pillar['match']|join(',')}}
+    - id_list: [ {{pillar['match']|join(',')}} ]
     - timeout: 360
     - require:
       - salt: reboot_minions
