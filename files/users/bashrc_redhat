@@ -1,0 +1,57 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User with admin role (wheel) specific environment
+if ! [[ "$PATH" =~ "$HOME/.local/bin:$HOME/bin:" ]]
+then
+    PATH="$HOME/.local/bin:$HOME/bin:$PATH:/usr/kerberos/sbin:/usr/local/sbin:/sbin:/usr/sbin"
+fi
+export PATH
+
+# Uncomment the following line if you don't like systemctl's auto-paging feature:
+# export SYSTEMD_PAGER=
+
+# If not running interactively, don't do anything from here on
+[[ $- != *i* ]] && return
+
+# User specific aliases and functions
+if [ -f ~/.bashrc_aliases ]; then
+    . ~/.bashrc_aliases
+fi
+
+## truncs a path - can be used in a prompt
+function trPWD () {
+	#   How many characters of the $PWD should be kept
+	if [ -z ${1} ] ; then pwdmaxlen=30; else pwdmaxlen=${1}; fi;
+	pwdoffset=$(( ( ${pwdmaxlen} / 2 ) -2 ))
+	#   Indicator that there has been directory truncation:
+	trunc_symbol="..."
+
+	# replace homedir at begin of path with a tilde (~)
+	DIR=${PWD/\#"${HOME}"/\~}
+
+	if [ ${#DIR} -gt ${pwdmaxlen} ] 
+	then
+		pwdstart="${DIR:0:${pwdoffset}}"
+		pwdend="${DIR:$(( ${#DIR} - ${pwdoffset} )):${#DIR}}"
+		newPWD="${pwdstart}${trunc_symbol}${pwdend}"
+	else
+		newPWD=${DIR}
+	fi
+
+	echo -ne $newPWD
+}
+
+# tell a fortune
+echo;
+fortune;
+echo;
+
+# my PS1 (with truncated path)
+PS1="\u@\h:\$(trPWD 20)\$ "
+export PS1
+

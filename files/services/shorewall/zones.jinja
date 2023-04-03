@@ -1,0 +1,7 @@
+###############################################################################
+#ZONE       TYPE        OPTIONS     IN_OPTIONS  OUT_OPTIONS
+
+fw      firewall
+{%- for zone in pillar['shorewall']['zones'] | default({}) %}
+{{ zone }}	ipv4
+{%- endfor %}

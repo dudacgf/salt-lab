@@ -1,0 +1,9 @@
+###############################################################################
+#SOURCE     DEST        POLICY  LOGLEVEL    RATE    CONNLIMIT
+{%- for policy in pillar['shorewall']['policy'] | default({}) %}
+   {%- set action = policy['action'] %}
+   {%- set source = policy['source'] %}
+   {%- set dest = policy['dest'] %}
+{{ source }}			{{ dest }}			{{ action }}
+{%- endfor %}
+

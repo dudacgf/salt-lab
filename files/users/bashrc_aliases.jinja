@@ -1,0 +1,92 @@
+{%- raw -%}
+#!/bin/bash
+
+# user specific aliases and functions
+alias a='alias'
+alias cdrom='mount /dev/cdrom /mnt/cdrom -r ; cd /mnt/cdrom ; ls'
+alias cds='cd /etc/rc.d/init.d ; ls'
+alias cls='clear'
+alias cp='/bin/cp -i'
+alias dir='ls -la'
+alias h='history'
+alias hf='history | grep i $1'
+alias httpd.conf='vi /etc/httpd/conf/httpd.conf'
+alias ipl='sudo iptables --line-numbers -n -v -L'
+alias ipm='sudo iptables -M -L'
+alias l='ls -laF --color=tty'
+alias ldir='mount /mnt/floppy ; l /mnt/floppy ; umount /mnt/floppy'
+alias less='less -X'
+alias nst='netstat -lep'
+alias ls='/bin/ls --color=tty'
+alias mv='/bin/mv -i'
+alias myip='wget -qO - icanhazip.com'
+alias patch='/usr/bin/patch -l -p0 -b -F 5'
+alias ps='ps auxw'
+alias rm='/bin/rm -i'
+alias svi='sudo vim'
+{%- endraw %}
+alias ta='sudo tail -f /var/log/{{ pillar['pkg_data']['apache']['name'] }}/{{ pillar['pkg_data']['apache']['access_log'] }}'
+alias te='sudo tail -f /var/log/{{ pillar['pkg_data']['apache']['name'] }}/{{ pillar['pkg_data']['apache']['error_log'] }}'
+{%- raw %}
+alias tm='sudo tail -f /var/log/messages'
+alias tmm='sudo tail -f /var/log/maillog'
+alias tms='sudo tail -f /var/log/secure'
+alias ts='sudo tail -f /var/log/syslog'
+alias tsc='sudo tail -f /var/log/squid/cache.log'
+alias tst='sudo tail -f /var/log/squid/store.log'
+alias tx='sudo tail -f /var/log/xferlog'
+alias ucdrom='cd /mnt ; umount cdrom ; ls'
+alias ufd='cd /mnt ; umount floppy ; ls'
+
+# Read aliases for ssh connections
+if [ -f ~/.sshaliases ]; then
+    . ~/.sshaliases
+fi
+
+{% endraw %}
+
+# extra functions for a particular minion
+{%- set functions = salt['pillar.get']('functions', {}) %}
+{%- for function in functions %}
+function {{ function }}
+{%- endfor %}
+
+# extra aliases for a particular minion
+{%- set aliases = salt['pillar.get']('aliases', {}) %}
+{%- for alias in aliases %}
+alias {{ alias }}
+{%- endfor %}
+
+{%- set hostname = grains['id'].split('.')[0] %}
+{#- comandos que só quero presentes nos servidores elastic #}
+{%- if hostname == "netflow" or hostname == 'graylog' %}
+   {%- set kibanapw = salt['pillar.get']( 'kibana:password', 'nada') %}
+function xg () {
+   http_proxy= https_proxy= curl -u kibana:{{ kibanapw }} -XGET -s https://localhost:9200/$*
+}
+
+function xd () {
+   http_proxy= https_proxy= curl -u kibana:{{ kibanapw }} -XDELETE -s https://localhost:9200/$*
+}
+
+function xp () {
+   http_proxy= https_proxy= curl -u kibana:{{ kibanapw }} -XPOST -s https://localhost:9200/$*
+}
+
+alias tg='sudo tail -f /var/log/graylog-server/server.log'
+{#- servidores elastic #}
+{#- servidor do salt #}
+{%- elif hostname == 'openvas' %}
+alias ow='while true; do clear ; ps | grep -E -o "openvas: testing ([0-9]{1,3}[\.]){3}[0-9]{1,3}$" | sed -- "s/.*testing //" | sort -u | column -c 80; read -n 1 -t 5 y; if [ ! -z $y ] ; then break ; fi ; done'
+
+{%- elif hostname == 'lduda' %}
+alias vmprep='sudo virt-sysprep --operations bash-history,backup-files,dhcp-client-state,machine-id,-ssh-hostkeys,-ssh-userdir,tmp-files,yum-uuid -d '
+
+{%- elif grains['os_family'] == 'RedHat' %}
+user1=/usr/lib64/nagios/plugins
+
+{%- else %}
+user1=/usr/lib/nagios/plugins
+
+{%- endif %} 
+

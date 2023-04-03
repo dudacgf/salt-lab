@@ -1,0 +1,89 @@
+#!/bin/bash
+
+## copia novos certificado/chaves/cadeia para serviços que vão utilizá-lo
+#
+# serviços contemplados: apache, elasticsearch, kibana, technitiu dns, postfix
+
+
+{#- obtém grains e pillars necessários #}
+{%- set hostname = grains.id.split('.')[0] %}
+{%- set default_domain = pillar['external_domain'] %}
+{%- set domain = pillar.get('external_domain') %}
+{%- set domainname = hostname + '.' + domain %}
+
+{%- if pillar.get('apache_ssl', False) %}
+#
+# httpd/apache
+
+{%- set etc_dir = pillar['pkg_data']['apache']['etc_dir'] %}
+mkdir -p {{ etc_dir }}/ssl 2> /dev/null
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ etc_dir }}/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ etc_dir }}/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ etc_dir }}/ssl
+
+chown -R {{ pillar['pkg_data']['apache']['user'] }}:{{ pillar['pkg_data']['apache']['group'] }} {{ etc_dir }}/ssl
+
+{%- endif %}
+
+{%- if 'elasticsearch' in pillar.get('roles', []) %}
+#
+# elasticsearch
+
+mkdir -p /etc/elastisearch/ssl
+
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/elasticsearch/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/elasticsearch/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/elasticsearch/ssl
+
+chown -R elasticsearch:elasticsearch /etc/elasticsearch/ssl
+
+{%- endif %}
+
+#
+{%- if 'kibana' in pillar.get('roles', []) %}
+#
+# kibana
+
+mkdir -p /etc/elastisearch/ssl
+
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/kibana/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/kibana/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/kibana/ssl
+
+chown -R kibana:kibana /etc/kibana/ssl
+
+{%- endif %}
+
+#
+# prometheus
+{% if 'prometheus' in pillar.get('roles', []) or pillar.get('prometheus_exporters', []) | length > 0 %}
+mkdir -p /etc/prometheus/ssl
+
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/prometheus/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/prometheus/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/prometheus/ssl
+
+{%- endif %}
+
+#
+# postfix
+
+mkdir -p /etc/postfix/ssl
+
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/postfix/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/postfix/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/postfix/ssl
+
+{%- if 'technitium_dns' in pillar.get('roles', []) %}
+#
+# technitium dns
+
+mkdir -p /etc/dns/ssl
+
+openssl pkcs12 -export -out /etc/dns/ssl/{{ domainname }}.pfx \
+    -inkey /etc/letsencrypt/live/{{ domainname }}/privkey.pem \
+    -in /etc/letsencrypt/live/{{ domainname }}/cert.pem \
+    -certfile /etc/letsencrypt/live/{{ domainname }}/chain.pem \
+    -passout pass:
+
+{%- endif %}

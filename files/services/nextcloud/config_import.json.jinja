@@ -1,0 +1,13 @@
+{%- set hostname = grains['id'].split('.') | first() %}
+{%- set domaintype = pillar['domain'] | default('internal') %}
+{%- set domain = pillar[domaintype + '_domain'] %}
+{
+    "system": {
+        "trusted_domains": [
+            "{{ hostname }}.{{ domain }}"
+        ],
+        "overwrite.cli.url": "https:\/\/{{ hostname }}.{{ domain }}\/nextcloud",
+        "default_phone_region": "BR"
+    }
+}
+

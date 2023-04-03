@@ -1,0 +1,22 @@
+#
+option domain-name "{{ pillar['internal_domain'] | default('local') }}";
+default-lease-time 3600;
+max-lease-time 7200;
+authoritative;
+
+{%- for range in pillar['dhcp-server']['ranges'] | default({}) %}
+   {%- set ip4_subnet = range['subnet'] %}
+   {%- set ip4_mask = range['mask'] %}
+   {%- set ip4_range_start = range['start'] %}
+   {%- set ip4_range_end = range['end'] %}
+   {%- set ip4_gateway = range['gateway'] %}
+   {%- set dns_servers = range['dns'] %}
+
+subnet {{ ip4_subnet }} netmask {{ ip4_mask }} {
+  option routers                {{ ip4_gateway }};
+  option domain-search          "{{ pillar['internal_domain'] | default('local') }}";
+  option domain-name-servers    {{ dns_servers | join(', ') }};
+  range  {{ ip4_range_start }}  {{ ip4_range_end }};
+}
+
+{%- endfor %}

@@ -1,0 +1,11 @@
+
+module selinux-postlog 1.0;
+
+require {
+	type postfix_master_t;
+	type var_log_t;
+	class file open;
+}
+
+#============= postfix_master_t ==============
+allow postfix_master_t var_log_t:file open;

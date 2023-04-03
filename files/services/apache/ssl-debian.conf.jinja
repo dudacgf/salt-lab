@@ -1,0 +1,43 @@
+{%- set hostname = grains.id.split('.')[0] %}
+{%- set domainname = grains['domain'] %}
+{%- set etc_dir = pillar['pkg_data']['apache']['etc_dir'] %}
+<IfModule mod_ssl.c>
+
+    SSLSessionCacheTimeout  300
+    SSLCryptoDevice builtin
+
+    <VirtualHost _default_:443>
+
+        ServerAdmin {{ pillar['contact'] }}
+        ServerName {{ hostname }}.{{ domainname }}
+
+        DocumentRoot /var/www/html
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+        LogLevel warn
+
+        SSLEngine on
+
+        Protocols h2 http/1.1
+        SSLCertificateFile {{ etc_dir }}/ssl/cert.pem
+        SSLCertificateKeyFile {{ etc_dir }}/ssl/privkey.pem
+        SSLCertificateChainFile {{ etc_dir }}/ssl/chain.pem
+
+        SSLProtocol all -TLSv1.1 -TLSv1 -SSLv2 -SSLv3
+        SSLProxyProtocol all -TLSv1.1 -TLSv1 -SSLv2 -SSLv3
+        SSLCipherSuite ALL:+HIGH:!ADH:!EXP:!SSLv2:!SSLv3:!MEDIUM:!LOW:!NULL:!aNULL:!MD5:!RC4
+        SSLProxyCipherSuite ALL:+HIGH:!ADH:!EXP:!SSLv2:!SSLv3:!MEDIUM:!LOW:!NULL:!aNULL:!MD5:!RC4
+        SSLHonorCipherOrder on
+
+        <FilesMatch "\.(cgi|shtml|phtml|php)$">
+            SSLOptions +StdEnvVars
+        </FilesMatch>
+        <Directory /usr/lib/cgi-bin>
+            SSLOptions +StdEnvVars
+        </Directory>
+
+    </VirtualHost>
+</IfModule>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet

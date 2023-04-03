@@ -1,0 +1,152 @@
+#############################################################################
+# NRPE Config File 
+# Written by: Eduardo Ferreira (duda@icatu.com.br)
+# 
+# Last Modified: 2022-04-01
+#
+#############################################################################
+
+{%- set settings = salt['grains.filter_by']({
+     'Debian': {
+       'plugins_dir': '/usr/lib/nagios/plugins/',
+       'pid_file': '/var/run/nagios/nrpe.pid',
+       'include_dir': '/etc/nagios/nrpe.d/',
+       'check_updates_cmd': 'check_apt_boot -d -t 160',
+       'user_group_name': 'nagios',
+     },
+     'RedHat': {
+       'plugins_dir': '/usr/lib64/nagios/plugins/',
+       'pid_file': '/run/nrpe/nrpe.pid',
+       'include_dir': '/etc/nrpe.d/',
+       'check_updates_cmd': 'check_updates -t 160',
+       'user_group_name': 'nrpe',
+     },
+   }
+   ,grain='os_family'
+)%}
+
+{%- set hostname = grains['id'].split('.')[0] %}
+# LOG FACILITY
+log_facility=daemon
+
+# PID FILE
+pid_file={{ settings.pid_file }}
+
+# PORT NUMBER
+server_port=5666
+
+# NRPE USER
+nrpe_user={{ settings.user_group_name }}
+
+# NRPE GROUP
+nrpe_group={{ settings.user_group_name }}
+
+# ALLOWED HOST ADDRESSES
+allowed_hosts=127.0.0.1,10.1.16.35,10.1.16.135,10.1.16.133
+
+# COMMAND ARGUMENT PROCESSING
+dont_blame_nrpe=1
+
+# DEBUGGING OPTION
+debug=0
+
+# COMMAND TIMEOUT
+command_timeout=120
+
+# CONNECTION TIMEOUT
+connection_timeout=300
+
+# INCLUDE CONFIG DIRECTORY
+include_dir={{ settings.include_dir }}
+
+# COMMAND DEFINITIONS
+{%- set wtproc = pillar['nrpe_warning_total_procs'] | default(300) %}
+{%- set ctproc = pillar['nrpe_critical_total_procs'] | default(400) %}
+command[check_users]={{ settings.plugins_dir }}check_users -w 5 -c 10
+command[check_load]={{ settings.plugins_dir }}check_load -w 15,10,5 -c 30,25,20
+command[check_mem]={{ settings.plugins_dir }}check_mem.pl -C-C  -f -w 10 -c 5
+command[check_swap]={{ settings.plugins_dir }}check_swap -w 15 -c 10
+command[check_zombie_procs]={{ settings.plugins_dir }}check_procs -w 5 -c 10 -s Z
+command[check_total_procs]={{ settings.plugins_dir }}check_procs -w {{ wtproc }} -c {{ ctproc }}
+command[check_boot]={{ settings.plugins_dir }}check_disk -w 20% -c 10% -W 10% -K 5% -p /boot
+command[check_root]={{ settings.plugins_dir }}check_disk -w 20% -c 10% -W 10% -K 5% -p /
+command[check_storage]= /bin/echo OK: This is a virtual machine. No Dell openmanage here...
+command[check_dell_chassis]=/bin/echo OK: This is a virtual machine. No Dell openmanage here...
+command[check_temps]=/bin/echo OK: This is a virtual machine. No Dell openmanage here...
+command[check_updates]= {{ settings.plugins_dir }}{{ settings.check_updates_cmd }}
+command[check_apt]= {{ settings.plugins_dir }}check_apt -d -l -t 60
+# uptime
+command[check_uptime]=bash -c "/bin/echo -n OK: ; /usr/bin/uptime"
+command[check_version]={{ settings.plugins_dir }}check_version -t 30
+
+# checa 1a milha da mpls
+command[link_mpls_atlnt]={{ settings.plugins_dir }}check_ping -H 172.31.4.13 -w 600.0,80% -c 1000.0,100% -p 4 -t 8 
+
+# checa saída internet
+command[link_internet]={{ settings.plugins_dir }}check_ping -H 8.8.8.8 -w 600.0,80% -c 1000.0,100% -p 4 -t 8 
+
+# checa link virtua no replica
+command[link_virtua_replica]={{ settings.plugins_dir }}check_ping -H 201.17.20.12 -w 600.0,80% -c 1000.0,100% -p 4 -t 8 
+
+# checa se vpn anyconnect está funcionando no icatu
+command[check_anyconnect]={{ settings.plugins_dir }}check_cisco_anyconnect -H ira.icatu.com.br:10443 -U $ARG1$ -P $ARG2$ -S icatufs01.icatu.rede -A 10.1.16.10
+
+# checa link via rajada de pings
+command[check_link_mls_l1100]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 200.152.102.1 -w 50,30% -c 100,80%
+command[check_link_level3_l1100]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 189.125.118.193 -w 50,30% -c 100,80%
+command[check_link_mundivox_l1100]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 187.102.153.184 -w 50,30% -c 100,80%
+command[check_link_mundivox_l1235]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 200.142.111.14 -w 50,30% -c 100,80%
+command[check_link_mundivox_atlnt]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 177.124.204.221 -w 50,30% -c 100,80%
+command[check_link_mundivox_replica]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 201.76.161.153 -w 50,30% -c 100,80%
+command[check_link_virtua_bsite]={{ settings.plugins_dir }}check_icmp -i 20 -p 10 -H 201.17.20.1 -w 50,30% -c 100,80%
+
+# checagem de serviços variados
+command[check_auditd]={{ settings.plugins_dir }}check_systemd.py --unit auditd.service
+command[check_filebeat]={{ settings.plugins_dir }}check_systemd.py --unit filebeat.service
+command[check_snmpd]={{ settings.plugins_dir }}check_systemd.py --unit snmpd.service
+
+# checagem do dns dos domínios públicos
+command[check_dns_icatu]={{ settings.plugins_dir }}check_dns_secondary -s 8.8.8.8 icatu.com.br
+command[check_dns_ventorinvestimentos]={{ settings.plugins_dir }}check_dns_secondary -s 8.8.8.8 ventorinvestimentos.com.br
+command[check_dns_utaci]={{ settings.plugins_dir }}check_dns_secondary -s 8.8.8.8 utaci.com.br
+command[check_dns_icatugp]={{ settings.plugins_dir }}check_dns_secondary -s 8.8.8.8 icatugp.com.br
+command[check_dns_icatudtvm]={{ settings.plugins_dir }}check_dns_secondary -s 8.8.8.8 icatudtvm.com.br
+command[check_dns_biscoitofino]={{ settings.plugins_dir }}check_dns_secondary -s 8.8.8.8 biscoitofino.com.br
+
+{%- if hostname == 'syslog01' %}
+# check log partition on syslog
+command[check_logs]={{ settings.plugins_dir }}check_disk -w 20% -c 10% -W 10% -K 5% -p /var/log
+{% endif %}
+
+{%- if hostname == 'netflow' %}
+# check log partition on netflow
+command[check_elastic]=/usr/lib64/nagios/plugins/check_disk -w 10% -c 5% -W 10% -K 5% -p /dev/sda2
+{% endif %}
+
+{%- if hostname == 'dns01' %}
+# check if dns bind is ok
+command[check_bind]=/usr/lib64/nagios/plugins/check_dns -H dns02.icatu.com.br -s 127.0.0.1 -a 192.168.9.134 -A
+{% endif %}
+
+{%- if hostname == 'dns02' %}
+# check if dns bind is ok
+command[check_bind]=/usr/lib64/nagios/plugins/check_dns -H ns01.icatu.com.br -s 192.168.9.134  -a 187.102.153.184 -a 189.125.118.194
+{% endif %}
+
+{%- if hostname == 'dns03' %}
+# check if dns bind is ok
+command[check_bind]=/usr/lib64/nagios/plugins/check_dns -H ns01.icatu.com.br -s 127.0.0.1 -a 189.125.118.194
+{% endif %}
+
+{%- if hostname == 'graylog' %}
+# check extra elastic storage partition
+command[check_node]=/usr/lib64/nagios/plugins/check_disk -w 10% -c 5% -p /elastic_nodes
+command[check_root]={{ settings.plugins_dir }}check_disk -w 10% -c 5% -W 10% -K 5% -p /
+{% endif %}
+
+{%- if hostname == 'splunk01' %}
+command[check_opt]=/usr/lib64/nagios/plugins/check_disk -w 15% -c 10% -W 10% -K 5% -u GB -p /dev/sda5
+{% endif %}
+
+### to check if openconnect is ok
+#command[debug_anyconnect]=sudo /usr/sbin/openconnect --no-dtls -v -b --no-cert-check --user=nagiosreader ira.icatu.com.br:10443 < /etc/nagios/openconnect.pwd

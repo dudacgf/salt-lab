@@ -1,0 +1,19 @@
+#########################################################################################################################################
+#ACTION     SOURCE      DEST        PROTO   DPORT   SPORT   ORIGDEST    RATE    USER    MARK    CONNLIMIT   TIME    HEADERS SWITCH  HELPE
+
+?SECTION ALL
+?SECTION ESTABLISHED
+?SECTION RELATED
+?SECTION INVALID
+?SECTION UNTRACKED
+?SECTION NEW
+{%- for rule in pillar['shorewall']['rules'] | default({}) %}
+   {%- set proto = rule['protocol'] | default('tcp') %}
+   {%- set action = rule['action'] | default('ACCEPT') %}
+   {%- set service = rule['service'] %}
+   {%- set dest = rule['dest'] %}
+   {%- for source in rule['source'] | default({}) %}
+{{ action }} {{ source }} {{ dest }} {{ proto }} {{ service }}
+#
+   {%- endfor %}
+{%- endfor %}

@@ -1,0 +1,29 @@
+[
+    {
+        "mount_id": 1,
+        "mount_point": "\/Confer\u00eancia",
+        "storage": "\\OCA\\Files_External\\Lib\\Storage\\SMB",
+        "authentication_type": "password::global",
+        "configuration": {
+            "host": "icatufs01.icatu.rede",
+            "share": "icatu",
+            "root": "HOME\/SUPORTE\/Confer\u00eancia",
+            "domain": "ICATU",
+            "show_hidden": false,
+            "check_acl": true,
+            "timeout": "",
+            "user": "duda",
+            "password": "Aracy 4 origem dos passar-s"
+        },
+        "options": {
+            "encrypt": true,
+            "previews": true,
+            "enable_sharing": true,
+            "filesystem_check_changes": 1,
+            "encoding_compatibility": false,
+            "readonly": true
+        },
+        "applicable_users": [],
+        "applicable_groups": []
+    }
+]

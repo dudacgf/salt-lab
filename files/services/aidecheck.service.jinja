@@ -1,0 +1,9 @@
+[Unit]
+Description=Aide Check
+
+[Service]
+Type=simple
+ExecStart={{ pillar['pkg_data']['aide']['aide_cmd'] }} --config {{ pillar['pkg_data']['aide']['conf'] }} --check
+
+[Install]
+WantedBy=multi-user.target

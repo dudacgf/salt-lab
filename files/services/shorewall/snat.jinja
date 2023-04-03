@@ -1,0 +1,10 @@
+#?FORMAT 2
+#########################################################################################################################################
+#ACTION         SOURCE          DEST        PROTO   DPORT   SPORT   IPSEC   MARK    USER    SWITCH  ORIGDEST    PROBABILITY
+{%- for snat_dest in pillar['shorewall']['snat'] | default([]) %}
+  {% set iface_dest = salt['ifaces.get_iface_name'](snat_dest['hwaddr']) %}
+  {%- for source in snat_dest['sources'] | default([]) %}
+MASQUERADE    {{ source }}   {{ iface_dest }}
+  {%- endfor %}
+{%- endfor %}
+

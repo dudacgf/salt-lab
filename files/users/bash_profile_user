@@ -1,0 +1,22 @@
+# .bash_profile
+
+# não faz nada se a seção for não interativa (scp, por exemplo)
+if [ -z "$PS1" ]; then
+   return
+fi
+
+# adiciona tmout  se a sessão for originada de SSH ou TERM=linux (console direta)
+if [ ! -z "${SSH_TTY}" -o "${TERM}" == "linux" ]; then
+  TMOUT=900
+  readonly TMOUT
+  export TMOUT
+fi
+
+unset USERNAME
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+   . ~/.bashrc
+fi
+
+

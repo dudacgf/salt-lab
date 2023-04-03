@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#ssh connections
+alias aldebaran='ssh aldebaran.theshiresco.com -o ServerAliveInterval=60 -X'
+alias cacti='ssh 10.1.16.35'
+alias dirautorais='ssh 192.168.16.120'
+alias dns01='ssh dns01.icatu.com.br'
+alias dns02='ssh 192.168.9.134'
+alias dns03='ssh 192.168.239.134'
+alias graylog='ssh 10.1.16.240'
+alias gwnagios='ssh 10.1.16.135'
+alias nagmonatl='ssh nagmonatl01.icatu.rede'
+alias nagmonlbl='ssh nagmonlbl01.icatu.rede'
+alias nagmonsrp='ssh 192.168.8.251'
+alias nflow='ssh netflow.icatu.rede'
+alias openvas='ssh openvas.icatu.rede'
+alias portal='ssh portal.icatu.rede'
+alias proxy='ssh proxyrj01.icatu.rede'
+alias rancid='ssh rancid.icatu.rede'
+alias saltm='ssh salt.icatu.rede'
+alias saltm='ssh salt.icatu.rede'
+alias shires='ssh -oHostKeyAlgorithms=+ssh-dss dudacgf@184.168.139.128'
+alias shires_hostinger='ssh -i /home/duda/.ssh/hostinger -p 65002 u258095091@82.180.175.60 '
+alias slog='ssh syslog01.icatu.rede'
+alias splunk='ssh 10.1.60.1'
+alias splunksh='ssh 10.1.60.7'
+alias tickets='ssh tickets.icatu.rede'
+alias ufwd='ssh 10.1.60.2'
+# FINIS
+

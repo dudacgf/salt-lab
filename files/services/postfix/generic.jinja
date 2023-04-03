@@ -1,0 +1,14 @@
+# 
+# generic - Postfix generic table format
+# 
+
+{%- set hostname = grains.id.split('.')[0] %}
+{%- set internal_domain = salt['pillar.get']('internal_domain', 'local') %}
+{%- set external_domain = salt['pillar.get']('external_domain', 'local') %}
+@{{ hostname }}.{{ internal_domain }} shires.mailer@{{ external_domain }}
+@{{ internal_domain }} shires.mailer@{{ external_domain }}
+{%- if internal_domain != external_domain %} 
+@{{ hostname }}.{{ external_domain }} shires.mailer@{{ external_domain }}
+@{{ external_domain }} shires.mailer@{{ external_domain }}
+{%- endif %}
+

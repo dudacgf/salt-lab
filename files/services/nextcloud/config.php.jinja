@@ -1,0 +1,22 @@
+{%- set hostname = grains['id'].split('.') | first() %}
+{%- set domaintype = pillar['domain'] | default('internal') %}
+{%- set domain = pillar[domaintype + '_domain'] %}
+<?php
+$CONFIG = array (
+  'trusted_domains' =>
+  array (
+    0 => 'conf.icatu.rede',
+  ),
+  'datadirectory' => '/var/www/nextcloud/data',
+  'dbtype' => 'mysql',
+  'version' => '25.0.1.1',
+  'overwrite.cli.url' => 'https://conf.icatu.rede/nextcloud',
+  'dbname' => '{{ pillar['nextcloud']['db_name'] }}',
+  'dbhost' => '{{ pillar['nextcloud']['db_host'] }}',
+  'dbport' => '',
+  'dbtableprefix' => 'oc_',
+  'mysql.utf8mb4' => true,
+  'dbuser' => '{{ pillar['nextcloud']['db_user'] }}',
+  'dbpassword' => '{{ pillar['nextcloud']['db_password'] }}'
+);
+

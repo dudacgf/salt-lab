@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+
+
+## check_apt_boot
+#  wraps check_apt and adds a reboot check as in check_updates
+#
+
+from os.path import exists
+import sys, subprocess, re
+
+output = ''
+rc = 0
+
+#
+# check if file /var/run/reboot-required exists
+if exists('/var/run/reboot-required'):
+    output = 'APT CRITICAL: you should reboot, '
+    rc = 2
+
+#
+# check if there are any updates waiting
+apt_result = subprocess.run(['/usr/lib/nagios/plugins/check_apt', '-d'], stdout=subprocess.PIPE, text=True)
+if (apt_result.returncode == 0):
+    if (output == ''):
+        output = apt_result.stdout[:-1]
+        rc = apt_result.returncode
+    else:
+        output = output + 'no updates available'
+else:
+    if (output == ''):
+        output = apt_result.stdout
+        rc = apt_result.returncode
+    else:
+        apt_output = apt_result.stdout.split('|')[0]
+        apt_performance = apt_result.stdout.split('|')[1]
+        apt_output = apt_output.split(':')[1]
+        output = output + apt_output + '|' + apt_performance[:-1]
+
+print(output)
+sys.exit(rc)
+
+
+
+

@@ -1,0 +1,203 @@
+#!/usr/bin/perl
+# $Header$
+# # ============================================================================
+# # 
+# #
+# #       This program is free software; you can redistribute it and/or modify it
+# #       under the terms of the GNU General Public License as published by the
+# #       Free Software Foundation; either version 2, or (at your option) any
+# #       later version.
+# #
+# #       This program is distributed in the hope that it will be useful,
+# #       but WITHOUT ANY WARRANTY; without even the implied warranty of
+# #       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# #       GNU General Public License for more details.
+# #
+# #       You should have received a copy of the GNU General Public License
+# #       along with this program; if not, write to the Free Software
+# #       Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+# #
+# # ============================================================================
+# #
+# # Checks if it is possible to connect to an anyconnect vpn server
+# #
+# # ecgf - ICATU
+# #
+# #       Description:
+use Time::HiRes qw(usleep);
+
+=head1 DESCRIPTION 
+
+check_cisco_anyconnect - Checks if it is possible to connect to an anyconnect vpn server
+
+=cut
+
+=head1 USAGE
+
+./check_cisco_anyconnect -H server-ip-address -U usuario -P user-password -S server-to-ping -A server-to-ping-expected-address
+
+=cut
+
+#
+#
+# ============================================================================
+#
+# ==============================================================================
+# # How using it ?
+# ============================================================================
+# ============================================================================
+#
+
+=head2 Options
+
+C<-H or --hostname> : IP/hostname of server or AnyConnect Connection name.
+
+C<-U or --username> : Cisco AnyConnect username
+
+C<-P or --password> : Cisco AnyConnect password
+
+C<-S or --server> : fdqn of server whose IP Address will be queried
+
+C<-A or --address> : expect IP Address of server
+
+=cut
+
+=head2 Example
+
+If you want to check if you are able to connect to a Cisco AnyConnect VPN Server, you could use
+
+./check_cisco_anyconnect -H ICATU-FW -U nagiosreader -P <password> -S webmail.icatu.com.br -A 192.168.231.145
+
+=cut
+#
+
+=head2 Output and Exit Codes
+
+	OK - AnyConnect Connection successful established and server in the correct address and pinged
+
+		output (sample)
+
+		OK: connection to <hostname> established. <server> pinged at <address>
+
+  	WARNING - AnyConnect Connection successful established but server not in expected IP address or not pinged
+
+		output (sample)
+
+		WARNING: connection to <hostname> established, but <server> not found at <address>
+
+		or
+
+		WARNING: connection to <hostname> established, but <server> at <address> not pinged
+
+	CRITICAL - AnyConnect Connection could not be established
+
+		output (sample)
+
+		CRITICAL: connection to <hostname> not established
+
+
+=cut
+
+=head1 IMPORTANT!!!
+
+
+Have FuN
+
+=cut
+
+#
+## ============================================================================
+#
+###################Setting parameters#########################
+use strict;
+use warnings;
+use Socket;
+use Getopt::Long;
+use Switch;
+
+my $msg = '';
+my $rc = 0;
+my $UNKNOWN = -1;
+my $OK = 0;
+my $WARNING = 1;
+my $CRITICAL = 2;
+my $host = '127.0.0.1';
+my $username = '';
+my $password = '';
+my $server = '';
+my $address = '';
+#my $sha1_fprint = 'sha1:e8af85af918aedb516f63a3aba1788bc5924e21f';
+my $sha1_fprint = 'sha1:AF873CD8E397A91F3D1278D1414C75F9860362A4';
+#my $sha256_fprint = 'sha256:7d673e1c2935d79812e07088fd8fc7a8bcaae3d1e29f4eb39e21f3fb3781ce27';
+my $sha256_fprint = ' pin-sha256:nzF98Nhnn1gKpXwAC7aWH0D5OFvSMfYsRCi5AS30fsg=';
+my $openconnect_options = "--authgroup VPN -l --no-dtls -q -b --servercert $sha256_fprint --passwd-on-stdin ";
+
+###################Getting options##############################
+GetOptions(
+        "host|H=s" => \$host,
+		"username|U=s" => \$username,
+		"password|P=s" => \$password,
+		"server|S=s" => \$server,
+		"address|A=s" => \$address,
+);
+
+#################################################################
+chomp($host);
+chomp($username);
+chomp($password);
+chomp($server);
+chomp($address);
+
+if ($host eq '' or $username eq '' or $password eq '' or $server eq '' or $address eq '') {
+	system("pod2man $0 | nroff -man | less");
+	exit 0;
+}
+
+########################################################################
+# try to connect
+########################################################################
+#print "whoami " . `whoami\n`;
+#foreach (sort keys %ENV) {
+#  print "$_  =  $ENV{$_}\n";
+#}
+
+#print "echo $password | sudo /sbin/openconnect $openconnect_options --user=$username $host";
+system("echo $password | sudo /sbin/openconnect $openconnect_options --user=$username $host > /dev/null 2>&1");
+usleep(45000);
+
+# check if is connected
+my @status = `ip a | grep -c "tun0:"`;
+chomp(@status);
+
+if ( $status[0] == 0 ) {
+	$msg = "CRITICAL: connection to $host not established\n";
+	$rc = $CRITICAL;
+} else {
+	
+	# ok, let's get <server> address
+	my @diggedaddress = `/usr/bin/dig $server +short`;
+	chomp($diggedaddress[0]);
+
+	if ( $diggedaddress[0] ne $address ) {
+		$msg = "WARNING: connection to $host established but $server address is $diggedaddress[0], not $address\n";
+		$rc= $WARNING;
+	} else {
+
+		# ok, let's ping $address
+		system("/bin/ping -W 2 -i 0.3 -c 2 -q $address > /dev/null 2>&1 ");
+		if ( $? ne 0 ) {
+			$msg = "WARNING: connection to $host established but $server could not be pinged at address $address\n";
+			$rc = $WARNING;
+		} else {
+			$msg = "OK: connection to $host established and $server pinged at address $address\n";
+			$rc = $OK;
+		}
+	}
+
+}
+
+# disconnects before exiting
+system("sudo /bin/pkill -SIGINT openconnect > /dev/null 2>&1 ");
+
+print $msg;
+exit $rc;

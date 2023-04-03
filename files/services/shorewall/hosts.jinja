@@ -1,0 +1,12 @@
+###############################################################################
+#ZONE       HOSTS               OPTIONS
+{%- for host in pillar['shorewall']['hosts'] | default({}) %}
+   {%- set zone = pillar['shorewall']['hosts'][host]['zone'] | default('') %}
+   {%- set nic = salt['ifaces.get_iface_name'](pillar['shorewall']['hosts'][host]['hwaddr']) %}
+   {%- if nic == None %}
+       {%- set nic = 'enp1s0' %} 
+   {%- endif %}
+   {%- set hosts = pillar['shorewall']['hosts'][host]['ipaddrs'] %}
+{{ zone }}     {{ nic }}:{{ hosts }}
+{%- endfor %}
+

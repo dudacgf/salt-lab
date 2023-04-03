@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Running kernel version
+kernel=`uname -r`
+
+# os info
+if [[ -f /etc/os-release ]] ; then
+    . /etc/os-release
+    release="$NAME $VERSION"
+else
+    release=`cat /etc/centos-release`
+fi
+
+echo "$release - Kernel version $kernel";
+
