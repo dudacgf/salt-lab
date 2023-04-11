@@ -1,9 +1,9 @@
-{% if not grains['flag_mysql_zabbix_db_user'] | default(False) %}
+{% if not grains['flag_zabbix_mysql_set'] | default(False) %}
+
 {% set root_password = pillar['mariadb_root_pw'] %}
 {% set db_name = pillar['zabbix']['db_name'] %}
 {% set db_user = pillar['zabbix']['db_user'] %}
 {% set db_password = pillar['zabbix']['db_password'] %}
-
 create zabbix db user:
   cmd.script:
     - source: salt://files/scripts/mysql_create_db_user.sh
@@ -24,6 +24,12 @@ create initial database:
 log_bin_trust 0:
   cmd.run:
     - name: "echo 'set global log_bin_trust_function_creators = 0;' | mysql -uroot -p'{{ root_password }}'"
+
+flag_zabbix_mysql_set:
+  grains.present:
+    - value: True
+    - require:
+      - cmd: create initial database
 
 {% else %}
 '-- zabbix db & user already created':
