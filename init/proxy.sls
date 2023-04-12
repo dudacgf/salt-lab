@@ -17,10 +17,16 @@
         'Acquire::https::Proxy "{{ proxy }}";',
       ]
 {% elif grains['os_family'] == 'RedHat' %}
+yum-utils:
+  pkg.installed
+
 add_proxy_line:
   cmd.run:
     - name: yum-config-manager --setopt=proxy={{ proxy }} --save
     - unless: grep {{ proxy }} /etc/yum.conf
+    - require:
+      - pkg: yum-utils
+
 {% else %}
 proxy error:
   test.show_notification:
