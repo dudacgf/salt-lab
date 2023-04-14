@@ -54,7 +54,7 @@ reboot nmcli:
 
 {% else %}
 
-'=== redhat and derivatives >= 8 already uses networkmanager ===':
+'-- redhat and derivatives >= 8 already uses networkmanager':
   test.nop
 
 {% endif %}
