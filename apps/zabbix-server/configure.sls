@@ -1,6 +1,6 @@
 /etc/zabbix/zabbix_server.conf:
   file.managed:
-    - source: salt://files/services/zabbix_server.conf.jinja
+    - source: salt://files/services/zabbix/zabbix_server.conf.jinja
     - template: jinja
     - user: root
     - group: zabbix
@@ -8,7 +8,7 @@
 
 /etc/zabbix/zabbix.conf.php:
   file.managed:
-    - source: salt://files/services/zabbix.conf.php.jinja
+    - source: salt://files/services/zabbix/zabbix.conf.php.jinja
     - template: jinja
     - user: apache
     - group: apache
