@@ -22,4 +22,18 @@
 
 {% endfor %} # file in homefiles
 
+# copia a chave pública ssh, se informada, para o diretório .ssh na home do usuário
+{% set source = salt['pillar.get']( 'users_to_create:' + user + ':ssh_authorized_key', 'none') %}
+{% if source != 'none' %}
+~{{ user }}/.ssh/authorized_keys:
+  file.managed:
+    - source: {{ source }}
+    - user: {{ user }}
+    - group: {{ user }}
+    - mode: 644
+    - dir_mode: 700
+    - makedirs: true
+    - backup: minion
+{% endif %}
+
 {% endfor %} # user in userlist
