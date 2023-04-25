@@ -13,7 +13,7 @@ install cyrus:
 {{ pillar['pkg_data']['mail']['install'] }}:
   pkg.installed
 
-{% if salt['pillar.get']('postfix_auth', False) %}
+{% if pillar['postfix']['auth'] | default(False) %}
 /etc/postfix/auth_relay:
   file.managed:
     - source: salt://files/services/postfix/auth_relay.jinja
