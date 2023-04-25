@@ -23,6 +23,7 @@ install-syslog-ng:
 /etc/syslog-ng/conf.d/auditd-graylog-parser.conf:
   file.managed:
     - source: salt://files/services/syslog-ng/auditd-graylog-parser.conf
+    - template: jinja
     - user: root
     - group: root
     - mode: 644
