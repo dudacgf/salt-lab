@@ -51,7 +51,7 @@ setproxy restart salt minion:
       - file: /etc/salt/minion.d/00-proxy.conf
 
 {% else %}
-'-- Este servidor não usa proxy. nada a fazer'
+'-- Este servidor não usa proxy. nada a fazer':
   test.nop
 
 {% endif %}
