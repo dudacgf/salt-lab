@@ -1,7 +1,11 @@
+#!jinja|yaml
+
 {% if not grains['flag_zabbix_repo_installed'] | default(False) %}
 
 {% if pillar['proxy'] != 'none' %}
 {% set proxy = 'https_proxy=' + pillar['proxy'] %}
+{% else %}
+{% set proxy = '' %}
 {% endif %}
 
 {% if grains['os'] == 'Debian' %}
@@ -15,11 +19,11 @@ zabbix repo:
     - name: dpkg -i /tmp/zabbix-release.deb
     - require:
       - cmd: download repo deb
-
 {% elif grains['os'] == 'Ubuntu' %}
+
 download repo deb:
   cmd.run:
-    - name:  {{ proxy }} wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu{{ grains['osrelease'] }}_all.deb -O /tmp/zabbix-release.deb
+    - name:  {{ proxy }} wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu{{ grains['osrelease'] }}_all.deb -O /tmp/zabbix-release.deb 
 
 zabbix repo:
   cmd.run:
