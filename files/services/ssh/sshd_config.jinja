@@ -1,0 +1,101 @@
+#	$OpenBSD: sshd_config,v 1.103 2018/04/09 20:41:22 tj Exp $
+
+# This is the sshd server system-wide configuration file.  See
+# sshd_config(5) for more information.
+
+# This sshd was compiled with PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+# The strategy used for options in the default sshd_config shipped with
+# OpenSSH is to specify options with their default value where
+# possible, but leave them commented.  Uncommented options override the
+# default value.
+
+{% if not ( grains['os_family'] == 'RedHat' and grains['osmajorrelease'] < 8 ) %}
+include /etc/ssh/sshd_config.d/*.conf
+{% endif %}
+
+Port 22
+Protocol 2
+AddressFamily any
+ListenAddress 0.0.0.0
+ListenAddress ::
+
+HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Ciphers and keying
+RekeyLimit default none
+
+# Logging
+SyslogFacility AUTH
+LogLevel INFO
+
+# Authentication:
+
+LoginGraceTime 60m
+PermitRootLogin no
+StrictModes yes
+MaxAuthTries 6
+MaxSessions 10
+
+PubkeyAuthentication yes
+PasswordAuthentication no # scanacct settings at end of file
+
+# Expect .ssh/authorized_keys2 to be disregarded by default in future.
+AuthorizedKeysFile	.ssh/authorized_keys 
+
+# Change to yes if you don't trust ~/.ssh/known_hosts for
+# HostbasedAuthentication
+IgnoreUserKnownHosts yes
+# Don't read the user's ~/.rhosts and ~/.shosts files
+IgnoreRhosts yes
+
+# To disable tunneled clear text passwords, change to no here!
+PermitEmptyPasswords no
+
+# Change to yes to enable challenge-response passwords (beware issues with
+# some PAM modules and threads)
+ChallengeResponseAuthentication no  
+
+# Set this to 'yes' to enable PAM authentication, account processing,
+# and session processing. 
+UsePAM yes
+
+#AllowAgentForwarding yes
+#AllowTcpForwarding yes
+#GatewayPorts no
+X11Forwarding no
+PrintMotd no
+UseDNS yes
+
+# Allow client to pass locale environment variables
+AcceptEnv LANG LC_*
+
+# override default of no subsystems
+{% if grains['os_family'] == 'redhat' %}
+Subsystem sftp	/usr/libexec/openssh/sftp-server
+{% else %}
+Subsystem sftp	/usr/lib/openssh/sftp-server
+{% endif %}
+
+# Restrict key exchange, cipher, and MAC algorithms, as per sshaudit.com
+# hardening guide.
+KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256
+Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com
+{% if not ( grains['os_family'] == 'redhat' and grains['osmajorrelease'] < 8 ) %}
+HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com
+{% else %}
+HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,sk-ssh-ed25519@openssh.com,sk-ssh-ed25519-cert-v01@openssh.com,rsa-sha2-256,rsa-sha2-512,rsa-sha2-256-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com
+{% endif %}
+
+
+# scanacct is used by lansweeper and openvas to scan the servers. 
+# no ssh-key configuration possible. user must login with password
+Match User scanacct
+  PubKeyAuthentication no
+  PasswordAuthentication yes
+
+Match address {{ pillar['salt_server_ip'] }}
+  PermitRootLogin yes
