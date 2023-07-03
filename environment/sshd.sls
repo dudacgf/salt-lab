@@ -9,7 +9,7 @@
 # arquivo de configuração do serviço
 /etc/ssh/sshd_config:
   file.managed:
-    - source: salt://files/services/sshd_config.jinja
+    - source: salt://files/services/ssh/sshd_config.jinja
     - user: root
     - group: root
     - mode: 644
@@ -20,7 +20,7 @@
 # arquivo que determina quais modulos serão aceitos (cifra baixa <3072 cortados)
 /etc/ssh/moduli:
   file.managed:
-    - source: salt://files/services/sshd_moduli
+    - source: salt://files/services/ssh/sshd_moduli
     - user: root
     - group: root
     - mode: 644
