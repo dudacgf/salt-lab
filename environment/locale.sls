@@ -67,7 +67,7 @@ def run():
             {'require': ['pre-localectl']},
         ],
     }
-    config[f'localectl set-keymap {keymap}'] = {
+    config[f'localectl set-x11-keymap {keymap} {keymap}'] = {
         'cmd.run': [
             {'require': [{'cmd': 'set-locale'}]},
         ],
