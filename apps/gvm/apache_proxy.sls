@@ -1,4 +1,4 @@
-{% if 'apache' in pillar['services'] %}
+{% if 'apache' in pillar['services'] | default([]) %}
 #
 # apache proxy conf
 {{ pillar['pkg_data']['apache']['confd_dir'] }}/gsad.conf:
