@@ -24,7 +24,9 @@ minimal:
       - fortune-mod
       - mlocate 
       - {{ pillar['pkg_data']['vim']['name'] }}
+{%- if grains['os'] == 'Rocky' and grains['osmajorrelease'] < 9 %}
       - needrestart
+{%- endif %}
       - dos2unix
       - traceroute
       - tcpdump
@@ -34,24 +36,28 @@ minimal:
       - hostname
       - python3-dns
       - curl
+{%- if grains['osmajorrelease'] >= 8 %}
       - python3-pycurl
       - python3-netifaces
       - python3-pip
+{%- endif %}
       - facter
       - patch
       - tar
 
 # preciso do pacote nmcli para rodar o _modulo nmconn
+{%- if grains['osmajorrelease'] >= 8 %}
 instala python3-nmcli:
   cmd.run:
     - name: pip3 install nmcli -q
+{%- endif %}
 
 #
 # Autoremove qualquer pacote que não for mais necessário
 {% if grains['os_family'] == 'Debian' %}
 apt-get autoremove -y:
   cmd.run
-{% elif grains['os_family'] == 'RedHat' %}
+{% elif grains['os_family'] == 'RedHat' and grains['osmajorrelease'] >= 8 %}
 dnf autoremove -y:
   cmd.run
 {% endif %}
