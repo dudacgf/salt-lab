@@ -28,7 +28,7 @@
 #
 # obtém o nome da conexão e gera o comando nmcli para fixar o IP
 {% set cmdGetConUUID = "nmcli --get-values uuid con show --active " %}
-{% set conUUID = salt['cmd.run'](cmdGetConUUID, '') %}
+{% set conUUID = salt['cmd.run'](cmdGetConUUID, '').split('\n') | first() %}
 {% set cmdSetConIP = "nmcli con mod '" + conUUID + "' ipv4.address " + ip4_address + "/" + ip4_netmask 
                      + " ipv4.gateway " +  ip4_gateway + " ipv4.dns '" +  ip4_dns | join(',') + "' ipv4.method manual" %}
 
