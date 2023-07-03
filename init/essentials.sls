@@ -14,6 +14,19 @@ minimal:
       - python3-netifaces
       - python3-pip
 
+#
+## is this an vmware vm?
+#
+{% if grains['manufacturer'] == 'VMware, Inc.' %}
+open-vm-tools:
+  pkg.installed
+
+vmtoolsd.service:
+  service.running:
+    - enable: True
+
+{% endif %}
+
 # 
 ## this one has no package
 install python3-nmcli:
