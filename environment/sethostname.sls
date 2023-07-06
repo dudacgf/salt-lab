@@ -32,7 +32,7 @@ nmcli general hostname {{ hostname }}.{{ domain }}:
 {% endif %}
 
 {% if pillar.get('register_dns', False) %}
-
+{% if pillar['dns_hoster'] | default('none') == 'godaddy' %}
 /tmp/godaddy_secrets:
   file.managed:
     - source: salt://files/secrets/godaddy_config.jinja
@@ -51,4 +51,45 @@ delete_secrets:
   cmd.run:
     - name: rm /tmp/godaddy_secrets
     - order: last
+{% elif pillar['dns_hoster'] | default('none') == 'aws' %}
+awscli:
+  pkg.installed
+
+/root/.aws/credentials:
+  file.managed:
+    - source: salt://files/secrets/aws-credentials.jinja
+    - template: jinja
+    - makedirs: True
+    - user: root
+    - group: root
+    - mode: 600
+
+/root/.aws/config:
+  file.managed:
+    - contents: |
+        [default]
+    - user: root
+    - group: root
+    - mode: 600
+
+register host:
+  cmd.script:
+    - source: salt://files/scripts/aws-register.sh.jinja
+    - template: jinja
+    - shell: /bin/bash
+    - require:
+      - pkg: awscli
+      - file: /root/.aws/credentials
+      - file: /root/.aws/config
+
+delete_secrets:
+  cmd.run:
+    - name: rm /root/.aws/credentials
+    - order: last
+
+{% elif pillar['dns_hoster'] | default('none') != 'none' %}
+'=== register A record for this type of dns hosting is not implemented. sorry ===':
+  test.nop
+{% endif %} # if pillar['dns_hoster']
+
 {% endif %}
