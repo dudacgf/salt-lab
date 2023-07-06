@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#
+# creates / updates a record in an aws route53 hosted zone
+#
+
+{% set hostname = grains.id.split('.')[0] %}
+{% set location = pillar['location'] | default('internal') %}
+{% set domainname = pillar[location + '_domain'] | default('local') %}
+{% set hosted_zone_id = pillar['aws'][domainname]['hosted_zone_id'] %}
+{% set ip4_address = grains.ipv4 | difference(['127.0.0.1']) | first %}
+
+changes_options='{"Action": "UPSERT", "ResourceRecordSet": { "Name": "{{ hostname }}.{{ domainname }}", "Type": "A", "TTL": 600, "ResourceRecords": [ {"Value": "{{ ip4_address }}"}] }}'
+
+aws route53 change-resource-record-sets --hosted-zone-id {{ hosted_zone_id }} \
+       --change-batch "{\"Changes\": [ $changes_options ] }"
+
