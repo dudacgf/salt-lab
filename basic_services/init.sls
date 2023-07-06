@@ -7,9 +7,7 @@ include:
   - basic_services.auditd
 #  - basic_services.aide
   - basic_services.chrony
-  {%- if pillar['nrpe'] %}
   - basic_services.nrpe
-  {%- endif %}
   - basic_services.snmpd
   {%- if pillar['postfix']['install'] %}
   - basic_services.postfix

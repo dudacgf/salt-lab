@@ -1,8 +1,8 @@
 #
 ## nrpe.sls - instala e configura o serviço nrpe para monitoramento via nagios
-# 
 #
 
+{% if pillar['nrpe_install'] | default(False) %}
 
 {{ pillar['pkg_data']['nrpe']['name'] }}:
   pkg.installed
@@ -99,3 +99,7 @@ nrpe abre porta firewalld:
     - watch:
       - file: /etc/nagios/nrpe.cfg
     
+{% else %} # if pillar[nrpe_install]
+'=== nrpe não será instalado ===':
+  test.nop
+{% endif %}
