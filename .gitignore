@@ -1,3 +1,4 @@
 win
 [a-z][1-2]*.sls
 [a-z].sls
+map.conf
