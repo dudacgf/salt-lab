@@ -13,6 +13,10 @@ instala nomachine:
 
 {% elif grains['os_family'] == 'RedHat' %}
 
+python packages:
+  pkg.installed:
+    - pkgs: [ 'python3-pycurl', 'python3-tornado']
+
 /tmp/nomachine.rpm:
   file.managed:
     - source: https://download.nomachine.com/download/8.5/Linux/nomachine_8.5.3_1_x86_64.rpm
