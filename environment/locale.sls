@@ -1,5 +1,8 @@
 #!py
 import re
+import logging
+
+log = logging.Logger(__name__)
 
 #
 # use pillar 'locale' and 'keymap' dict values to configure minion locale settings
@@ -48,12 +51,26 @@ def run():
         config['console-data'] =  'pkg.installed' 
         config[f'loadkeys {keymap}'] =  'cmd.run' 
 
+        config['set-locale'] = {
+            'cmd.run': [
+                {'name': f'localectl set-locale LANG={locale_} LANGUAGE={locale_}'},
+                {'require': ['pre-localectl']},
+            ],
+        }
+        config[f'localectl set-x11-keymap {keymap}'] = {
+            'cmd.run': [
+                {'require': [{'cmd': 'set-locale'}]},
+            ],
+        }
+
     # RedHat: install needed locale and language files
     else:
         packages = __salt__['cmd.run']('dnf -q list langpacks-{}*'.format(lang)).split('\n')
         del packages[0]
         packages = [re.sub(r' .*', '', x) for x in packages]
         packages.append('glibc-langpack-{}'.format(lang))
+        setpkg = set(packages)
+        packages = list(setpkg)
 
         config['pre-localectl'] = {
             'pkg.installed': [
@@ -61,17 +78,18 @@ def run():
             ],
         }
 
-    config['set-locale'] = {
-        'cmd.run': [
-            {'name': f'localectl set-locale LANG={locale_} LANGUAGE={locale_}'},
-            {'require': ['pre-localectl']},
-        ],
-    }
-    config[f'localectl set-x11-keymap {keymap} {keymap}'] = {
-        'cmd.run': [
-            {'require': [{'cmd': 'set-locale'}]},
-        ],
-    }
+        config['set-locale'] = {
+            'cmd.run': [
+                {'name': f'localectl set-locale LANG={locale_} LANGUAGE={locale_}'},
+                {'require': ['pre-localectl']},
+            ],
+        }
+
+        config[f'localectl set-keymap {keymap}'] = {
+            'cmd.run': [
+                {'require': [{'cmd': 'set-locale'}]},
+            ],
+        }
 
     return config
             
