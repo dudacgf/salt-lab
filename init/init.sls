@@ -153,12 +153,12 @@ no proxy:
       - salt: {{ minion }} static ip
 {% endif %}
 
-{#
+
 ### 6. executa o highstate desse minion
 {{ minion }} highstate:
   salt.state:
     - tgt: {{ minion }}
     - highstate: True
 
-#}
+
 {% endfor %} # minion in...
