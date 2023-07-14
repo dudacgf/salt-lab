@@ -1,0 +1,15 @@
+[InstallMedia-BaseOS]
+name=Rocky Linux 9.0 - BaseOS
+mediaid=1657031221.5900638
+metadata_expire=-1
+gpgcheck=0
+cost=500
+baseurl=http://10.1.115.1/rocky-iso/BaseOS
+
+[InstallMedia-AppStream]
+name=Rocky Linux 9.0 - AppStream
+mediaid=1657031221.5900638
+metadata_expire=-1
+gpgcheck=0
+cost=500
+baseurl=http://10.1.115.1/rocky-iso/AppStream
