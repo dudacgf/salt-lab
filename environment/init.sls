@@ -6,5 +6,5 @@ include:
   - environment.sshd
   - environment.users
   - environment.certbot
-  - environment.zabbix-agent2
+  - environment.zabbix-agent
   - environment.shorewall
