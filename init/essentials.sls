@@ -14,6 +14,21 @@ minimal:
       - python3-netifaces
       - python3-pip
 
+prepara-pip:
+  pkg.installed:
+    - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
+
+minimal salt-minion:
+  cmd.run:
+    - name: 'salt-pip install netifaces pycurl tornado'
+
+{% if not pillar['keep_gcc'] | default(False) %}
+prepara-pip_remove:
+  pkg.removed:
+    - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
+
+{% endif %}
+
 #
 ## is this an vmware vm?
 #
