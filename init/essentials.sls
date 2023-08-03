@@ -46,7 +46,11 @@ vmtoolsd.service:
 ## this one has no package
 install python3-nmcli:
   pip.installed:
-    - name: nmcli >= 1.1.2
+    - name: nmcli 
+{%- if grains['os'] == 'Debian' and grains['osmajorrelease'] > 11 %}
+    - install_options:
+      - --break-system-packages
+{% endif %}
 
 # 
 ## sync modules, functions etc
