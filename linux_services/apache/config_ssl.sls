@@ -5,7 +5,7 @@
 #                   abaixo do diretório apache
 #
 
-{% if not pillar.get('apache_ssl', False) %}
+{% if not pillar['apache']['ssl_enable'] | default(False) %}
 nada a fazer:
   test.nop:
     - name: '*** servidor não usa https. nada a fazer'
@@ -84,12 +84,6 @@ ssl restart apache:
     - name: systemctl restart {{ pillar['pkg_data']['apache']['service'] }}
     - require:
       - file: ssl configuration
-   
-flag_apache_ssl_configured:
-  grains.present:
-    - value: True
-    - require:
-      - cmd: ssl restart apache
 
 {% endif %} # if apache_ssl
 

@@ -37,7 +37,8 @@ postfix:
   relay: icatu-com-br.mail.protection.outlook.com
 
 # 
-apache_ssl: True
+apache:
+  ssl_enable: True
 
 # 
 manage_users: True

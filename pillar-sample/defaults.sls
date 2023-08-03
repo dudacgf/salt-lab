@@ -6,7 +6,8 @@ locale: pt_BR.UTF8
 manage_users: True
 dhcp: True
 certbot: False
-apache_ssl: False
+apache:
+  ssl_enable: False
 register_dns: False
 set_hostname: True
 selinux_mode: enforcing

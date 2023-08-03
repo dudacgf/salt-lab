@@ -68,7 +68,8 @@ roles: [ 'lamp' ]
 services: ['apache', 'mariadb', 'php']
 
 # determina se apache vai utilizar ssl
-apache_ssl: True
+apache:
+  ssl_enable: True
 
 # senha root do servidor mariadb
 mariadb_root_pw: 'a hard password here'
