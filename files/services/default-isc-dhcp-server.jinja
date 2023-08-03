@@ -1,0 +1,9 @@
+# Defaults for isc-dhcp-server (sourced by /etc/init.d/isc-dhcp-server)
+
+{%- set nic_list = [] %}
+{%- for hwaddr in pillar['dhcp-server']['interfaces']['hwaddr'] %}
+    {%- set nic = salt['ifaces.get_iface_name'](hwaddr) %}
+    {%- do nic_list.append(nic) %}
+{%- endfor %}
+INTERFACESv4="{{ nic_list | join(' ') }}"
+INTERFACESv6=""

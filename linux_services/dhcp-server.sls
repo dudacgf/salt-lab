@@ -15,15 +15,24 @@
     - require:
       - pkg: {{ pillar['pkg_data']['dhcp-server']['name'] }}
 
+/etc/default/isc-dhcp-server:
+  file.managed:
+    - source: salt://files/services/default-isc-dhcp-server.jinja
+    - template: jinja
+    - user: root
+    - group: root
+    - mode: 0644
+
 {{ pillar['pkg_data']['dhcp-server']['service'] }}:
   service.running:
     - enable: True
     - restart: True
     - watch:
       - file: /etc/dhcp/dhcpd.conf
+      - file: /etc/default/isc-dhcp-server
 
-pip3 install isc_dhcp_leases 2> /dev/null:
-  cmd.run
+isc_dhcp_leases:
+  pip.installed
 
 /usr/local/bin/dhcpd_leases:
   file.managed:
@@ -32,5 +41,5 @@ pip3 install isc_dhcp_leases 2> /dev/null:
     - group: root
     - mode: 0755
     - require:
-      - cmd: pip3 install*
+      - pip: isc_dhcp_leases
 
