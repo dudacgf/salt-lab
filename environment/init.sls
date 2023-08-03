@@ -1,10 +1,10 @@
 include:
   - environment.basic
   - environment.locale
-  - environment.sethostname
-  - environment.settimezone
+  - environment.timezone
+  - environment.hostname
+  - environment.certbot
   - environment.sshd
   - environment.users
-  - environment.certbot
   - environment.zabbix-agent
   - environment.shorewall
