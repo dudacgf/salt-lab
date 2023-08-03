@@ -1,80 +1,39 @@
 #!/bin/bash
-
-## copia novos certificado/chaves/cadeia para serviços que vão utilizá-lo
 #
-# serviços contemplados: apache, elasticsearch, kibana, technitiu dns, postfix
+## post_hook.sh - copy certbot generated ou renewed certificates to apropriated directories 
+#                 to be used by services
 
-
-{#- obtém grains e pillars necessários #}
+#
+# services currently supported: apache, elasticsearch, kibana, tdns, graylog, squid
+{%- set ssl_services = {
+                       'apache': {'dir': pillar['pkg_data']['apache']['etc_dir'], 
+                                  'user': pillar['pkg_data']['apache']['user'],
+                                  'group': pillar['pkg_data']['apache']['group']
+                                 },
+                       'elasticsearch': {'dir': '/etc/elasticsearch', 'user': 'elastisearch', 'group': 'elasticsearch'},
+                       'kibana': {'dir': '/etc/kibana', 'user': 'kibana', 'group': 'kibana'},
+                       'graylog': {'dir': '/etc/graylog', 'user': 'graylog', 'group': 'graylog'},
+                       'squid': {'dir': '/etc/squid', 'user': 'squid', 'group': 'squid'},
+                      }
+%}
 {%- set hostname = grains.id.split('.')[0] %}
-{%- set default_domain = pillar['external_domain'] %}
-{%- set domain = pillar.get('external_domain') %}
+{%- set location = pillar['location'] | default('internal') %}
+{%- set domain = pillar[location + '_domain'] %}
 {%- set domainname = hostname + '.' + domain %}
 
-{%- if pillar.get('apache_ssl', False) %}
-#
-# httpd/apache
+{%- for service in ssl_services %}
+{%- if pillar[service] | default('none') != 'none' and pillar[service]['ssl_enable'] | default(False) %}
 
-{%- set etc_dir = pillar['pkg_data']['apache']['etc_dir'] %}
-mkdir -p {{ etc_dir }}/ssl 2> /dev/null
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ etc_dir }}/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ etc_dir }}/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ etc_dir }}/ssl
-
-chown -R {{ pillar['pkg_data']['apache']['user'] }}:{{ pillar['pkg_data']['apache']['group'] }} {{ etc_dir }}/ssl
-
+# {{ service }} uses ssl
+mkdir -p {{ ssl_services[service]['dir'] }} 2> /dev/null
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ ssl_services[service]['dir'] }}/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ ssl_services[service]['dir'] }}/ssl
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ ssl_services[service]['dir'] }}/ssl
+chown -R {{ ssl_services[service]['user'] }}:{{ ssl_services[service]['group'] }} {{ ssl_services[service]['dir'] }}/ssl
 {%- endif %}
+{%- endfor %}
 
-{%- if 'elasticsearch' in pillar.get('roles', []) %}
-#
-# elasticsearch
-
-mkdir -p /etc/elastisearch/ssl
-
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/elasticsearch/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/elasticsearch/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/elasticsearch/ssl
-
-chown -R elasticsearch:elasticsearch /etc/elasticsearch/ssl
-
-{%- endif %}
-
-#
-{%- if 'kibana' in pillar.get('roles', []) %}
-#
-# kibana
-
-mkdir -p /etc/elastisearch/ssl
-
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/kibana/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/kibana/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/kibana/ssl
-
-chown -R kibana:kibana /etc/kibana/ssl
-
-{%- endif %}
-
-#
-# prometheus
-{% if 'prometheus' in pillar.get('roles', []) or pillar.get('prometheus_exporters', []) | length > 0 %}
-mkdir -p /etc/prometheus/ssl
-
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/prometheus/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/prometheus/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/prometheus/ssl
-
-{%- endif %}
-
-#
-# postfix
-
-mkdir -p /etc/postfix/ssl
-
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem /etc/postfix/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem /etc/postfix/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem /etc/postfix/ssl
-
-{%- if 'technitium_dns' in pillar.get('roles', []) %}
+{%- if pillar['tdns'] | default('none') != 'none' and pillar['tdns']['ssl_enable'] %}
 #
 # technitium dns
 
