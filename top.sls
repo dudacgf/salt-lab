@@ -5,4 +5,5 @@ base:
     - services
     - roles
     - apps
+    - pkgs
 
