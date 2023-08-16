@@ -2,6 +2,7 @@
 ## aide.sls - instala e configura o serviço aide para checkagem do filesystem
 # 
 
+{%- if pillar['aide'] | default(False) and pillar['aide']['install'] | default(False) %}
 aide:
   pkg.installed
   
@@ -48,3 +49,8 @@ aidecheck.timer:
     - enable: true
     - restart: true
 
+{%- else %}
+'=== aide will not be installed ===':
+  test.nop
+
+{%- endif %}

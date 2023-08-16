@@ -7,5 +7,4 @@ include:
   - environment.sshd
   - environment.users
   - environment.netshares
-  - environment.zabbix-agent
   - environment.shorewall

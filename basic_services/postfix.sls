@@ -3,6 +3,8 @@
 #
 ### ecgf
 
+{%- if pillar['postfix'] | default(False) and pillar['postfix']['install'] | default(False) %}
+
 postfix:
   pkg.installed
 
@@ -84,4 +86,8 @@ postfix.service:
     - watch:
       - file: /etc/postfix/*
 
+{%- else %}
+'=== postfix will not be installed ===':
+  test.nop
 
+{%- endif %}
