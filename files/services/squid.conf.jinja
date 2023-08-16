@@ -1,9 +1,9 @@
-{%- if pillar['squid']['transparent'] | default(False) %} 
+{%- if pillar['squid'] | default(False) and pillar['squid']['transparent'] | default(False) %} 
 http_port 3128 intercept
-http_port 127.0.0.1:3129
+http_port 127.0.0.1:3130
 
 {%- if pillar['squid']['ssl_enable'] | default(False) %}
-https_port 3130 ssl-bump intercept \
+https_port 3129 ssl-bump intercept \
   cert=/etc/squid/ssl/cert+key.pem \
   generate-host-certificates=on dynamic_cert_mem_cache_size=4MB
 
@@ -45,8 +45,11 @@ acl safe_ports port 280     # http-mgmt
 acl safe_ports port 488     # gss-http
 acl safe_ports port 591     # filemaker
 acl safe_ports port 777     # multiling http
+
+acl CONNECT method CONNECT
+
 http_access deny !safe_ports
-http_access deny connect !ssl_ports
+http_access deny CONNECT !ssl_ports
 http_access allow localhost manager
 http_access deny manager
 http_access allow localhost

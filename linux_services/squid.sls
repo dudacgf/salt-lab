@@ -15,7 +15,7 @@ squid:
     - require:
       - pkg: squid
 
-{% if pillar['squid']['ssl_enable'] | default(False) %}
+{% if pillar['squid']| default(False) and pillar['squid']['ssl_enable'] | default(False) %}
 /etc/squid/ssl/chain.pem:
   file.managed:
     - source: {{ salt.sslfile.chain() }}
