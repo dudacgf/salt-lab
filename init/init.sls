@@ -133,8 +133,40 @@ no proxy:
       - fun: match.grain
         tgt: 'flag_static_extra_ips_set:True'
 
-{% else %}
+#
+## if redefine_proxy is set, redefine proxy
+{% set proxy = salt.cmd.run('salt ' + minion + ' pillar.get redefine_proxy') | load_yaml %}
+{% if proxy != 'none' %}
+{{ minion }} redefine proxy minion:
+  salt.state:
+    - sls: init.proxy.proxy_minion
+    - tgt: {{ minion }}
+    - pillar: {'proxy': {{ proxy[minion] }} }
 
+# waits (the previous state restarts salt-minion service)
+{{ minion }} redefine proxy restart:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ '{{ minion }}' ]
+    - timeout: {{ pillar['sleep_a_longer_while'] }}
+    - require:
+      - salt: {{ minion }} redefine proxy minion
+
+{{ minion }} redefine proxy syspkg:
+  salt.state:
+    - sls: init.proxy.proxy_syspkg
+    - tgt: {{ minion }}
+    - pillar: {'proxy': {{ proxy[minion] }} }
+
+{% else %}
+no redefine proxy:
+  test.nop:
+    - name: '=== no redefine proxy ==='
+{% endif %}
+
+
+
+{% else %}
 #
 ### 5. sets static ip if configured in the minion host pillar
 #
@@ -155,10 +187,11 @@ no proxy:
 
 
 ### 6. executa o highstate desse minion
+{%- if pillar['highstate_on_init'] | default(False) %}
 {{ minion }} highstate:
   salt.state:
     - tgt: {{ minion }}
     - highstate: True
-
+{%- endif %}
 
 {% endfor %} # minion in...
