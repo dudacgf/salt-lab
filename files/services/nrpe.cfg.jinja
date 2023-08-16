@@ -73,8 +73,9 @@ command[check_root]={{ settings.plugins_dir }}check_disk -w 20% -c 10% -W 10% -K
 command[check_storage]= /bin/echo OK: This is a virtual machine. No Dell openmanage here...
 command[check_dell_chassis]=/bin/echo OK: This is a virtual machine. No Dell openmanage here...
 command[check_temps]=/bin/echo OK: This is a virtual machine. No Dell openmanage here...
-command[check_updates]= {{ settings.plugins_dir }}{{ settings.check_updates_cmd }}
-command[check_apt]= {{ settings.plugins_dir }}check_apt -d -l -t 60
+command[check_updates]=sudo {{ settings.plugins_dir }}{{ settings.check_updates_cmd }}
+command[check_apt]=sudo {{ settings.plugins_dir }}check_apt -d -l -t 60
+command[check_apt_boot]=sudo {{ settings.plugins_dir }}check_apt_boot -d -l -t 60
 # uptime
 command[check_uptime]=bash -c "/bin/echo -n OK: ; /usr/bin/uptime"
 command[check_version]={{ settings.plugins_dir }}check_version -t 30

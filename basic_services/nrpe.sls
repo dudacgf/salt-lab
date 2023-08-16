@@ -3,13 +3,14 @@
 #
 
 {% if pillar['nrpe_install'] | default(False) %}
+{% set settings = pillar['pkg_data']['nrpe'] %}
 
-{{ pillar['pkg_data']['nrpe']['name'] }}:
+{{ settings.name }}:
   pkg.installed
   
 install_plugins:
   pkg.installed:
-   - pkgs: [ {{ pillar['pkg_data']['nrpe']['install_plugins'] }} ]
+   - pkgs: [ {{ settings.install_plugins }} ]
   
 # copia configuração padrão para o diretório nagios
 /etc/nagios/nrpe.cfg:
@@ -22,7 +23,7 @@ install_plugins:
     - backup: minion
 
 # copia checks não oficiais
-{{ pillar['pkg_data']['nrpe']['plugins_dir'] }}check_mem.pl:
+{{ settings.plugins_dir }}check_mem.pl:
   file.managed:
     - source: salt://files/services/nrpe_checks/check_mem.pl
     - user: root
@@ -31,7 +32,7 @@ install_plugins:
     - backup: minion
 
 # copia checks não oficiais
-{{ pillar['pkg_data']['nrpe']['plugins_dir'] }}check_apt_boot:
+{{ settings.plugins_dir }}check_apt_boot:
   file.managed:
     - source: salt://files/services/nrpe_checks/check_apt_boot
     - user: root
@@ -39,7 +40,7 @@ install_plugins:
     - mode: 755
     - backup: minion
 
-{{ pillar['pkg_data']['nrpe']['plugins_dir'] }}check_version:
+{{ settings.plugins_dir }}check_version:
   file.managed:
     - source: salt://files/services/nrpe_checks/check_version
     - user: root
@@ -47,7 +48,7 @@ install_plugins:
     - mode: 755
     - backup: minion
 
-{{ pillar['pkg_data']['nrpe']['plugins_dir'] }}check_systemd.py:
+{{ settings.plugins_dir }}check_systemd.py:
   file.managed:
     - source: salt://files/services/nrpe_checks/check_systemd.py
     - user: root
@@ -55,7 +56,7 @@ install_plugins:
     - mode: 755
     - backup: minion
 
-{{ pillar['pkg_data']['nrpe']['plugins_dir'] }}check_dns_secondary:
+{{ settings.plugins_dir }}check_dns_secondary:
   file.managed:
     - source: salt://files/services/nrpe_checks/check_dns_secondary
     - user: root
@@ -63,7 +64,7 @@ install_plugins:
     - mode: 755
     - backup: minion
 
-{{ pillar['pkg_data']['nrpe']['plugins_dir'] }}check_updates:
+{{ settings.plugins_dir }}check_updates:
   file.managed:
     - source: salt://files/services/nrpe_checks/check_updates
     - user: root
@@ -78,7 +79,7 @@ install nrpe selinux context:
 
 set selinux context:
   cmd.run:
-    - name: restorecon -Rv {{ pillar['nrpe']['plugins_dir'] }}
+    - name: restorecon -Rv {{ settings.plugins_dir }}
 {% endif %}
 
 {% if grains['os_family'] == 'RedHat' %}
@@ -91,8 +92,19 @@ nrpe abre porta firewalld:
 {% endif %}
 
 #
-# ajusta o serviço nrpe
-{{ pillar['pkg_data']['nrpe']['service'] }}:
+# sudo directive to run check_updates as root (better results)
+/etc/sudoers.d/10-nrpe:
+  file.managed:
+    - contents: |
+       #
+       ## Allows nrpe to run check_update as root command
+       nrpe  ALL=(ALL)   NOPASSWD: {{ settings.plugins_dir }}check_updates
+       nrpe  ALL=(ALL)   NOPASSWD: {{ settings.plugins_dir }}check_apt
+       nrpe  ALL=(ALL)   NOPASSWD: {{ settings.plugins_dir }}check_apt_boot
+
+#
+# enables and restart if needed (changes in nrpe.cfg)
+{{ settings.service }}:
   service.running:
     - enable: true
     - restart: true
