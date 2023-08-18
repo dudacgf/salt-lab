@@ -96,3 +96,15 @@ pkg_data:
     service: isc-dhcp-server.service
   jdk:
     name: openjdk-17-jre
+  #
+  duo:
+    name: duo-unix
+  # 
+  zabbix:
+    name: zabbix-agent
+    conffile: /etc/zabbix/zabbix_agent.conf
+  #
+  salt-pycurl-requirements: 'gcc, libssl-dev, libcurl4-gnutls-dev, libgnutls28-dev'
+  # 
+  guestfs-tools:
+    name: libguestfs-tools

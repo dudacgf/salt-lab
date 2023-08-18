@@ -90,3 +90,15 @@ pkg_data:
   #
   networkmanager:
     name: NetworkManager
+  #
+  duo:
+    name: duo_unix
+  #
+  zabbix:
+    name: zabbix-agent2
+    conffile: /etc/zabbix/zabbix_agent2.conf
+  # 
+  salt-pycurl-requirements: 'gcc, openssl-devel, libcurl-devel'
+  #
+  guestfs-tools:
+    name: libguestfs-tools-c
