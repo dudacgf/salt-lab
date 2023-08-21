@@ -48,8 +48,10 @@ install python3-nmcli:
   pip.installed:
     - name: nmcli 
 {%- if grains['os'] == 'Debian' and grains['osmajorrelease'] > 11 %}
-    - install_options:
-      - --break-system-packages
+    #- install_options:
+      #- --break-system-packages
+    - args:
+      - --use-pep517
 {% endif %}
 
 # 
