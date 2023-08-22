@@ -64,24 +64,3 @@ epel-release:
 enable-powertools:
   cmd.run:
     - name: crb enable
-
-## se precisar de shorewall, precisa baixar e instalar os pacotes
-#
-{% if pillar['shorewall'] | default('none') != 'none' and grains['osmajorrelease'] >= 9 %}
-baixa base:
-  file.managed:
-    - name: /tmp/shorewall-5.2.8-0base.noarch.rpm
-    - source: https://de.shorewall.org/pub/shorewall/5.2/shorewall-5.2.8/shorewall-5.2.8-0base.noarch.rpm
-    - skip_verify: true
-    
-baixa core:
-  file.managed:
-    - name: /tmp/shorewall-core-5.2.8-0base.noarch.rpm
-    - source: https://de.shorewall.org/pub/shorewall/5.2/shorewall-5.2.8/shorewall-core-5.2.8-0base.noarch.rpm
-    - skip_verify: true
-
-os_specific instala shorewall:
-  cmd.run:
-    - name: dnf install /tmp/shorewall* -y -q
-
-{% endif %}
