@@ -65,16 +65,6 @@ enable-powertools:
   cmd.run:
     - name: crb enable
 
-## se roda em ambiente virtual (libvirt) na estação lduda, tem repo iso disponível
-{% if grains.virtual | default('none') == 'kvm' %}
-/etc/yum.repos.d/rocky-iso.repo:
-  file.managed:
-    - source: salt://files/env/rocky-iso.repo
-    - user: root
-    - group: root
-    - mode: 0644
-{% endif %}
-
 ## se precisar de shorewall, precisa baixar e instalar os pacotes
 #
 {% if pillar['shorewall'] | default('none') != 'none' and grains['osmajorrelease'] >= 9 %}
