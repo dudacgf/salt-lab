@@ -45,18 +45,6 @@ minimal:
       - patch
       - tar
 
-# preciso do pacote nmcli para rodar o _modulo nmconn
-{% if pillar['proxy'] | default('none') == 'none' %}
-{%     set proxy = '' %}
-{% else %}
-{%     set proxy='https_proxy=' + pillar['proxy'] + ' http_proxy=' + pillar['proxy'] %}
-{% endif %}
-{%- if grains['osmajorrelease'] >= 8 %}
-instala python3-nmcli:
-  cmd.run:
-    - name: {{ proxy }} pip3 install nmcli -q
-{%- endif %}
-
 #
 # Autoremove qualquer pacote que não for mais necessário
 {% if grains['os_family'] == 'Debian' %}
