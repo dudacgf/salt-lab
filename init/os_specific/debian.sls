@@ -15,10 +15,10 @@
 '/etc/apt/sources.list.d/debian_extras.list':
   file.managed:
     - contents: [
-      'deb http://alcateia.ufscar.br/debian/ bullseye contrib',
-      'deb-src http://alcateia.ufscar.br/debian/ bullseye contrib',
-      'deb http://alcateia.ufscar.br/debian/ bullseye non-free',
-      'deb-src http://alcateia.ufscar.br/debian/ bullseye non-free',
+      'deb http://alcateia.ufscar.br/debian/ {{ grains['oscodename'] }} contrib',
+      'deb-src http://alcateia.ufscar.br/debian/ {{ grains['oscodename'] }} contrib',
+      'deb http://alcateia.ufscar.br/debian/ {{ grains['oscodename'] }} non-free',
+      'deb-src http://alcateia.ufscar.br/debian/ {{ grains['oscodename'] }} non-free',
       ]
 
 firmware-linux-nonfree:
