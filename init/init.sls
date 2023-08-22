@@ -87,13 +87,12 @@ no proxy:
 #
 ### 4. if host pillar defines interfaces, create them in the virtual_host and set it's ip address
 #
-{% set redefine_interfaces = salt.cmd.run('salt ' + minion + 
-                                          ' pillar.get redefine_interfaces') | load_yaml %}
-{% if redefine_interfaces[minion] %}
-
 #
 ## adds the network virtual interfaces to the minion (this is run in the virtual_host)
 {% set interfaces = salt['cmd.run']("salt " + minion + " pillar.get interfaces") | load_yaml %}
+{% if interfaces[minion]['redefine'] %}
+
+{% do interfaces[minion].pop('redefine') %}
 {{ minion }} add interfaces:
   salt.state:
     - sls: init.add_minion_interfaces
