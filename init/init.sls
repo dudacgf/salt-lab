@@ -14,7 +14,7 @@
 ### 0. Proxy - defines proxy for apt/yum and salt-minion
 #
 {% set proxy = salt.cmd.run('salt ' + minion + ' pillar.get proxy') | load_yaml %}
-{% if proxy != 'none' %}
+{% if proxy[minion] != 'none' %}
 {{ minion }} define proxy minion:
   salt.state:
     - sls: init.proxy.proxy_minion
@@ -135,7 +135,8 @@ no proxy:
 #
 ## if redefine_proxy is set, redefine proxy
 {% set proxy = salt.cmd.run('salt ' + minion + ' pillar.get redefine_proxy') | load_yaml %}
-{% if proxy != 'none' %}
+
+{% if proxy[minion] != 'none' %}
 {{ minion }} redefine proxy minion:
   salt.state:
     - sls: init.proxy.proxy_minion
