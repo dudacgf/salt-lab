@@ -13,6 +13,8 @@ minimal:
       - python3-tornado
       - python3-netifaces
       - python3-pip
+    - refresh: True
+    - allow_updates: True
 
 prepara-pip:
   pkg.installed:
