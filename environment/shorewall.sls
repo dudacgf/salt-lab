@@ -4,7 +4,7 @@
 # ecgf - dez/2022
 #
 
-{% if pillar['shorewall'] | default('none') == 'none' %}
+{% if pillar['shorewall'] | default(False) %}
 nothing to do:
   test.show_notification:
     - text: '*** shorewall not enabled for this minion. nothing to do. ***'
