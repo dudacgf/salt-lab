@@ -29,7 +29,7 @@ python3-certbot-dns-route53:
 ## gera o novo certificado
 run certbot:
   cmd.run:
-    - name: certbot certonly --dns-route53 --email={{ domainemail }} --reinstall --no-eff-email --agree-tos --post-hook /usr/local/bin/post_hook.sh -d {{ domain }} -d {{ domainname }} 
+    - name: certbot certonly --dns-route53 --email={{ domainemail }} --reinstall --no-eff-email --agree-tos --post-hook /usr/local/bin/post_hook.sh -d {{ domainname }} 
     - require:
       - file: {{ sls }} copy aws files
 
