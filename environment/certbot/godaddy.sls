@@ -1,7 +1,6 @@
-#
+#!jinja|yaml
+
 # 
-##
-#
 ## certbot.sls - instala certbot, gera certificado
 #
 ## (c) ecgf - Jun/2021
@@ -10,10 +9,11 @@
 
 #
 # obtém grains e pillars necessários
-{% set hostname = grains.id.split('.')[0] %}
-{% set domain = pillar['external_domain'] %}
-{% set domainname = hostname + '.' + domain %}
-{% set domainemail = pillar['contact'] %}
+{%- set hostname = grains.id.split('.')[0] %}
+{%- set location = pillar['location'] %}
+{%- set domain = pillar[location + '_domain'] %}
+{%- set domainname = hostname + '.' + domain %}
+{%- set domainemail = pillar['contact'] %}
 
 # scripts para validação
 copia validation.py:
@@ -76,13 +76,6 @@ flag_certbot_run:
 {% else %}
 
 '*** Server already has certificate. Not running certbot. ***':
-  test.nop
-
-{% endif %}
-
-{% else %}
-
-'*** Server does not need certificate. Not running certbot. ***':
   test.nop
 
 {% endif %} # certbot

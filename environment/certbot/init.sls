@@ -11,17 +11,6 @@ certbot:
 {{ pillar['pkg_data']['python']['dnspython'] }}:
   pkg.installed
 
-#
-## post process hook
-copia post_hook.sh:
-  file.managed:
-    - name: /usr/local/bin/post_hook.sh
-    - source: salt://files/services/certbot/post_hook.sh.jinja
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: 750
-
 # you just need to run it once
 {% if not grains['flag_certbot_run'] | default(False) %}
 
@@ -39,4 +28,4 @@ copia post_hook.sh:
 {%- else %}
 '*** Server does not need certificate. Not running certbot. ***':
   test.nop
-{% endif %} # if certbot
+{% endif %} # if pillar['certbot']
