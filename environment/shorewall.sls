@@ -4,11 +4,8 @@
 # ecgf - dez/2022
 #
 
-{% if pillar['shorewall'] | default(False) %}
-nothing to do:
-  test.show_notification:
-    - text: '*** shorewall not enabled for this minion. nothing to do. ***'
-{% else %}
+{% if pillar['shorewall'] is defined and 
+      pillar['shorewall']['install'] | default(False) %}
 {% if grains['os_family'] == 'RedHat' %}
 transfere shorewall-core rpm:
   file.managed:
@@ -111,4 +108,8 @@ stop firewalld:
     - enable: False
     - require:
       - service: restart shorewall service
+{% else %}
+nothing to do:
+  test.show_notification:
+    - text: '*** shorewall not enabled for this minion. nothing to do. ***'
 {% endif %}
