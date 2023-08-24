@@ -13,7 +13,7 @@ copia godaddy files:
 
 register host:
   cmd.run:
-    - name: 'python3 /tmp/godaddy_ddns.py %/root/godaddy_secrets'
+    - name: 'python3 /root/godaddy_ddns.py %/root/godaddy_secrets'
 
 delete_secrets:
   cmd.run:
