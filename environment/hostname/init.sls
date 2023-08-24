@@ -1,8 +1,9 @@
+#!jinja|yaml
 #
 # sethostname.sls - configura o hostname de um minion
 #
 
-{%- if not pillar['set_hostname'] | default(False) %}
+{%- if pillar['set_hostname'] | default(False) %}
 {% include 'environment/hostname/sethostname.sls' %}
 {% endif %}
 
