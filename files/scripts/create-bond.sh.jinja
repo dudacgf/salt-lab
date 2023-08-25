@@ -1,0 +1,23 @@
+#
+# pillar sample
+# bonds:
+#   bond0: 
+#     primary: eth-name
+#     secondary: wlan-name
+#     ssid: ssid
+#     key-mgt: wpa-psk
+#     psk: a-psk-secret
+
+
+{% for bond in pillar['bonds'] | default([]) %}
+# cria a interface 
+sudo nmcli connection add type bond con-name {{ bond }} bondifname {{ bond }} mode active-backup primary {{ pillar['bonds'][bond]['primary'] }} +bond.options "fail_over_mac=active,miimon=100,primary_reselect=always,updelay=200"
+# coloca interface ethernet como slave de bond0
+sudo nmcli connection add type ethernet con-name {{ bond }}-e slave-type bond master {{ bond }} ifname {{ pillar['bonds'][bond]['primary'] }}
+# coloca interface wifi como slave de bond0
+sudo nmcli connection add type wifi con-name {{ bond }}-w slave-type bond master {{ bond }} ifname {{ pillar['bonds'][bond]['secondary'] }} ssid {{ pillar['bonds'][bond]['ssid'] }}
+# define parâmetros de segurança da conexão wifi
+sudo nmcli connection modify bond0-w wifi-sec.key-mgmt {{ pillar['bonds'][bond]['key-mgmt'] }} wifi-sec.psk {{ pillar['bonds'][bond]['psk'] }}
+{% endfor %}
+
+# reboot as needed 
