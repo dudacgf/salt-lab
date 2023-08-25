@@ -3,10 +3,10 @@
 #
 #
 
+{% if pillar['netshares'] | default('none') != 'none' %}
 cifs-utils:
   pkg.installed
 
-{% if pillar['netshares'] | default('none') != 'none' %}
 {% for share in pillar['netshares'] | default([]) %}
 "{{ pillar['netshares'][share]['mount'] }}":
   file.directory:
