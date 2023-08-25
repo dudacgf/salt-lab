@@ -6,32 +6,25 @@
 
 {% if pillar['shorewall'] is defined and 
       pillar['shorewall']['install'] | default(False) %}
+
+#
+# redhat 8 and up doesn't offer shorewall anymore
 {% if grains['os_family'] == 'RedHat' %}
-transfere shorewall-core rpm:
-  file.managed:
-    - name: /tmp/shorewall.rpm
-    - source: salt://files/installers/shorewall-5.2.8-0base.noarch.rpm
-    - user: root
-    - unless: test -f /etc/shorewall/zones
+shorewall repo:
+  pkgrepo.managed:
+    - name: 'copr_shorewall'
+    - file: /etc/yum.repos.d/shorewall_copr.repo
+    - humanname: Copr repo for shorewall owned by pgfed
+    - baseurl: https://download.copr.fedorainfracloud.org/results/pgfed/shorewall/fedora-rawhide-x86_64/
+    - gpgcheck: 1
+    - gpgkey: https://download.copr.fedorainfracloud.org/results/pgfed/shorewall/pubkey.gpg
+    - enabled: 1
+{% endif %}
 
-transfere shorewall rpm:
-  file.managed:
-    - name: /tmp/shorewall-core.rpm
-    - source: salt://files/installers/shorewall-core-5.2.8-0base.noarch.rpm
-    - user: root
-    - unless: test -f /etc/shorewall/zones
-
-instala shorewall:
-  cmd.run:
-    - name: dnf install /tmp/shorewall* -y -q
-    - unless: test -f /etc/shorewall/zones
-    - require:
-      - file: transfere shorewall*
-{% elif grains['os_family'] == 'Debian' %}
 instala shorewall:
   pkg.installed:
     - name: shorewall
-{% endif %}
+    - refresh: True
 
 configura shorewall.conf:
   file.managed:
