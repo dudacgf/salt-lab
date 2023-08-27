@@ -4,15 +4,16 @@
 #                 to be used by services
 
 #
-# services currently supported: apache, elasticsearch, kibana, tdns, graylog, squid
+# services currently supported: apache, elasticsearch, kibana, tdns, graylog, squid, salt-api
 {%- set ssl_services = {
                        'apache': {'dir': pillar['pkg_data']['apache']['etc_dir'], 
                                   'user': pillar['pkg_data']['apache']['user'],
                                   'group': pillar['pkg_data']['apache']['group']
                                  },
                        'elasticsearch': {'dir': '/etc/elasticsearch', 'user': 'elastisearch', 'group': 'elasticsearch'},
-                       'kibana': {'dir': '/etc/kibana', 'user': 'kibana', 'group': 'kibana'},
                        'graylog': {'dir': '/etc/graylog', 'user': 'graylog', 'group': 'graylog'},
+                       'kibana': {'dir': '/etc/kibana', 'user': 'kibana', 'group': 'kibana'},
+                       'salt-api': {'dir': '/etc/salt/pki', 'user': 'salt', 'group': 'salt'},
                        'squid': {'dir': '/etc/squid', 'user': 'squid', 'group': 'squid'},
                       }
 %}
@@ -25,18 +26,18 @@
 {%- if pillar[service] | default('none') != 'none' and pillar[service]['ssl_enable'] | default(False) %}
 
 # {{ service }} uses ssl
-mkdir -p {{ ssl_services[service]['dir'] }} 2> /dev/null
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ ssl_services[service]['dir'] }}/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ ssl_services[service]['dir'] }}/ssl
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ ssl_services[service]['dir'] }}/ssl
-chown -R {{ ssl_services[service]['user'] }}:{{ ssl_services[service]['group'] }} {{ ssl_services[service]['dir'] }}/ssl
+mkdir -p {{ ssl_services[service]['dir'] }}/ssl 2> /dev/null
+cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ ssl_services[service]['dir'] }}/ssl/
+cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ ssl_services[service]['dir'] }}/ssl/
+cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ ssl_services[service]['dir'] }}/ssl/
+chown -R {{ ssl_services[service]['user'] }}:{{ ssl_services[service]['group'] }} {{ ssl_services[service]['dir'] }}/ssl/
 {%- endif %}
 {%- endfor %}
 
-{%- if pillar['tdns'] | default('none') != 'none' and pillar['tdns']['ssl_enable'] %}
 #
-# technitium dns
+# technitium dns uses pfx format
 
+{%- if pillar['tdns'] | default('none') != 'none' and pillar['tdns']['ssl_enable'] %}
 mkdir -p /etc/dns/ssl
 
 openssl pkcs12 -export -out /etc/dns/ssl/{{ domainname }}.pfx \
