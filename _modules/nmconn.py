@@ -29,13 +29,15 @@ def get():
         salt minion nmconn.get
 
     '''
+    nmcli.set_lang('C.UTF-8')
     logging.info('estou aqui')
     return_value = {}
     devices = nmcli.device()
     for device in devices:
         interface = device.device
         if interface == 'lo': continue
-        connection = re.sub("\(externally\)\ *", "", device.connection)
+        #connection = re.sub("\(externally\)\ *", "", device.connection)
+        connection = re.sub("\(.*\)\ *", "", device.connection)
         hwaddr = nmcli.device.show(interface)['GENERAL.HWADDR']
         uuid = nmcli.connection.show(connection)['connection.uuid']
         return_value[interface] = {
@@ -55,6 +57,7 @@ def get_uuid(iface=None):
         salt minion nmconn.get_uuid eth0
 
     '''
+    nmcli.set_lang('C.UTF-8')
     # marreta: dá um up na interface para pegar o uuid enquanto ela tenta se ativar 
     for n in nmcli.connection():
       nmcli.connection.up(n.name, wait=0)
@@ -67,3 +70,39 @@ def get_uuid(iface=None):
       return False
     return None
 
+def get_cmdline(network=None):
+    '''
+    returns nmcli line command to set a static ip address from interface pillar values
+
+    network: virtual network that will have its ip set as static
+
+    returns: 
+      a nmcli cmd line if everything is ok
+      nothing if not
+    '''
+
+    nmcli.set_lang('C.UTF-8')
+    try:
+        hwaddr = __pillar__['interfaces'][network]['hwaddr']
+        nic = __salt__['ifaces.get_iface_name'](hwaddr)
+        connUUID = get_uuid(nic)
+
+        addr = __pillar__['interfaces'][network]['ip4_address']
+        t = __pillar__['interfaces'][network]['ip4_netmask']
+        mask = __salt__['network.calc_net'](addr, t)
+        mask = re.sub('(.*/)', '', mask)
+        if 'ip4_gateway' in __pillar__['interfaces'][network]:
+            gateway = ' ipv4.gateway ' + __pillar__['interfaces'][network]['ip4_gateway']
+        else:
+            gateway = ''
+        if 'ip4_dns' in __pillar__['interfaces'][network]:
+            d = __pillar__['interfaces'][network]['ip4_dns']
+            dns = ' ipv4.dns ' + ','.join(d)
+        else:
+            dns = ''
+
+        cmdSetConIP = "nmcli con mod '" + connUUID + "' ipv4.address " + addr + "/" + mask + gateway + dns + " ipv4.method manual" 
+
+        return cmdSetConIP
+    except Exception as e: 
+        return e.message, e.args
