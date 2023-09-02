@@ -3,8 +3,12 @@
 # 
 
 #
-## basic packages
+## clean packager cache before anything
+{{ pillar['pkg_data']['packager'] }} clean all:
+  cmd.run
+
 # 
+## basic packages
 minimal:
   pkg.installed:
     - pkgs:
@@ -19,10 +23,11 @@ minimal:
 prepara-pip:
   pkg.installed:
     - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
+    - refresh: True
 
 minimal salt-minion:
   cmd.run:
-    - name: 'salt-pip install netifaces pycurl tornado'
+    - name: 'salt-pip -q install netifaces pycurl tornado'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
@@ -32,8 +37,7 @@ prepara-pip_remove:
 {% endif %}
 
 #
-## is this an vmware vm?
-#
+## is this a vmware vm?
 {% if grains['manufacturer'] == 'VMware, Inc.' %}
 open-vm-tools:
   pkg.installed
