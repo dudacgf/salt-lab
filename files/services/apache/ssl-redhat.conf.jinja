@@ -23,7 +23,7 @@
 
         SSLEngine on
 
-{%- if grains['os_family'] == 'RedHat' and grains['osmajorelease'] > 7 %}
+{%- if grains['os_family'] == 'RedHat' and grains['osmajorrelease'] > 7 %}
         Protocols h2 http/1.1
 {%- endif %}
         SSLCertificateFile {{ etc_dir }}/ssl/cert.pem
