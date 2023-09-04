@@ -158,7 +158,7 @@ graylog selinux:
 graylog tmp ca-root cert:
   file.managed:
     - name: /tmp/chain.pem
-    - source: {{ sslfile.chain() }}
+    - source: {{ salt.sslfile.chain() }}
 
 graylog import ca-root chain:
   keystore.managed:
