@@ -1,0 +1,8 @@
+#!/bin/bash
+
+{%- if pillar['mongodb']['auth'] | default(False) %}
+echo -en "show dbs" | mongosh --quiet -u {{ pillar['mongodb']['admin_user'] }} -p {{ pillar['mongodb']['admin_pw'] }}
+{%- else %}
+echo -en "show dbs" | mongosh --quiet 
+{%- endif %}
+echo
