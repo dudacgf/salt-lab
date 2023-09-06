@@ -1,13 +1,22 @@
 #
 # Adiciona o repositório do elasticsearch
 {% if grains['os_family'] == 'Debian' %}
+/etc/apt/trusted.gpg.d/elasticsearch.gpg:
+  file.managed:
+    - source: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    - skip_verify: True
+    - makedirs: True
+
 add elasticsearch repo:
   pkgrepo.managed:
-    - name: deb http://artifacts.elastic.co/packages/7.x/apt stable main
-    - humanname: Elasticsearch repository for 7.x packages
+    - name: "deb [signed-by=/etc/apt/trusted.gpg.d/elastichsearch.gpg arch=amd64] http://artifacts.elastic.co/packages/8.x/apt stable main"
+    - humanname: Elasticsearch repository for 8.x packages
     - dist: stable
     - file: /etc/apt/sources.list.d/elasticsearch.list
-    - key_url: salt://files/env/GPG-KEY-elasticsearch
+    - key_url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+    - aptkey: False
+    - require:
+      - file: /etc/apt/trusted.gpg.d/elasticsearch.gpg
 {% elif grains['os_family'] == 'RedHat' %}
 # força aceitação de sha-1 signed keys
 permit sha1 keys:
@@ -18,7 +27,7 @@ add elasticsearch repo:
   pkgrepo.managed:
     - name: elasticsearch
     - enabled: True
-    - baseurl: https://artifacts.elastic.co/packages/7.x/yum
+    - baseurl: https://artifacts.elastic.co/packages/8.x/yum
     - gpgcheck: 1
     - gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - require:
@@ -48,7 +57,8 @@ elastic_install:
     - mode: 660
     - backup: minion
 
-{% if pillar['elasticsearch']['ssl_enable'] | default(False) %}
+{% if pillar['elasticsearch'] is defined and 
+      pillar['elasticsearch']['ssl_enable'] | default(False) %}
 # chaves de criptografia para tráfego com clientes
 /etc/elasticsearch/pki/chain.pem:
   file.managed:
@@ -104,7 +114,9 @@ elasticsearch.service:
 
 #
 # configura as senhas dos usuários padrão
-{%- if pillar['elasticsearch']['auth'] | default(False) and not grains['flag_elasticsearch_auth_set'] | default(False) %}
+{%- if pillar['elasticsearch'] is defined and
+       pillar['elasticsearch']['auth'] | default(False) and not 
+       grains['flag_elasticsearch_auth_set'] | default(False) %}
 configura elasticsearch passwords:
   cmd.script:
     - source: salt://files/scripts/elasticsearch-setup-passwords.sh
