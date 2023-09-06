@@ -36,6 +36,21 @@ flag_remi_installed:
       - cmd: enable_remi_81
 
 {% endif %}
+{% elif grains['os'] == 'Debian' and grains['osmajorrelease'] < 12 %}
+/etc/apt/trusted.gpg.d/php.gpg:
+  file.managed:
+    - source: https://packages.sury.org/php/apt.gpg
+    - skip_verify: True
+    - makedirs: True
+
+repo php-sury:
+  pkgrepo.managed:
+    - name: "deb [signed-by=/etc/apt/trusted.gpg.d/php-sury.gpg arch=amd64] https://packages.sury.org/php/ bullseye main"
+    - baseurl: "https://packages.sury.org/php"
+    - humanname: Debian - PHP Sury
+    - file: /etc/apt/sources.list.d/php-sury.list
+    - key_url: https://packages.sury.org/php/apt.gpg
+    - aptkey: False
 {% endif %}
 
 #
