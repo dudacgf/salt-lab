@@ -105,4 +105,4 @@ def get_cmdline(network=None):
 
         return cmdSetConIP
     except Exception as e: 
-        return e.message, e.args
+        return e
