@@ -66,7 +66,7 @@ nextcloud habilita fulltextsearch:
 
 nextcloud elastic ingest-attachment install:
   cmd.run:
-    - name: /usr/share/elasticsearch/bin/elastisearch-plugin install ingest-attachment
+    - name: /usr/share/elasticsearch/bin/elasticsearch-plugin install ingest-attachment
     - runas: elasticsearch
 
 {% set ldap_configs = pillar['nextcloud']['ldap_config'] | default({}) %}

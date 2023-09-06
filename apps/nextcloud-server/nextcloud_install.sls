@@ -16,7 +16,7 @@ os failure:
 nextcloud download:
   archive.extracted:
     - name: /var/www/
-    - source: https://download.nextcloud.com/server/releases/latest.zip
+    - source: salt://files/services/nextcloud/latest.zip
     - skip_verify: True
     - user: {{ pillar['pkg_data']['apache']['user'] }}
     - group: {{ pillar['pkg_data']['apache']['group'] }}
@@ -36,7 +36,7 @@ nextcloud cria db e user:
 
 nextcloud initialize:
   cmd.run:
-    - name: echo "{{ pillar['nextcloud']['admin_password'] }}" | php /var/www/nextcloud/occ maintenance:install --database "mysql" --database-name "{{ db_name }}" --database-user "{{ db_user }}" --database-pass "{{ db_password }}"
+    - name: echo "{{ pillar['nextcloud']['admin_password'] }}" | php /var/www/nextcloud/occ maintenance:install --database "mysql" --database-name '{{ db_name }}' --database-user '{{ db_user }}' --database-pass '{{ db_password }}'
     - runas: {{ pillar['pkg_data']['apache']['user'] }}
 
 nextcloud create admin:
@@ -44,7 +44,7 @@ nextcloud create admin:
     - name: php /var/www/nextcloud/occ user:add --password-from-env --group admin --display-name {{ pillar['nextcloud']['admin_user'] }} {{ pillar['nextcloud']['admin_user'] }}
     - runas: {{ pillar['pkg_data']['apache']['user'] }}
     - env: 
-      - OC_PASS: "{{ pillar['nextcloud']['admin_password'] }}"
+      - OC_PASS: '{{ pillar['nextcloud']['admin_password'] }}'
 
 flag_nextcloud_users:
   grains.present:

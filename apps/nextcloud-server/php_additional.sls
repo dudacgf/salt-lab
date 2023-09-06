@@ -19,8 +19,22 @@ ajusta php-fpm ini:
     - source: salt://files/services/nextcloud/nextcloud-php_fpm_www_conf.patch
 {% endif %}
 
-ajusta php ini:
-  file.patch:
-    - name: {{ pillar['pkg_data']['php']['php_ini'] }}
-    - source: salt://files/services/nextcloud/nextcloud_php_ini.patch
-
+#
+# ajusta php.ini
+{% set php_ini = salt.cmd.shell("php --ini | grep -i 'loaded configuration file' | sed -- 's/.*: *//'") | 
+                 default(pillar['pkg_data']['php']['php_ini']) %}
+php ini max_execution_time:
+  file.replace:
+    - name: {{ php_ini }}
+    - pattern: max_execution_time = 30
+    - repl: max_execution_time = 60
+php ini memory_limit:
+  file.replace:
+    - name: {{ php_ini }}
+    - pattern: memory_limit = 128M
+    - repl: memory_limit = 512M
+php ini date.timezone:
+  file.replace:
+    - name: {{ php_ini }}
+    - pattern: date.timezone =
+    - repl: date.timezone = 'America/Sao_Paulo'

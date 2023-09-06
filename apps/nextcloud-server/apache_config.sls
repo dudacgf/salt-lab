@@ -5,10 +5,28 @@
 {% endif %}
 # configuração apache para o nextcloud
 nextcloud copia apache conf:
-  file.patch:
+  file.replace:
     - name: {{ ssl_file }}
-    - source: salt://files/services/apache/nextcloud-server-ssl-conf.patch.jinja
-    - template: jinja
+    - pattern: 'DocumentRoot /var/www/html'
+    - repl: |
+        Header always set Strict-Transport-Security "max-age=15552000; includeSubDomains"
+                DocumentRoot /var/www/nextcloud
+
+                <location />
+                    <LimitExcept GET POST HEAD PUT PROPFIND>
+                        deny from all
+                    </LimitExcept>
+                </location>
+
+                <Directory /var/www/nextcloud/>
+                  Require all granted
+                  AllowOverride All
+                  Options FollowSymLinks MultiViews
+
+                  <IfModule mod_dav.c>
+                    Dav off
+                  </IfModule>
+                </Directory>
 
 nextcloud reload apache:
   service.running:
