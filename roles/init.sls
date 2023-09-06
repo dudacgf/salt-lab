@@ -3,6 +3,7 @@
 #                           e chama os state files correspondentes
 
 {% set roles = pillar.get('roles', {}) %}
+{% if roles %}
 {% for role in roles %}
 
 # tem coisa que tá em roles
@@ -11,3 +12,7 @@
 
 
 {% endfor %}
+{% else %}
+'== no roles to be installed ==':
+  test.nop
+{% endif %}

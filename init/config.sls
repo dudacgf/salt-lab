@@ -190,6 +190,26 @@ no redefine proxy:
 ### 6. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
 {%- if hoi[mname]['highstate_on_init'] | default(False) %}
+
+## aguarda minion voltar ao ar
+{% for i in range(0,20) %}
+sleep {{ pillar['sleep_a_while'] }}:
+  module.run:
+    - name: test.sleep
+    - length: {{ pillar['sleep_a_while'] }}
+
+{% set rc = salt['cmd.run']('salt ' + mname + ' test.ping --out yaml') | load_yaml %}
+{% if rc[mname] %}
+  {% break %}
+{% endif %}
+
+{% endfor %}
+
+aguarda:
+  module.run:
+    - name: test.sleep
+    - length: {{ pillar['sleep_a_while'] }}
+
 "{{ mname }} === will execute high state ===":
   test.nop
 
