@@ -1,4 +1,11 @@
-{%- if grains['os_family'] == 'RedHat' and pillar['selinux_mode'] | default('enforcing') == 'enforcing' and not pillar['flag_mongodb_selinux_policy_set'] | default(False) %}
+{%- if grains['os_family'] == 'RedHat' and 
+       pillar['selinux_mode'] | default('enforcing') == 'enforcing' and not 
+       pillar['flag_mongodb_selinux_policy_set'] | default(False) %}
+
+selinux stop mongod:
+  service.dead:
+    - name: mongod.service
+
 /tmp/mongodb_selinux.pp:
   file.managed:
     - name: /tmp/mongodb_selinux.pp
@@ -13,5 +20,6 @@ mongod selinux:
 flag_mongodb_selinux_policy_set:
   grains.present:
     - value: True
+
 {%- endif %}
 

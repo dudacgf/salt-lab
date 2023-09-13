@@ -9,14 +9,15 @@ mongodb repo:
     - humanname: MongoDB repository 6.0 version
     - file: /etc/apt/sources.list.d/mongodb-org-6.0.list
     - key_url: https://www.mongodb.org/static/pgp/server-6.0.asc
+    - aptkey: False
 {% elif grains['os_family'] == 'RedHat' %}
 mongodb repo:
   pkgrepo.managed:
-    - name: mongodb-org-5.0
+    - name: mongodb-org-6.0
     - humanname: 'MongoDB Repository'
-    - baseurl: https://repo.mongodb.org/yum/redhat/8/mongodb-org/5.0/x86_64/
+    - baseurl: https://repo.mongodb.org/yum/redhat/8/mongodb-org/6.0/x86_64/
     - gpgcheck: 1
-    - gpgkey: https://www.mongodb.org/static/pgp/server-5.0.asc
+    - gpgkey: https://www.mongodb.org/static/pgp/server-6.0.asc
 {% else %}
 mongodb failure:
   test.fail_without_changes:

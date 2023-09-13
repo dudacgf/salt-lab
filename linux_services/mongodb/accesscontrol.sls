@@ -21,39 +21,25 @@ mongodb access control nothing to do:
       - ')'
       - 'exit'
 
-stop mongod:
-  service.dead:
-    - name: mongod.service
-
-mongod background running:
-  cmd.run:
-    - name: 'mongod --port 27017 --dbpath /var/lib/mongo/ --pidfilepath /tmp/m.pid 2>&1 > /dev/null'
-    - runas: mongod
-    - bg: True
-    - require:
-      - file: /tmp/mongodb_access_control.mql
-      - service: stop mongod
-
 configura acl:
   cmd.run:
     - name: 'mongosh --quiet < /tmp/mongodb_access_control.mql'
     - require:
-      - cmd: mongod background running
-
-mongod stop background:
-  cmd.run:
-    - name: 'kill -15 `cat /tmp/m.pid`'
+      - file: /tmp/mongodb_access_control.mql
 
 ajusta mongod.conf:
-  file.patch:
+  file.replace:
     - name: /etc/mongod.conf
-    - source: salt://files/services/mongod_auth.patch
+    - pattern: '^#security:'
+    - repl: 'security.authorization: enabled'
     - require:
       - cmd: configura acl
 
 flag_mongodb_acctl_set:
   grains.present:
     - value: True
+    - require:
+      - file: ajusta mongod.conf
 
 reinicia mongod service acctl:
   service.running:
