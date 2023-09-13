@@ -8,12 +8,15 @@
 #  (c) ecgf - mar/2023
 #
 
+{% import "utils/macros.sls" as m %}
+
 {% for minion in pillar['minions'] | default([]) %}
 {% set mname = pillar['minions'][minion]['name'] %}
 
 #
 ### 0. Proxy - defines proxy for apt/yum and salt-minion
 #
+
 {% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get proxy') | load_yaml %}
 {% if proxy[mname] != 'none' %}
 {{ mname }} define proxy minion:
@@ -44,6 +47,7 @@
 #
 ### 1. things needed for the following steps
 #
+{{ m.wait_minion(mname, 'b_es') }}
 
 {{ mname }} essentials:
   salt.state:
@@ -112,6 +116,7 @@
 
 #
 ## configures static ip for the new interfaces (if needed)
+{{ m.wait_minion(mname, 'b-ei') }}
 {{ mname }} set extra ips:
   salt.state:
     - sls: init.setextraips
@@ -192,23 +197,7 @@ no redefine proxy:
 {%- if hoi[mname]['highstate_on_init'] | default(False) %}
 
 ## aguarda minion voltar ao ar
-{% for i in range(0,20) %}
-sleep {{ pillar['sleep_a_while'] }}:
-  module.run:
-    - name: test.sleep
-    - length: {{ pillar['sleep_a_while'] }}
-
-{% set rc = salt['cmd.run']('salt ' + mname + ' test.ping --out yaml') | load_yaml %}
-{% if rc[mname] %}
-  {% break %}
-{% endif %}
-
-{% endfor %}
-
-aguarda:
-  module.run:
-    - name: test.sleep
-    - length: {{ pillar['sleep_a_while'] }}
+{{ m.wait_minion(mname, 'b-hs') }}
 
 "{{ mname }} === will execute high state ===":
   test.nop
