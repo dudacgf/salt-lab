@@ -1,25 +1,23 @@
 #!/bin/bash
-
+#
 {%- set ns = namespace(protocol='http') %}
-{%- if pillar['elasticsearch']['ssl_enable'] | default(False) %}
+{%- if pillar['elasticsearch'] is defined and 
+       pillar['elasticsearch']['ssl_enable'] | default(False) %}
    {%- set ns.protocol = 'https' %}
 {%- endif %}
-{%- if pillar['elasticsearch']['auth'] | default(False) %}
+#
+{%- if pillar['elasticsearch'] is defined and 
+       pillar['elasticsearch']['auth'] | default(False) %}
 echo -e "==== apm_system ==="
-curl -k -s -u "apm_system:{{ pillar['elasticsearch']['passwords']['apm_system'] }}" -XGET {{ ns.protocol }}://localhost:9200 
+curl -k -s -XGET {{ ns.protocol }}://apm_system:{{ pillar['elasticsearch']['passwords']['apm_system'] }}@localhost:9200 
 echo -e "\n==== kibana_system ==="
-curl -k -s -u "kibana_system:{{ pillar['elasticsearch']['passwords']['kibana_system'] }}" -XGET {{ ns.protocol }}://localhost:9200 
-echo -e "\n==== kibana ==="
-curl -k -s -u "kibana:{{ pillar['elasticsearch']['passwords']['kibana'] }}" -XGET {{ ns.protocol }}://localhost:9200 
-echo -e "\n==== logstash ==="
-curl -k -s -u "logstash_system:{{ pillar['elasticsearch']['passwords']['logstash_system'] }}" -XGET {{ ns.protocol }}://localhost:9200 
+curl -k -s -XGET {{ ns.protocol }}://kibana_system:{{ pillar['elasticsearch']['passwords']['kibana_system'] }}@localhost:9200 
 echo -e "\n==== beats_system ==="
-curl -k -s -u "beats_system:{{ pillar['elasticsearch']['passwords']['beats_system'] }}" -XGET {{ ns.protocol }}://localhost:9200 
-echo -e "\n==== remote_monitoring_user ==="
-curl -k -s -u "remote_monitoring_user:{{ pillar['elasticsearch']['passwords']['remote_monitoring_user'] }}" -XGET {{ ns.protocol }}://localhost:9200/_stats 
+curl -k -s -XGET {{ ns.protocol }}://beats_system:{{ pillar['elasticsearch']['passwords']['beats_system'] }}@localhost:9200 
 echo -e "\n==== elastic ==="
-curl -k -s -u "elastic:{{ pillar['elasticsearch']['passwords']['elastic'] }}" -XGET {{ ns.protocol }}://localhost:9200 
+curl -k -s -XGET {{ ns.protocol }}://elastic:{{ pillar['elasticsearch']['passwords']['elastic'] }}@localhost:9200 
 echo
 {%- else %}
 curl -k -s -XGET {{ ns.protocol }}://localhost:9200
 {%- endif %}
+

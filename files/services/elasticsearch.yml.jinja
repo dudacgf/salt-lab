@@ -34,15 +34,15 @@ xpack.security.enabled: true
 
 xpack.security.transport.ssl.enabled: true
 xpack.security.transport.ssl.verification_mode: certificate
-xpack.security.transport.ssl.key: /etc/elasticsearch/pki/privkey.pem
-xpack.security.transport.ssl.certificate: /etc/elasticsearch/pki/fullchain.pem
-xpack.security.transport.ssl.certificate_authorities: [ '/etc/elasticsearch/pki/chain.pem' ]
+xpack.security.transport.ssl.key: /etc/elasticsearch/ssl/privkey.pem
+xpack.security.transport.ssl.certificate: /etc/elasticsearch/ssl/fullchain.pem
+xpack.security.transport.ssl.certificate_authorities: [ '/etc/elasticsearch/ssl/chain.pem' ]
 
 xpack.security.http.ssl.enabled: true
 xpack.security.http.ssl.verification_mode: certificate
-xpack.security.http.ssl.key: /etc/elasticsearch/pki/privkey.pem
-xpack.security.http.ssl.certificate: /etc/elasticsearch/pki/fullchain.pem
-xpack.security.http.ssl.certificate_authorities: [ '/etc/elasticsearch/pki/chain.pem' ]
+xpack.security.http.ssl.key: /etc/elasticsearch/ssl/privkey.pem
+xpack.security.http.ssl.certificate: /etc/elasticsearch/ssl/fullchain.pem
+xpack.security.http.ssl.certificate_authorities: [ '/etc/elasticsearch/ssl/chain.pem' ]
 {%- else %}
 #
 # TODO: set xpack security
