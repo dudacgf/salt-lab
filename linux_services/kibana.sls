@@ -8,8 +8,8 @@
 {% if grains['os_family'] == 'Debian' %}
 add elasticsearch repo:
   pkgrepo.managed:
-    - name: deb http://artifacts.elastic.co/packages/7.x/apt stable main
-    - humanname: Elasticsearch repository for 7.x packages
+    - name: deb http://artifacts.elastic.co/packages/8.x/apt stable main
+    - humanname: Elasticsearch repository for 8.x packages
     - dist: stable
     - file: /etc/apt/sources.list.d/elasticsearch.list
     - key_url: salt://files/env/GPG-KEY-elasticsearch
@@ -23,7 +23,7 @@ add elasticsearch repo:
   pkgrepo.managed:
     - name: elasticsearch
     - enabled: True
-    - baseurl: https://artifacts.elastic.co/packages/7.x/yum
+    - baseurl: https://artifacts.elastic.co/packages/8.x/yum
     - gpgcheck: 1
     - gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - require:
