@@ -1,8 +1,8 @@
 #
-## graylog.sls - instala e configura o serviço graylog para análise de logs
+## graylog.sls - installs e setups graylog service
 # 
 
-# Adiciona o repositório do graylog
+# adds graylog repo
 {% if grains['os_family'] == 'Debian' %}
 graylog repo:
   pkgrepo.managed:
@@ -34,15 +34,15 @@ graylog failure:
     - failhard: true
 {% endif %}
 
-# o jre é prerequisito para o graylog mas não é instalado como dependência. 
+# o jre is a prerequisite to graylog but is not installed as a dependency 
 {{ pillar['pkg_data']['jdk']['name'] }}:
   pkg.installed
 
-# manda instalar só o integrations-plugins porque ele instala também o graylog-server
+# install 
 graylog-server: 
   pkg.installed
   
-# pacotes necessários para os relatórios:
+# other packages needed by reports
 instala pacotes relatório:
   pkg.installed:
     - pkgs:
@@ -57,34 +57,35 @@ instala pacotes relatório:
       - fontconfig
     {%- endif %}
 
-{% if pillar['graylog']['ssl_enable'] | default(False) %}
-# chaves de criptografia para tráfego com clientes
-/etc/graylog/server/pki/cert.pem:
+{% if pillar['graylog'] is defined and 
+      pillar['graylog']['ssl_enable'] | default(False) %}
+# certificates 
+/etc/graylog/server/ssl/cert.pem:
   file.managed:
     - source: {{ salt.sslfile.cert() }}
     - makedirs: true
     - dir_mode: 770
-    - user: root
+    - user: graylog
     - group: graylog
     - mode: 660
     - backup: minion
 
-/etc/graylog/server/pki/privkey.pem:
+/etc/graylog/server/ssl/privkey.pem:
   file.managed:
     - source: {{ salt.sslfile.privkey() }}
     - makedirs: true
     - dir_mode: 770
-    - user: root
+    - user: graylog
     - group: graylog
     - mode: 660
     - backup: minion
 {% endif %}
 
-# instala pwgen se necessário
+# install pwgen
 pwgen:
   pkg.installed
 
-# arquivo de configuração do serviço
+# configuration file
 /etc/graylog/server/server.conf:
   file.managed:
     - source: salt://files/services/graylog-server.conf.jinja
@@ -97,28 +98,28 @@ pwgen:
       - pkg: pwgen
 
 #
-# para o graylog para ajustar usuário
-{% if pillar['mongodb']['auth'] | default(False) %}
+# adds graylog user if mongodb uses authentication
+{% if pillar['mongodb'] is defined and 
+      pillar['mongodb']['auth'] | default(False) %}
 stop graylog now:
   service.dead:
     - name: graylog-server.service
 
-# adiciona usuário graylog ao mongodb
 graylog mongodb access control:
   file.managed:
     - name: /tmp/mongodb_access_control.mql
     - user: mongod
     - group: mongod
-    - contents: 
-      - 'use graylog;'
-      - 'db.createUser('
-      - '  {'
-      - '    user: "{{ pillar['graylog']['mongodb_user'] }}",'
-      - '    pwd: "{{ pillar['graylog']['mongodb_pw'] }}",'
-      - '    roles: [ { role: "root", db: "admin" } ]'
-      - '  }'
-      - ')'
-      - 'exit'
+    - contents: |
+         use graylog;
+         db.createUser(
+           {
+             user: "{{ pillar['graylog']['mongodb_user'] }}",
+             pwd: "{{ pillar['graylog']['mongodb_pw'] }}",
+             roles: [ { role: "root", db: "admin" } ]
+           }
+         )
+         exit
 
 graylog configura acl:
   cmd.run:
@@ -127,16 +128,17 @@ graylog configura acl:
       - service: stop graylog now
       - file: /tmp/mongodb_access_control.mql
 
-graylog remove tmp access control:
-  file.absent:
-    - name: /tmp/mongodb_access_control.mql
-    - require:
-      - file: graylog mongodb access control
+#graylog remove tmp access control:
+#  file.absent:
+#    - name: /tmp/mongodb_access_control.mql
+#    - order: last
+#    - require:
+#      - cmd: graylog configura acl
 {% endif %}
 
 {% if grains['os_family'] == 'RedHat' %}
 #
-# abre porta no firewall
+# opens firewall 
 graylog firewalld port:
   cmd.run:
     - name: 'firewall-cmd --permanent --add-port=9000/tcp'
@@ -146,39 +148,40 @@ graylog firewalld reload:
     - name: 'firewall-cmd --reload'
 
 #
-# configura selinux
+# selinux
 graylog selinux:
   cmd.run:
     - name: semanage port -m -t http_port_t -p tcp 9000
 
 {% endif %}
 
-{% if pillar['elasticsearch']['ssl_enable'] | default(False) %}
-# importa chain.pem na java keystore
+# if elasticsearch uses ssl/tls imports chain.pem into java keystore
+{% if pillar['elasticsearch'] is defined and
+      pillar['elasticsearch']['ssl_enable'] | default(False) %}
 graylog tmp ca-root cert:
   file.managed:
     - name: /tmp/chain.pem
     - source: {{ salt.sslfile.chain() }}
+    - mode: 440
 
 graylog import ca-root chain:
   keystore.managed:
     - name: /etc/pki/ca-trust/extracted/java/cacerts
     - passphrase: changeit
     - entries:
-      - alias: ca_root
-        certificate: /tmp/chain.pem
+          - alias: ca_root
+            certificate: /tmp/chain.pem
     - require:
-      - file: graylog tmp ca-root-chain
+      - file: graylog tmp ca-root cert
 
-# configura sysconfig para apontar para a keystore
+# patches sysconfig to point to java keystore
 graylog sysconfig patch:
   file.patch:
     - name: /etc/sysconfig/graylog-server
     - source: salt://files/services/graylog-server.sysconfig.patch
 {% endif %}
 
-#
-# ajusta o serviço graylog
+# run the service
 graylog-server.service:
   service.running:
     - enable: true
