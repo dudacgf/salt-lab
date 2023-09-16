@@ -1,6 +1,12 @@
 #
 # adds elasticsearch repo
-{% if grains['os_family'] == 'Debian' %}
+
+{%- if pillar['elasticsearch'] is defined %}
+    {%- set version = pillar['elasticsearch']['version'] | default('8.x') %}
+{%- else %}
+    {%- set version = '8.x' %}
+{% endif %}
+{%- if grains['os_family'] == 'Debian' %}
 /etc/apt/trusted.gpg.d/elasticsearch.gpg:
   file.managed:
     - source: https://artifacts.elastic.co/GPG-KEY-elasticsearch
@@ -9,16 +15,16 @@
 
 add elasticsearch repo:
   pkgrepo.managed:
-    - name: "deb [signed-by=/etc/apt/trusted.gpg.d/elastichsearch.gpg arch=amd64] http://artifacts.elastic.co/packages/8.x/apt stable main"
-    - humanname: Elasticsearch repository for 8.x packages
+    - name: "deb [signed-by=/etc/apt/trusted.gpg.d/elastichsearch.gpg arch=amd64] http://artifacts.elastic.co/packages/{{ version }}/apt stable main"
+    - humanname: Elasticsearch repository for {{ version }} packages
     - dist: stable
     - file: /etc/apt/sources.list.d/elasticsearch.list
     - key_url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - aptkey: False
     - require:
       - file: /etc/apt/trusted.gpg.d/elasticsearch.gpg
-{% elif grains['os_family'] == 'RedHat' %}
-# I don't know if this is needed or not in version 8
+{%- elif grains['os_family'] == 'RedHat' %}
+# I don't know if this is needed yet (it is)
 permit sha1 keys:
   cmd.run:
     - name: update-crypto-policies --set LEGACY
@@ -27,12 +33,12 @@ add elasticsearch repo:
   pkgrepo.managed:
     - name: elasticsearch
     - enabled: True
-    - baseurl: https://artifacts.elastic.co/packages/8.x/yum
+    - baseurl: https://artifacts.elastic.co/packages/{{ version }}/yum
     - gpgcheck: 1
     - gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - require:
       - cmd: permit sha1 keys
-{% else %}
+{%- else %}
 failure:
   test.fail_without_changes:
     - text: '*** elasticsearch: OS not supported. Will not install ***'
@@ -47,3 +53,9 @@ elastic_install:
     - require:
       - add elasticsearch repo
 
+{%- if grains['os_family'] == 'Redhat' %}
+# restaura sha-1 keys
+restore crypto-policies:
+  cmd.run:
+    - name: update-crypto-policies --set DEFAULT
+{%- endif %}
