@@ -61,5 +61,6 @@ mongod remove temp cert file:
     - name: /tmp/cert+key.pem
     - require:
       - file: mongod copia cert+key file
+    - order: last
 {%- endif %}
 
