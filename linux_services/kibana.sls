@@ -5,11 +5,14 @@
 
 #
 # Adiciona o repositório do elasticsearch
+{%- if pillar['kibana'] is defined %}
+    {%- set version = pillar['kibana']['version'] | default('8.x') %}
+{%- endif %}
 {% if grains['os_family'] == 'Debian' %}
 add elasticsearch repo:
   pkgrepo.managed:
-    - name: deb http://artifacts.elastic.co/packages/8.x/apt stable main
-    - humanname: Elasticsearch repository for 8.x packages
+    - name: deb http://artifacts.elastic.co/packages/{{ version }}/apt stable main
+    - humanname: Elasticsearch repository for {{ version }} packages
     - dist: stable
     - file: /etc/apt/sources.list.d/elasticsearch.list
     - key_url: salt://files/env/GPG-KEY-elasticsearch
@@ -23,7 +26,7 @@ add elasticsearch repo:
   pkgrepo.managed:
     - name: elasticsearch
     - enabled: True
-    - baseurl: https://artifacts.elastic.co/packages/8.x/yum
+    - baseurl: https://artifacts.elastic.co/packages/{{ version }}/yum
     - gpgcheck: 1
     - gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - require:
@@ -38,6 +41,13 @@ failure:
 # instala o kibana
 kibana:
   pkg.installed
+
+{%- if grains['os_family'] == 'RedHat' %}
+# restore default crypto policy
+restore crypto policies:
+  cmd.run:
+    - name: update-crypto-policies --set DEFAULT
+{%- endif %}
 
 # arquivo de configuração do kibana
 kibana.yml:
