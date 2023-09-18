@@ -23,23 +23,22 @@
 {%- set domainname = hostname + '.' + domain %}
 
 {%- for service in ssl_services %}
-{%- if pillar[service] | default('none') != 'none' and pillar[service]['ssl_enable'] | default(False) %}
+{%- if pillar[service] is defined and pillar[service]['ssl_enable'] | default(False) %}
 
 # {{ service }} uses ssl
 mkdir -p {{ ssl_services[service]['dir'] }}/ssl 2> /dev/null
 cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ ssl_services[service]['dir'] }}/ssl/
 cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ ssl_services[service]['dir'] }}/ssl/
 cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ ssl_services[service]['dir'] }}/ssl/
-chown -R {{ ssl_services[service]['user'] }}:{{ ssl_services[service]['group'] }} {{ ssl_services[service]['dir'] }}/ssl/
+if id -u {{ ssl_services[service]['user'] }} > /dev/null 2>&1; then 
+   chown -R {{ ssl_services[service]['user'] }}:{{ ssl_services[service]['group'] }} {{ ssl_services[service]['dir'] }}/ssl/
+fi
 {%- endif %}
 {%- endfor %}
 
-#
+{%- if pillar['tdns'] is defined and pillar['tdns']['ssl_enable'] %}
 # technitium dns uses pfx format
-
-{%- if pillar['tdns'] | default('none') != 'none' and pillar['tdns']['ssl_enable'] %}
 mkdir -p /etc/dns/ssl
-
 openssl pkcs12 -export -out /etc/dns/ssl/{{ domainname }}.pfx \
     -inkey /etc/letsencrypt/live/{{ domainname }}/privkey.pem \
     -in /etc/letsencrypt/live/{{ domainname }}/cert.pem \
