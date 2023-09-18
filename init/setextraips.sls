@@ -33,18 +33,12 @@ nmcli set ip address {{ network }}:
  cmd.run:
    - name: "{{ cmdSetConIP }}"
 
-{%- set nic = salt['ifaces.get_iface_name'](pillar['interfaces'][network]['hwaddr']) %}
-nmcli reapply {{ network }}:
- cmd.run:
-   - name: nmcli device reapply {{ nic }}
-
 desabilita flag tudo ok {{ network }}:
   grains.present:
     - name: flag_tudo_ok
     - value: False
     - onfail: 
       - cmd: nmcli set ip address {{ network }}
-      - cmd: nmcli reapply {{ network }}
 
 {% endif %} 
 {% endfor %}
@@ -55,14 +49,5 @@ flag_static_extra_ips_set:
     - onlyif:
       - fun: match.grain
         tgt: 'flag_tudo_ok:True'
-
-
-reboot setextraips {{ grains['id'].split('.')[0] }}:
-  cmd.run:
-    - name: /bin/bash -c 'sleep 5; shutdown -r now'
-    - bg: True
-    - onlyif: 
-      - fun: match.grain
-        tgt: 'flag_static_extra_ips_set:True'
 
 {% endif %} # flag_static_ip_set

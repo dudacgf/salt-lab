@@ -45,7 +45,14 @@
 {% endif %}
 
 #
-### 1. things needed for the following steps
+### 1. os_specific initialization (repos, yum/apt settings etc)
+{{ mname }} os_specific:
+   salt.state:
+     - sls: init.os_specific
+     - tgt: {{ mname }}
+
+#
+### 2. things needed for the following steps
 #
 {{ m.wait_minion(mname, 'b_es') }}
 
@@ -62,13 +69,6 @@
     - timeout: 240
     - require:
       - salt: {{ mname }} essentials
-
-#
-### 2. os_specific initialization (repos, yum/apt settings etc)
-{{ mname }} os_specific:
-   salt.state:
-     - sls: init.os_specific
-     - tgt: {{ mname }}
 
 #
 ### 3. NetworkManager
@@ -126,18 +126,14 @@
       - salt: {{ mname }} add interfaces
 
 #
-## waits (setextraips reboots the minion)
-{{ mname }} aguarda extra ips:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ "{{ mname }}" ]
-    - timeout: 120 ## TODO diminuir isso aqui
-    - require:
-      - salt: {{ mname }} set extra ips
-    - onlyif: 
-      - fun: match.grain
-        tgt: 'flag_static_extra_ips_set:True'
+## restarts minion via its virtual host server
+{{ mname }} restart virtual guest:
+  salt.state:
+    - sls: utils.stops_starts_virtual_guest
+    - tgt: {{ pillar['virtual_host'] }}
+    - pillar: {'minion': {{ mname }}}
 
+{{ m.wait_minion(mname, 'a-ei') }}
 #
 ## if redefine_proxy is set, redefine proxy
 {% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get redefine_proxy') | load_yaml %}
