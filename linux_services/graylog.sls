@@ -6,7 +6,7 @@
 {% if grains['os_family'] == 'Debian' %}
 graylog repo:
   pkgrepo.managed:
-    - name: deb https://packages.graylog2.org/repo/debian/ stable 5.0
+    - name: deb https://packages.graylog2.org/repo/debian/ stable 5.1
     - humanname: Graylog repo
     - dist: stable
     - file: /etc/apt/sources.list.d/graylog.list
@@ -22,7 +22,7 @@ graylog repo:
 graylog repo:
   pkgrepo.managed:
     - name: graylog
-    - baseurl: https://packages.graylog2.org/repo/el/stable/5.0/$basearch/
+    - baseurl: https://packages.graylog2.org/repo/el/stable/5.1/$basearch/
     - gpgcheck: 1
     - gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-graylog
     - require:
@@ -40,7 +40,9 @@ graylog failure:
 
 # install 
 graylog-server: 
-  pkg.installed
+  pkg.installed:
+    - refresh: True
+    - allow_updates: True
   
 # other packages needed by reports
 instala pacotes relatório:
