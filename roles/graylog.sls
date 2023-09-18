@@ -5,6 +5,7 @@
 include:
   - linux_services.mongodb
   - linux_services.elasticsearch
+  - linux_services.kibana
   - linux_services.graylog
 
 
