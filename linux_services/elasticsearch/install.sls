@@ -25,9 +25,9 @@ add elasticsearch repo:
       - file: /etc/apt/trusted.gpg.d/elasticsearch.gpg
 {%- elif grains['os_family'] == 'RedHat' %}
 # I don't know if this is needed yet (it is)
-permit sha1 keys:
+elastic re-enable sha1:
   cmd.run:
-    - name: update-crypto-policies --set LEGACY
+    - name: update-crypto-policies --set DEFAULT:SHA1
 
 add elasticsearch repo:
   pkgrepo.managed:
@@ -37,7 +37,7 @@ add elasticsearch repo:
     - gpgcheck: 1
     - gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - require:
-      - cmd: permit sha1 keys
+      - cmd: elastic re-enable sha1
 {%- else %}
 failure:
   test.fail_without_changes:
@@ -53,9 +53,3 @@ elastic_install:
     - require:
       - add elasticsearch repo
 
-{%- if grains['os_family'] == 'Redhat' %}
-# restaura sha-1 keys
-restore crypto-policies:
-  cmd.run:
-    - name: update-crypto-policies --set DEFAULT
-{%- endif %}
