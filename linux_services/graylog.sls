@@ -62,7 +62,7 @@ instala pacotes relatório:
 {% if pillar['graylog'] is defined and 
       pillar['graylog']['ssl_enable'] | default(False) %}
 # certificates 
-/etc/graylog/server/ssl/cert.pem:
+/etc/graylog/ssl/cert.pem:
   file.managed:
     - source: {{ salt.sslfile.cert() }}
     - makedirs: true
@@ -72,7 +72,7 @@ instala pacotes relatório:
     - mode: 660
     - backup: minion
 
-/etc/graylog/server/ssl/privkey.pem:
+/etc/graylog/ssl/privkey.pem:
   file.managed:
     - source: {{ salt.sslfile.privkey() }}
     - makedirs: true
@@ -109,7 +109,7 @@ stop graylog now:
 
 graylog mongodb access control:
   file.managed:
-    - name: /tmp/mongodb_access_control.mql
+    - name: /tmp/mongodb_acl_graylog.mql
     - user: mongod
     - group: mongod
     - contents: |
@@ -123,12 +123,21 @@ graylog mongodb access control:
          )
          exit
 
+graylog default crypto-policy:
+  cmd.run:
+    - name: update-crypto-policies --set DEFAULT
+
 graylog configura acl:
   cmd.run:
-    - name: 'mongosh -u {{ pillar['mongodb']['admin_user'] }} -p {{ pillar['mongodb']['admin_pw'] }} --quiet < /tmp/mongodb_access_control.mql'
+    - name: 'mongosh -u {{ pillar['mongodb']['admin_user'] }} -p {{ pillar['mongodb']['admin_pw'] }} --quiet < /tmp/mongodb_acl_graylog.mql'
     - require:
       - service: stop graylog now
-      - file: /tmp/mongodb_access_control.mql
+      - file: /tmp/mongodb_acl_graylog.mql
+      - cmd: graylog default crypto-policy
+
+graylog default-sha1 crypto-policy:
+  cmd.run:
+    - name: update-crypto-policies --set DEFAULT:SHA1
 
 #graylog remove tmp access control:
 #  file.absent:
