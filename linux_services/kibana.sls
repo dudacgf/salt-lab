@@ -9,7 +9,7 @@
     {%- set version = pillar['kibana']['version'] | default('8.x') %}
 {%- endif %}
 {% if grains['os_family'] == 'Debian' %}
-add elasticsearch repo:
+add kibana repo:
   pkgrepo.managed:
     - name: deb http://artifacts.elastic.co/packages/{{ version }}/apt stable main
     - humanname: Elasticsearch repository for {{ version }} packages
@@ -18,11 +18,11 @@ add elasticsearch repo:
     - key_url: salt://files/env/GPG-KEY-elasticsearch
 {% elif grains['os_family'] == 'RedHat' %}
 # força aceitação de sha-1 signed keys
-permit sha1 keys:
+kibana re-enable sha1:
   cmd.run:
-    - name: update-crypto-policies --set LEGACY
+    - name: update-crypto-policies --set DEFAULT:SHA1
 
-add elasticsearch repo:
+add kibana repo:
   pkgrepo.managed:
     - name: elasticsearch
     - enabled: True
@@ -30,7 +30,7 @@ add elasticsearch repo:
     - gpgcheck: 1
     - gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
     - require:
-      - cmd: permit sha1 keys
+      - cmd: kibana re-enable sha1
 {% else %}
 failure:
   test.fail_without_changes:
@@ -41,13 +41,6 @@ failure:
 # instala o kibana
 kibana:
   pkg.installed
-
-{%- if grains['os_family'] == 'RedHat' %}
-# restore default crypto policy
-restore crypto policies:
-  cmd.run:
-    - name: update-crypto-policies --set DEFAULT
-{%- endif %}
 
 # arquivo de configuração do kibana
 kibana.yml:
