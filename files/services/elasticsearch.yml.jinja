@@ -26,7 +26,14 @@ network.host: {{ listenaddress }}
 http.port: 9200
 http.max_warning_header_count: -1
 
+{% if pillar['elasticsearch'] is defined and not
+      pillar['elasticsearch']['is_cluster'] | default(False) %}
 discovery.type: single-node
+{%- else %}
+discovery.seed.hosts: [ {{ pillar['elasticsearch']['cluster']['seed_hosts'] }} ]
+cluster.initial_master_nodes: [ {{ pillar['elasticsearch']['cluster']['master_nodes'] }} ]
+{%- endif %}
+
 {%- if pillar['elasticsearch'] is defined and 
        pillar['elasticsearch']['ssl_enable'] | default(False) %}
 
