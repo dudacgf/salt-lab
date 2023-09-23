@@ -233,7 +233,7 @@ def input_delete(to_delete: str):
 
     try:
         callapi.perform()
-        if callapi.getinfo(pycurl.RESPONSE_CODE) >= 404:
+        if callapi.getinfo(pycurl.RESPONSE_CODE) >= 400:
             json_contents = {'rc': callapi.getinfo(pycurl.RESPONSE_CODE), to_delete: 'not found'}
         else:
             json_contents = {'rc': callapi.getinfo(pycurl.RESPONSE_CODE), to_delete: 'deleted'}
