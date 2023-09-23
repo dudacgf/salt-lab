@@ -8,7 +8,7 @@ minimal elasticsearch.yml:
           http.host: 0.0.0.0
           path.data: /var/lib/elasticsearch
           path.logs: /var/log/elasticsearch
-          cluster.initial_master_nodes: ["lgl.shireslab.com.br"]
+          discovery.type: single-node
           xpack.security.enabled: True
           xpack.security.transport.ssl.enabled: false
           xpack.security.http.ssl.enabled: false
