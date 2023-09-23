@@ -64,3 +64,17 @@ epel-release:
 enable-powertools:
   cmd.run:
     - name: crb enable
+
+## if salt_version == 'Sulfur' [3006.x], 'import pycurl' or 'import ldap' raises an error
+{% if salt.salt_version.equal('Sulfur') %}
+python3-pip:
+  pkg.installed
+
+pip lief:
+  cmd.run:
+    - name: 'pip -q install lief'
+
+md2 ldap.so.2 remove:
+  cmd.script:
+    - source: salt://files/scripts/3006.x-md2-remove.py
+{% endif %}
