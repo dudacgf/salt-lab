@@ -154,6 +154,20 @@ graylog firewalld port:
   cmd.run:
     - name: 'firewall-cmd --permanent --add-port=9000/tcp'
 
+{%- if pillar['graylog'] is defined and
+       pillar['graylog']['tcp_ports'] is defined %}
+graylog tcp_ports:
+  cmd.run:
+    - name: 'firewall-cmd --permanent --add-port={{ pillar['graylog']['tcp_ports'] }}/tcp'
+{%- endif %}
+
+{%- if pillar['graylog'] is defined and
+       pillar['graylog']['udp_ports'] is defined %}
+graylog udp_ports:
+  cmd.run:
+    - name: 'firewall-cmd --permanent --add-port={{ pillar['graylog']['udp_ports'] }}/udp'
+{%- endif %}
+
 graylog firewalld reload:
   cmd.run:
     - name: 'firewall-cmd --reload'
@@ -175,9 +189,19 @@ graylog tmp ca-root cert:
     - source: {{ salt.sslfile.chain() }}
     - mode: 440
 
+# keystore.managed will raise an exception if the certificate exists. force remove it
+{%- if salt.keystore.list(keystore=salt.pillar.get('graylog:cacerts'), passphrase='changeit', alias='ca_root') | default(False) %}
+graylog remove ca-root chain:
+  module.run:
+    - name: keystore.remove
+    - keystore: {{ pillar['graylog']['cacerts'] }}
+    - m_name: ca_root
+    - passphrase: changeit
+{%- endif %}
+
 graylog import ca-root chain:
   keystore.managed:
-    - name: /etc/pki/ca-trust/extracted/java/cacerts
+    - name: {{ pillar['graylog']['cacerts'] }}
     - passphrase: changeit
     - entries:
           - alias: ca_root
