@@ -5,7 +5,7 @@
 
 # Where and how to store data.
 storage:
-      dbPath: /var/lib/mongo
+      dbPath: {{ pillar['pkg_data']['mongodb']['data_dir'] }}
 #  engine:
 #  mmapv1:
 #  wiredTiger:
@@ -32,6 +32,8 @@ net:
     certificateKeyFile: /etc/mongodb/cert+key.pem
     disabledProtocols: TLS1_0,TLS1_1
     allowConnectionsWithoutCertificates: true
+setParameter:
+  ocspEnabled: false
 {%- endif %}
 
 # how the process runs
