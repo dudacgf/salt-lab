@@ -189,16 +189,8 @@ graylog tmp ca-root cert:
     - source: {{ salt.sslfile.chain() }}
     - mode: 440
 
-# keystore.managed will raise an exception if the certificate exists. force remove it
-{%- if salt.keystore.list(keystore=salt.pillar.get('graylog:cacerts'), passphrase='changeit', alias='ca_root') | default(False) %}
-graylog remove ca-root chain:
-  module.run:
-    - name: keystore.remove
-    - keystore: {{ pillar['graylog']['cacerts'] }}
-    - m_name: ca_root
-    - passphrase: changeit
-{%- endif %}
-
+# keystore.managed will raise an exception if the certificate exists. Check before adding just to get a pretty output
+{%- if not salt.keystore.list(keystore=salt.pillar.get('graylog:cacerts'), passphrase='changeit', alias='ca_root') | default(False) %}
 graylog import ca-root chain:
   keystore.managed:
     - name: {{ pillar['graylog']['cacerts'] }}
@@ -208,6 +200,7 @@ graylog import ca-root chain:
             certificate: /tmp/chain.pem
     - require:
       - file: graylog tmp ca-root cert
+{%- endif %}
 
 # patches sysconfig to point to java keystore
 graylog sysconfig patch:
@@ -215,6 +208,33 @@ graylog sysconfig patch:
     - name: /etc/sysconfig/graylog-server
     - source: salt://files/services/graylog-server.sysconfig.patch
 {% endif %}
+
+# will graylog run under an apache proxy? is apache installed?
+{%- if pillar['graylog'] is defined and
+       pillar['graylog']['apache_proxy'] | default(False) and 
+       salt.service.running(pillar['pkg_data']['apache']['service']) | default(False) %}
+/etc/httpd/conf.d/graylog_proxy.conf:
+  file.managed:
+    - source: salt://files/services/graylog/graylog_apache_proxy.conf.jinja
+    - template: jinja
+    - user: {{ pillar['pkg_data']['apache']['user'] }}
+    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - mode: 0644
+
+graylog restart apache service:
+  module.run:
+    - name: service.reload
+    - m_name: {{ pillar['pkg_data']['apache']['service'] }}
+    - require:
+      - file: /etc/httpd/conf.d/graylog_proxy.conf
+    - watch:
+      - file: /etc/httpd/conf.d/graylog_proxy.conf
+
+{%- if grains['os_family'] == 'RedHat' and pillar['selinux_mode'] | lower() == 'enforcing' %}
+sudo setsebool -P httpd_can_network_connect 1:
+  cmd.run
+{%- endif %}
+{%- endif %} # if apache_proxy
 
 # run the service
 graylog-server.service:

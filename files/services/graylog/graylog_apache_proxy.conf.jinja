@@ -1,0 +1,20 @@
+{%- set hostname = grains['id'].split('.')[0] %}
+{% set location = pillar['location'] | default('internal') %}
+{% set domain = pillar[location + '_domain'] | default('local') %}
+<Proxy *>
+	Order deny,allow
+	Allow from all
+</Proxy>
+
+<Location /api/>
+	RequestHeader set X-Graylog-Server-URL "http://{{ hostname }}.{{ domain }}/api/"
+	ProxyPass http://127.0.0.1:9000/api/
+	ProxyPassReverse http://127.0.0.1:9000/api/
+</Location>
+
+<Location />
+	RequestHeader set X-Graylog-Server-URL "http://{{ hostname }}.{{ domain }}/"
+	ProxyPass http://127.0.0.1:9000/
+	ProxyPassReverse http://127.0.0.1:9000/
+</Location>
+
