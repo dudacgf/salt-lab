@@ -19,11 +19,11 @@ certbot:
 {% include 'environment/certbot/' + pillar['dns_hoster'] + '.sls' ignore missing %}
 {%- else %}
 '*** dns hoster not supported: {{ pillar['dns_hoster'] }} ***':
-  test.nop
+  test.fail_without_changes
 {%- endif %} # if dns_hoster
 {% else %}
 '*** Server already has certificate. Not running certbot. ***':
-  test.fail_without_changes
+  test.nop
 {% endif %} # if flag_certbot_run
 {%- else %}
 '*** Server does not need certificate. Not running certbot. ***':
