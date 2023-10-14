@@ -23,7 +23,7 @@ certbot:
 {%- endif %} # if dns_hoster
 {% else %}
 '*** Server already has certificate. Not running certbot. ***':
-  test.nop
+  test.fail_without_changes
 {% endif %} # if flag_certbot_run
 {%- else %}
 '*** Server does not need certificate. Not running certbot. ***':
