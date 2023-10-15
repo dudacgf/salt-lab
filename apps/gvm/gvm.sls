@@ -42,11 +42,11 @@ copia sysconfig gsad:
     - group: root
     - mode: 644
 
-gvmd setup:
+gvm setup:
   module.run:
     - cmd.run:
-      - name: gvmd-setup
-      - cmd: gvmd-setup
+      - name: gvm-setup
+      - cmd: gvm-setup
       - stdin: |
           {{ pillar['gsad_admin_pw'] }}
           {{ pillar['gsad_admin_pw'] }}
