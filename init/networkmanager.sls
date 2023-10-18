@@ -10,13 +10,13 @@ network-manager:
 
 /etc/NetworkManager/NetworkManager.conf:
   file.managed:
-    - contents:
-      - '[main]'
-      - 'plugins=ifupdown,keyfile'
-      - '[ifupdown]'
-      - 'managed=True'
-      - '[device]'
-      - 'wifi.scan-rand-mac-address=no'
+    - contents: |
+          [main]
+          plugins=ifupdown,keyfile
+          [ifupdown]
+          managed=True
+          [device]
+          wifi.scan-rand-mac-address=no
 
 /etc/network/interfaces:
   file.managed:
