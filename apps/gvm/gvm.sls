@@ -34,7 +34,7 @@ gvm:
     - require:
       - gvm_repo
 
-copia systemd gsad:
+copia sysconfig gsad:
   file.managed:
     - name: /etc/sysconfig/gsad
     - source: salt://files/services/gvm/gsad.conf
@@ -42,8 +42,18 @@ copia systemd gsad:
     - group: root
     - mode: 644
 
+gvm setup:
+  module.run:
+    - cmd.run:
+      - name: gvm-setup
+      - cmd: gvm-setup
+      - stdin: |
+          {{ pillar['gsad_admin_pw'] }}
+          {{ pillar['gsad_admin_pw'] }}
+
 gsad.service:
   service.running:
     - restart: true
     - watch:
       - file: copia systemd gsad
+
