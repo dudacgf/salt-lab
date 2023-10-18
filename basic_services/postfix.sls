@@ -43,6 +43,19 @@ postmap /etc/postfix/generic:
     - watch:
       - file: /etc/postfix/generic
 
+/etc/postfix/sender_canonical:
+  file.managed:
+    - source: salt://files/services/postfix/sender_canonical.jinja
+    - template: jinja
+    - user: root
+    - group: postfix
+    - mode: 640
+
+postmap /etc/postfix/sender_canonical:
+  cmd.run:
+    - watch:
+      - file: /etc/postfix/sender_canonical
+
 /etc/postfix/main.cf:
   file.managed:
     - source: salt://files/services/postfix/main.cf.jinja
