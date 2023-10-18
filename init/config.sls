@@ -78,16 +78,8 @@
     - tgt: {{ mname }}
 
 # waits (Network Manager state reboots the minion if needed)
-{{ mname }} network manager reboot:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
-    - timeout: 240
-    - require:
-      - salt: {{ mname }} network manager
-    - onlyif:
-      - fun: match.grain
-        tgt: "!os_family:RedHat"
+{{ m.wait_minion(mname, 'a-nm') }}
+
 #
 #
 ### 4. if host pillar defines interfaces, create them in the virtual_host and set it's ip address
@@ -115,27 +107,7 @@
       - salt: {{ mname }} add interfaces
 
 #
-## configures static ip for the new interfaces (if needed)
-{{ m.wait_minion(mname, 'b-ei') }}
-{{ mname }} set extra ips:
-  salt.state:
-    - sls: init.setextraips
-    - tgt: {{ mname }} 
-    - timeout: 30
-    - require:
-      - salt: {{ mname }} add interfaces
-
-#
-## restarts minion via its virtual host server
-{{ mname }} restart virtual guest:
-  salt.state:
-    - sls: utils.stops_starts_virtual_guest
-    - tgt: {{ pillar['virtual_host'] }}
-    - pillar: {'minion': {{ mname }}}
-
-{{ m.wait_minion(mname, 'a-ei') }}
-#
-## if redefine_proxy is set, redefine proxy
+## 4a. if redefine_proxy is set, redefine proxy
 {% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get redefine_proxy') | load_yaml %}
 
 {% if proxy[mname] != 'none' %}
@@ -166,27 +138,19 @@ no redefine proxy:
     - name: '=== no redefine proxy ==='
 {% endif %}
 
+{% endif %} #redefine_interfaces
 
-
-{% else %}
 #
-### 5. sets static ip if configured in the minion host pillar
-#
-{{ mname }} static ip:
+## 5. set ipv4 address if defined
+{{ m.wait_minion(mname, 'b-ia') }}
+{{ mname }} ipaddress:
   salt.state:
-    - sls: init.setipaddress
-    - tgt: {{ mname }}
-
-# waits (setipaddress restarts salt-minion service)
-{{ mname }} aguarda restart:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
+    - sls: init.ipaddress
+    - tgt: {{ mname }} 
     - timeout: 30
     - require:
-      - salt: {{ mname }} static ip
-{% endif %}
-
+      - salt: {{ mname }} add interfaces
+{{ m.wait_minion(mname, 'a-ia') }}
 
 ### 6. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
