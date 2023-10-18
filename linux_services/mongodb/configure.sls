@@ -25,8 +25,8 @@ mongod copia chain file:
   file.managed:
     - name: /etc/mongodb/chain.pem
     - source: {{ salt.sslfile.chain() }}
-    - user: mongod
-    - group: mongod
+    - user: {{ pillar['pkg_data']['mongodb']['user'] }}
+    - group: {{ pillar['pkg_data']['mongodb']['group'] }}
     - makedirs: True
 
 # cria arquivo temporário com cert + privkey em /tmp e depois o copia para o diretório de destino
@@ -48,8 +48,8 @@ mongod copia cert+key file:
   file.managed:
     - name: /etc/mongodb/cert+key.pem
     - source: /tmp/cert+key.pem
-    - user: mongod
-    - group: mongod
+    - user: {{ pillar['pkg_data']['mongodb']['user'] }}
+    - group: {{ pillar['pkg_data']['mongodb']['group'] }}
     - makedirs: True
     - require:
       - file: mongod temp cert file

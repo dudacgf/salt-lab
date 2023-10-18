@@ -8,8 +8,8 @@ mongodb access control nothing to do:
 {%- if not pillar['flag_mongodb_acctl_set'] | default(False) %}
 /tmp/mongodb_access_control.mql:
   file.managed:
-    - user: mongod
-    - group: mongod
+    - user: {{ pillar['pkg_data']['mongodb']['user'] }}
+    - group: {{ pillar['pkg_data']['mongodb']['group'] }}
     - contents: 
       - 'use admin;'
       - 'db.createUser('

@@ -9,7 +9,7 @@ mongodb repo:
     - humanname: MongoDB repository 6.0 version
     - file: /etc/apt/sources.list.d/mongodb-org-6.0.list
     - key_url: https://www.mongodb.org/static/pgp/server-6.0.asc
-    - aptkey: False
+#    - aptkey: False
 {% elif grains['os_family'] == 'RedHat' %}
 mongodb repo:
   pkgrepo.managed:
