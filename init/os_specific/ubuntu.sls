@@ -10,15 +10,6 @@
       - 'APT::Get::Always-Include-Phased-Updates "1";'
 
 #
-## adds a local repo if running in a libvirt
-{% if grains.virtual | default('none') == 'kvm' %}
-/etc/apt/sources.list.d/ubuntu-iso.list:
-  file.managed:
-    - contents: |
-        deb http://10.1.115.1/ubuntu-iso/ jammy main
-{% endif %}
-
-#
 ## remove snapd em sistemas Ubuntu
 {% if grains['os'] == 'Ubuntu' and grains['osmajorrelease'] > 20 and pillar['remove_snapd'] | default(False) %}
 apt-get purge snapd -y:
