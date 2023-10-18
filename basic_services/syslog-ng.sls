@@ -2,6 +2,11 @@
 ## snmpd.sls - instala e configura o serviço snmpd para monitoramento via nagios e/ou cacti
 # 
 
+{%- if salt.service.status('rsyslog') %}
+rsyslog:
+  pkg.removed
+{%- endif %}
+
 install-syslog-ng:
   pkg.installed:
     - pkgs: [ {{ pillar['pkg_data']['syslog-ng']['name'] }}, {{ pillar['pkg_data']['syslog-ng']['mod_http'] }} ]
