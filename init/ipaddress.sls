@@ -7,7 +7,7 @@
 
 {%- if pillar['interfaces'] is not defined or not 
        pillar['interfaces']['redefine'] | default(False) %}
-# only 1 nic in default virtual network, values defined at pillar root
+{#- only 1 nic in default virtual network, values defined at pillar root #}
   {%- set nic = grains['hwaddr_interfaces'] | difference(['lo']) | first %}
   {%- set interfaces = {'default': {
                                     'dhcp': pillar['dhcp'],
@@ -20,18 +20,19 @@
                        }
   %}
 {%- else %}
-# one or more nics defined in pillar interface dict
+{#- one or more nics defined in pillar interfaces dict #}
   {% set interfaces = pillar['interfaces'] | default([]) %}
   {% do interfaces.pop('redefine') %}
 {%- endif %}
 
 {% for network in interfaces | default([]) %}
   {%- set this_nic = interfaces[network] %}
-  {%- if not this_nic['dhcp'] | default(False) %}
+  {%- if not this_nic['dhcp'] | default(True) %}
+    {%- set will_reboot = True %}
     {%- set ip4_address = this_nic['ip4_address'] %}
     {%- set ip4_netmask = salt.network.calc_net(ip4_address, this_nic['ip4_netmask']) | regex_replace('(.*/)', '') | string %}
     {%- set ip4_gateway = this_nic['ip4_gateway'] | default('') %}
-    {%- set ip4_dns = ';'.join(pillar['ip4_dns'] | default([])) %}
+    {%- set ip4_dns = ';'.join(this_nic['ip4_dns'] | default([])) %}
     {%- set nic = salt.ifaces.get_iface_name(this_nic['hwaddr'])  %}
     {%- set uuid = salt.nmconn.get_uuid(nic) %}
 {{ nic }}.nmconnection:
@@ -66,8 +67,14 @@
   {% endif %} 
 {% endfor %}
 
+{%- if will_reboot | default(False) %}
 reboot nmconnection:
   cmd.run:
     - name: /bin/bash -c 'sleep 5; shutdown -r now'
     - bg: True
+{%- else %}
+'=== all interfaces use dhcp. no ip address to set':
+  test.nop
+{%- endif %}
+
 
