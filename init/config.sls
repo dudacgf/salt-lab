@@ -149,7 +149,7 @@ no redefine proxy:
     - tgt: {{ mname }} 
     - timeout: 30
     - require:
-      - salt: {{ mname }} add interfaces
+      - salt: {{ mname }} network manager
 {{ m.wait_minion(mname, 'a-ia') }}
 
 ### 6. executa o highstate desse minion
