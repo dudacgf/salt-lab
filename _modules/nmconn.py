@@ -66,8 +66,8 @@ def get_uuid(iface=None):
       connection = nmcli.device.show(iface)['GENERAL.CONNECTION']
       uuid = nmcli.connection.show(connection)['connection.uuid']
       return uuid
-    except:
-      return False
+    except e:
+      return False, e
     return None
 
 def get_cmdline(network=None):
