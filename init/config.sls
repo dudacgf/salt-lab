@@ -8,8 +8,6 @@
 #  (c) ecgf - mar/2023
 #
 
-{% import "utils/macros.sls" as m %}
-
 {% for minion in pillar['minions'] | default([]) %}
 {% set mname = pillar['minions'][minion]['name'] %}
 
@@ -54,19 +52,17 @@
 #
 ### 2. things needed for the following steps
 #
-{{ m.wait_minion(mname, 'b_es') }}
-
 {{ mname }} essentials:
   salt.state:
     - sls: init.essentials
     - tgt: {{ mname }}
 
 # waits (essentials restarts the minion service)
-{{ mname }} wait restart:
+{{ mname }} wait essentials:
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 240
+    - timeout: 60
     - require:
       - salt: {{ mname }} essentials
 
@@ -77,8 +73,14 @@
     - sls: init.networkmanager
     - tgt: {{ mname }}
 
-# waits (Network Manager state reboots the minion if needed)
-{{ m.wait_minion(mname, 'a-nm') }}
+## waits (networkmanager may restart the minion)
+{{ mname }} wait networkmanager:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ '{{ mname }}' ]
+    - timeout: 60
+    - require:
+      - salt: {{ mname }} network manager
 
 #
 #
@@ -102,7 +104,7 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ "{{ mname }}" ]
-    - timeout: 360 ## TODO diminuir isso aqui
+    - timeout: 60
     - require:
       - salt: {{ mname }} add interfaces
 
@@ -142,22 +144,27 @@ no redefine proxy:
 
 #
 ## 5. set ipv4 address if defined
-{{ m.wait_minion(mname, 'b-ia') }}
-{{ mname }} ipaddress:
+{{ mname }} ip address:
   salt.state:
     - sls: init.ipaddress
     - tgt: {{ mname }} 
-    - timeout: 30
     - require:
       - salt: {{ mname }} network manager
-{{ m.wait_minion(mname, 'a-ia') }}
+
+# waits (the previous state may restart salt-minion service)
+{{ mname }} wait ipaddress:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ '{{ mname }}' ]
+    - timeout: 60
+    - require:
+      - salt: {{ mname }} ip address
 
 ### 6. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
 {%- if hoi[mname]['highstate_on_init'] | default(False) %}
 
 ## aguarda minion voltar ao ar
-{{ m.wait_minion(mname, 'b-hs') }}
 
 "{{ mname }} === will execute high state ===":
   test.nop
