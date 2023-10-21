@@ -20,15 +20,24 @@
                        }
   %}
 {%- else %}
-{#- one or more nics defined in pillar interfaces dict #}
+{#- one or more nics defined at pillar interfaces dict #}
   {% set interfaces = pillar['interfaces'] | default([]) %}
   {% do interfaces.pop('redefine') %}
 {%- endif %}
 
+# initializes the flag. it's ugly. It works
+flag_not_dhcp:
+  grains.present:
+    - name: flag_not_dhcp
+    - value: False
+
 {% for network in interfaces | default([]) %}
   {%- set this_nic = interfaces[network] %}
   {%- if not this_nic['dhcp'] | default(True) %}
-    {%- set will_reboot = True %}
+{{ network }} flag_not_dhcp:
+  grains.present:
+    - name: flag_not_dhcp
+    - value: True
     {%- set ip4_address = this_nic['ip4_address'] %}
     {%- set ip4_netmask = salt.network.calc_net(ip4_address, this_nic['ip4_netmask']) | regex_replace('(.*/)', '') | string %}
     {%- set ip4_gateway = this_nic['ip4_gateway'] | default('') %}
@@ -67,14 +76,26 @@
   {% endif %} 
 {% endfor %}
 
-{%- if will_reboot | default(False) %}
 reboot nmconnection:
   cmd.run:
     - name: /bin/bash -c 'sleep 5; shutdown -r now'
     - bg: True
-{%- else %}
-'=== all interfaces use dhcp. no ip address to set':
-  test.nop
-{%- endif %}
+    - onlyif:
+        - fun: match.grain
+          tgt: 'flag_not_dhcp:True'
+
+'=== all interfaces use dhcp. no ip address to set ===':
+  test.nop:
+    - onlyif:
+        - fun: match.grain
+          tgt: 'flag_not_dhcp:False'
+
+ipaddress send start event anyway:
+  cmd.run:
+    - name: /bin/bash -c "sleep 5; salt-call event.send 'salt/minion/{{ grains['id'] }}/start'"
+    - bg: True
+    - onlyif:
+        - fun: match.grain
+          tgt: 'flag_not_dhcp:False'
 
 
