@@ -57,4 +57,8 @@ reboot nmcli:
 '-- redhat and derivatives >= 8 already uses networkmanager':
   test.nop
 
+networkmanager send start event anyway:
+  cmd.run:
+    - name: /bin/bash -c "sleep 5; salt-call event.send 'salt/minion/{{ grains['id'] }}/start'"
+    - bg: True
 {% endif %}
