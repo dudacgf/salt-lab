@@ -60,14 +60,17 @@ def get_uuid(iface=None):
     nmcli.set_lang('C.UTF-8')
     # marreta: dá um up na interface para pegar o uuid enquanto ela tenta se ativar 
     for n in nmcli.connection():
-      nmcli.connection.up(n.name, wait=0)
+      try:
+          nmcli.connection.up(n.name, wait=0)
+      except:
+          pass
 
     try:
       connection = nmcli.device.show(iface)['GENERAL.CONNECTION']
       uuid = nmcli.connection.show(connection)['connection.uuid']
       return uuid
-    except e:
-      return False, e
+    except:
+      return False
     return None
 
 def get_cmdline(network=None):
