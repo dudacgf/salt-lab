@@ -7,7 +7,7 @@
 
 {%- if pillar['interfaces'] is not defined or not 
        pillar['interfaces']['redefine'] | default(False) %}
-{#- only 1 nic in default virtual network, values defined at pillar root #}
+{#- get values defined at pillar root and then any values from pillar interface #}
   {%- set nic = grains['hwaddr_interfaces'] | difference(['lo']) | first %}
   {%- set interfaces = {'default': {
                                     'dhcp': pillar['dhcp'],
@@ -19,10 +19,10 @@
                                    }
                        }
   %}
+  {%- do interfaces.update(pillar['interfaces'] | default([{'redefine': False}])) %}
 {%- else %}
 {#- one or more nics defined at pillar interfaces dict #}
   {% set interfaces = pillar['interfaces'] | default([]) %}
-  {% do interfaces.pop('redefine') %}
 {%- endif %}
 
 # initializes the flag. it's ugly. It works
@@ -31,7 +31,8 @@ flag_not_dhcp:
     - name: flag_not_dhcp
     - value: False
 
-{% for network in interfaces | default([]) %}
+{%- do interfaces.pop('redefine') %}
+{%- for network in interfaces | default([]) %}
   {%- set this_nic = interfaces[network] %}
   {%- if not this_nic['dhcp'] | default(True) %}
 {{ network }} flag_not_dhcp:
