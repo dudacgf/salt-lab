@@ -6,7 +6,7 @@
    {%- if nic == None %}
        {%- set nic = 'enp1s0' %} 
    {%- endif %}
-   {%- set hosts = pillar['shorewall']['hosts'][host]['ipaddrs'] %}
+   {%- set hosts = ','.join(pillar['shorewall']['hosts'][host]['ipaddrs']) %}
 {{ zone }}     {{ nic }}:{{ hosts }}
 {%- endfor %}
 
