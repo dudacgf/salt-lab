@@ -37,7 +37,7 @@ stopped:
 
 sleep a while:
   cmd.run:
-    - name: 'sleep {{ pillar['sleep_a_while'] | default(15) }}'
+    - name: 'sleep {{ pillar['sleep_a_longer_while'] | default(15) }}'
     - require:
       - virt: stopped
 
