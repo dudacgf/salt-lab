@@ -7,6 +7,12 @@
 {{ pillar['pkg_data']['packager'] }} clean all:
   cmd.run
 
+
+## runs updates before anything else
+upgrades:
+  pkg.uptodate:
+    - refresh: True
+
 # 
 ## basic packages
 minimal:
@@ -17,6 +23,7 @@ minimal:
       - python3-tornado
       - python3-netifaces
       - python3-pip
+      - uuid
     - refresh: True
     - allow_updates: True
 
