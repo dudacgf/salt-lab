@@ -82,20 +82,56 @@
     - require:
       - salt: {{ mname }} network manager
 
+##
+# will need this in the following steps
+{% set virtual_host = salt['cmd.run']("salt " + mname + " pillar.get virtual_host") | load_yaml %}
+
 #
 #
-### 4. if host pillar defines interfaces, create them in the virtual_host and set it's ip address
+### 4. attach usb devices
+#
+#
+{% set usb_devices = salt['cmd.run']("salt " + mname + " pillar.get usb_devices") | load_yaml %}
+{% if usb_devices[mname]['attach'] | default(False) %}
+{{ mname }} attach usb devices:
+  salt.state:
+    - sls: init.attach_usb
+    - tgt: {{ virtual_host[mname] }}
+    - pillar: {'usb_devices': {{ usb_devices[mname] }}, 'minion': {{ mname }} }
+{% endif %}
+
+#
+#
+### 5. install drivers, if needed
+{{ mname }} install drivers:
+  salt.state:
+    - sls: drivers
+    - tgt: {{ mname }}
+
+#
+## wait (install drivers reboots the minion)
+{{ mname }} aguarda drivers:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ "{{ mname }}" ]
+    - timeout: 60
+    - require:
+      - salt: {{ mname }} install drivers
+
+#
+#
+### 6. if host pillar defines interfaces, create them in the virtual_host and set it's ip address
 #
 #
 ## adds the network virtual interfaces to the minion (this is run in the virtual_host)
 {% set interfaces = salt['cmd.run']("salt " + mname + " pillar.get interfaces") | load_yaml %}
-{% if interfaces[mname]['redefine'] %}
+{% if interfaces[mname]['redefine'] | default(False) %}
 
 {% do interfaces[mname].pop('redefine') %}
 {{ mname }} add interfaces:
   salt.state:
     - sls: init.add_minion_interfaces
-    - tgt: {{ pillar['virtual_host'] }}
+    - tgt: {{ virtual_host[mname] }}
     - pillar: {'minion_interfaces': {{ interfaces[mname] }}, 'minion': {{ mname }} }
 
 #
@@ -109,7 +145,7 @@
       - salt: {{ mname }} add interfaces
 
 #
-## 4a. if redefine_proxy is set, redefine proxy
+## 6a. if redefine_proxy is set, redefine proxy
 {% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get redefine_proxy') | load_yaml %}
 
 {% if proxy[mname] != 'none' %}
@@ -143,7 +179,7 @@ no redefine proxy:
 {% endif %} #redefine_interfaces
 
 #
-## 5. set ipv4 address if defined
+## 7. set ipv4 address if defined
 {{ mname }} ip address:
   salt.state:
     - sls: init.ipaddress
@@ -160,7 +196,7 @@ no redefine proxy:
     - require:
       - salt: {{ mname }} ip address
 
-### 6. executa o highstate desse minion
+### 8. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
 {%- if hoi[mname]['highstate_on_init'] | default(False) %}
 
