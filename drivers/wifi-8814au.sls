@@ -34,6 +34,9 @@ reboot 8814au:
     - require:
       - cmd: '/root/src/8814au/install-driver.sh'
 
+'-- driver 8814au installed. will boot now':
+  test.nop
+
 {% else %}
 
 '-- won\'t install in redhat derivatives':
