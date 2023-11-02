@@ -43,7 +43,12 @@ flag_not_dhcp:
     {%- set ip4_netmask = salt.network.calc_net(ip4_address, this_nic['ip4_netmask']) | regex_replace('(.*/)', '') | string %}
     {%- set ip4_gateway = this_nic['ip4_gateway'] | default('') %}
     {%- set ip4_dns = ';'.join(this_nic['ip4_dns'] | default([])) %}
-    {%- set nic = salt.ifaces.get_iface_name(this_nic['hwaddr'])  %}
+    {%- set nic = salt.ifaces.get_iface_name(this_nic['hwaddr']) %}
+    #if i don't have a real hardware address
+    {%- if nic is none %} 
+        {%- set nic = network %}
+        {%- set hwaddr = grains['hwaddr_interfaces'][nic] %}
+    {%- endif %}
     {%- set uuid = salt.nmconn.get_uuid(nic) %}
 {{ nic }}.nmconnection:
   file.managed:

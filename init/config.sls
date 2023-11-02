@@ -57,7 +57,7 @@
     - sls: init.essentials
     - tgt: {{ mname }}
 
-# waits (essentials restarts the minion service)
+# waits (essentials restarts the minion)
 {{ mname }} wait essentials:
   salt.wait_for_event:
     - name: salt/minion/*/start
