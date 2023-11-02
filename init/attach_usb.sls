@@ -23,7 +23,7 @@
             </source>
           </hostdev>
 
-"virsh attach-device {{ pillar['minion'] }} /tmp/{{ device }}.xml": cmd.run
+"virsh attach-device {{ pillar['minion'] }} /tmp/{{ device }}.xml --persistent": cmd.run
 
 {% endfor %}
 
