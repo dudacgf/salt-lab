@@ -13,12 +13,13 @@
 {% for interface in interfaces %}
 
     {% set itype  = interfaces[interface]['itype'] | default('network') %}
-    {% set hwaddr = interfaces[interface]['hwaddr'] | default('none') %}
-
-    {% if hwaddr != 'none' %}
-       {% do interface_list.append("{'name': '" + interface + "', 'mac': '" + hwaddr + "', 'source': '" + interface + "', 'type': '" + itype + "'}") %}
-    {% else %}
-       {% do interface_list.append("{'name': '" + interface + "', 'source': '" + interface + "', 'type': '" + itype + "'}") %}
+    {% if itype != 'hotspot' %}
+        {% set hwaddr = interfaces[interface]['hwaddr'] | default('none') %}
+        {% if hwaddr != 'none' %}
+           {% do interface_list.append("{'name': '" + interface + "', 'mac': '" + hwaddr + "', 'source': '" + interface + "', 'type': '" + itype + "'}") %}
+        {% else %}
+           {% do interface_list.append("{'name': '" + interface + "', 'source': '" + interface + "', 'type': '" + itype + "'}") %}
+        {% endif %}
     {% endif %}
 
 {% endfor %}
