@@ -13,6 +13,10 @@ upgrades:
   pkg.uptodate:
     - refresh: True
 
+{%- if grains['os_family'] == 'Debian' %}
+apt-get dist-upgrade -y: cmd.run
+{%- endif %}
+
 # 
 ## basic packages
 minimal:
@@ -76,8 +80,6 @@ sync all:
 ## restart minion 
 restart salt minion:
   cmd.run:
-    - name: 'salt-call --local service.restart salt-minion'
+    - name: /bin/bash -c 'sleep 5; shutdown -r now'
     - bg: True
-    - require:
-      - saltutil: sync all
 
