@@ -15,7 +15,6 @@
     {%- set this_nic = interfaces[nic] %}
     {%- if this_nic['itype'] == 'hotspot' %}
       {%- set ip4_address = this_nic['ip4_address'] %}
-      {%- set ip4_netmask = salt.network.calc_net(ip4_address, this_nic['ip4_netmask']) | regex_replace('(.*/)', '') | string %}
       {%- set ap_name = this_nic['ap_name'] %}
       {%- set ap_psk = this_nic['ap_psk'] %}
 {{ ap_name }}.nmconnection:
@@ -46,7 +45,7 @@
             psk={{ ap_psk }}
 
             [ipv4]
-            address={{ ip4_address + '/' + ip4_netmask }}
+            address={{ ip4_address }}
             dns-search=
             method=shared
 

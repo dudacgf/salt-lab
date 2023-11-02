@@ -91,9 +91,6 @@ def get_cmdline(network=None):
         connUUID = get_uuid(nic)
 
         addr = __pillar__['interfaces'][network]['ip4_address']
-        t = __pillar__['interfaces'][network]['ip4_netmask']
-        mask = __salt__['network.calc_net'](addr, t)
-        mask = re.sub('(.*/)', '', mask)
         if 'ip4_gateway' in __pillar__['interfaces'][network]:
             gateway = ' ipv4.gateway ' + __pillar__['interfaces'][network]['ip4_gateway']
         else:
@@ -104,7 +101,7 @@ def get_cmdline(network=None):
         else:
             dns = ''
 
-        cmdSetConIP = "nmcli con mod '" + connUUID + "' ipv4.address " + addr + "/" + mask + gateway + dns + " ipv4.method manual" 
+        cmdSetConIP = "nmcli con mod '" + connUUID + "' ipv4.address " + addr + gateway + dns + " ipv4.method manual" 
 
         return cmdSetConIP
     except Exception as e: 
