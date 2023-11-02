@@ -1,5 +1,3 @@
-#!jinja|yaml
-
 {% if grains['os_family'] != 'RedHat' %}
 
 # install prerequisites
@@ -20,30 +18,33 @@ install 8814au pre-reqs:
       - file: '/root/src'
 
 # install the driver
-'/root/src/8814au/install-driver.sh':
+install driver 8814au:
   cmd.run:
+    - name: '/root/src/8814au/install-driver.sh NoPrompt'
     - cwd: /root/src/8814au
-    - args: ['NoPrompt']
     - require:
       - git: 'https://github.com/morrownr/8814au.git'
 
-reboot 8814au:
-  cmd.run:
-    - name: /bin/bash -c 'sleep 5; shutdown -r now'
-    - bg: True
+8814au toggle flag_driver_installed on:
+  grains.present:
+    - name: flag_driver_installed
+    - value: True
     - require:
-      - cmd: '/root/src/8814au/install-driver.sh'
+      - cmd: install driver 8814au
 
-'-- driver 8814au installed. will boot now':
-  test.nop
+'-- driver 8814au installed':
+  test.nop:
+    - require:
+      - cmd: install driver 8814au
+
+'-- driver 8814au not installed':
+  test.nop:
+    - onfail:
+      - cmd: install driver 8814au
 
 {% else %}
 
 '-- won\'t install in redhat derivatives':
   test.nop
 
-8814au send start event anyway:
-  cmd.run:
-    - name: /bin/bash -c "sleep 5; salt-call event.send 'salt/minion/{{ grains['id'] }}/start'"
-    - bg: True
 {% endif %}

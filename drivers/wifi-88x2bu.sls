@@ -1,5 +1,3 @@
-#!jinja|yaml
-
 {% if grains['os_family'] != 'RedHat' %}
 
 # install prerequisites
@@ -27,23 +25,29 @@ install 88x2bu pre-reqs:
       - git: 'https://github.com/RinCat/RTL88x2BU-Linux-Driver.git'
 
 # install the driver
-'/root/src/88x2bu/install-driver.sh':
+install driver 88x2bu:
   cmd.run:
+    - name: '/root/src/88x2bu/install-driver.sh NoPrompt'
     - cwd: /root/src/88x2bu
-    - args: ['NoPrompt']
     - require:
       - file: '/root/src/88x2bu/install-driver.sh'
 
-reboot 88x2bu:
-  cmd.run:
-    - name: /bin/bash -c 'sleep 5; shutdown -r now'
-    - bg: True
+88x2bu toggle flag_driver_installed on:
+  grains.present:
+    - name: flag_driver_installed
+    - value: True
     - require:
-      - cmd: '/root/src/88x2bu/install-driver.sh'
+      - cmd: install driver 88x2bu
 
-
-'-- driver 88x2bu installed. will boot now':
+'-- driver 88x2bu installed':
   test.nop
+    - require:
+      - cmd: install driver 88x2bu
+
+'-- driver 8814au not installed':
+  test.nop:
+    - onfail:
+      - cmd: install driver 88x2bu
 
 {% else %}
 
