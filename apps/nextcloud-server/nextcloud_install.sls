@@ -16,7 +16,7 @@ os failure:
 nextcloud download:
   archive.extracted:
     - name: /var/www/
-    - source: salt://files/services/nextcloud/latest.zip
+    - source: https://download.nextcloud.com/server/releases/latest.zip
     - skip_verify: True
     - user: {{ pillar['pkg_data']['apache']['user'] }}
     - group: {{ pillar['pkg_data']['apache']['group'] }}
