@@ -6,7 +6,7 @@
 #
 
 {%- if pillar['interfaces'] is not defined or not 
-       pillar['interfaces']['redefine'] | default(False) %}
+       pillar['redefine_interfaces'] | default(False) %}
 {#- get values defined at pillar root and then any values from pillar interface #}
   {%- set nic = grains['hwaddr_interfaces'] | difference(['lo']) | first %}
   {%- set interfaces = {'default': {
@@ -18,7 +18,7 @@
                                    }
                        }
   %}
-  {%- do interfaces.update(pillar['interfaces'] | default([{'redefine': False}])) %}
+  {%- do interfaces.update(pillar['interfaces'] | default({})) %}
 {%- else %}
 {#- one or more nics defined at pillar interfaces dict #}
   {% set interfaces = pillar['interfaces'] | default([]) %}
@@ -30,7 +30,6 @@ flag_not_dhcp:
     - name: flag_not_dhcp
     - value: False
 
-{%- do interfaces.pop('redefine') %}
 {%- for network in interfaces | default([]) %}
   {%- set this_nic = interfaces[network] %}
   {%- if not this_nic['dhcp'] | default(True) %}
@@ -88,18 +87,14 @@ reboot nmconnection:
         - fun: match.grain
           tgt: 'flag_not_dhcp:True'
 
-'=== all interfaces use dhcp. no ip address to set ===':
-  test.nop:
+"salt/minion/{{ grains['id'] }}/start":
+  event.send:
+    - data: '=== all interfaces use dhcp. no ip address to set ==='
     - onlyif:
         - fun: match.grain
           tgt: 'flag_not_dhcp:False'
 
-ipaddress send start event anyway:
-  cmd.run:
-    - name: /bin/bash -c "sleep 5; salt-call event.send 'salt/minion/{{ grains['id'] }}/start'"
-    - bg: True
-    - onlyif:
-        - fun: match.grain
-          tgt: 'flag_not_dhcp:False'
-
-
+remove flag_not_dhcp:
+  module.run:
+    - grains.delkey:
+      - key: flag_not_dhcp
