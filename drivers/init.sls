@@ -20,30 +20,16 @@ reboot drivers:
         - fun: match.grain
           tgt: 'flag_driver_installed:true'
 
-'=== no drivers installed ===':
-  test.nop:
-    - onlyif:
-        - fun: match.grain
-          tgt: 'flag_driver_installed:false'
-
-no drivers installed send event:
-  cmd.run:
-    - name: /bin/bash -c "sleep 5; salt-call event.send 'salt/minion/{{ grains['id'] }}/start'"
-    - bg: True
-    - onlyif:
-        - fun: match.grain
-          tgt: 'flag_driver_installed:false'
-{% else %}
-no drivers to install send event:
-  cmd.run:
-    - name: /bin/bash -c "sleep 5; salt-call event.send 'salt/minion/{{ grains['id'] }}/start'"
-    - bg: True
-
-'== no drivers to be installed ==':
-  test.nop
 {% endif %}
 
-remove flag:
-  grains.absent:
-    - name: flag_driver_installed
-    - order: 10100
+"/salt/minion/{{ grains['id'] }}/start":
+  event.send:
+    - data: "== no drivers to install =="
+    - onlyif:
+        - fun: match.grain
+          tgt: 'flag_driver_installed:false'
+
+remove flag_driver_installed:
+  module.run:
+    - grains.delkey:
+      - key: flag_driver_installed
