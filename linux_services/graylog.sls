@@ -90,7 +90,7 @@ pwgen:
 # configuration file
 /etc/graylog/server/server.conf:
   file.managed:
-    - source: salt://files/services/graylog-server.conf.jinja
+    - source: salt://files/services/graylog/graylog-server.conf.jinja
     - template: jinja
     - user: root
     - group: graylog
@@ -206,7 +206,7 @@ graylog import ca-root chain:
 graylog sysconfig patch:
   file.patch:
     - name: /etc/sysconfig/graylog-server
-    - source: salt://files/services/graylog-server.sysconfig.patch
+    - source: salt://files/services/graylog/graylog-server.sysconfig.patch
 {% endif %}
 
 # will graylog run under an apache proxy? is apache installed?
