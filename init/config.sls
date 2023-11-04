@@ -124,10 +124,9 @@
 #
 #
 ## adds the network virtual interfaces to the minion (this is run in the virtual_host)
-{% set interfaces = salt['cmd.run']("salt " + mname + " pillar.get interfaces") | load_yaml %}
-{% if interfaces[mname]['redefine'] | default(False) %}
-
-{% do interfaces[mname].pop('redefine') %}
+{%- set redefine = salt['cmd.run']("salt " + mname + " pillar.get redefine_interfaces") | load_yaml %}
+{%- if redefine[mname] %}
+    {%- set interfaces = salt['cmd.run']("salt " + mname + " pillar.get interfaces") | load_yaml %}
 {{ mname }} add interfaces:
   salt.state:
     - sls: init.add_minion_interfaces
@@ -140,7 +139,7 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ "{{ mname }}" ]
-    - timeout: 60
+    - timeout: 120
     - require:
       - salt: {{ mname }} add interfaces
 
@@ -192,7 +191,7 @@ no redefine proxy:
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 60
+    - timeout: 120
     - require:
       - salt: {{ mname }} ip address
 
