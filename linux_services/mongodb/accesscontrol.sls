@@ -21,11 +21,20 @@ mongodb access control nothing to do:
       - ')'
       - 'exit'
 
+mongodb default crypto-policy:
+  cmd.run:
+    - name: update-crypto-policies --set DEFAULT
+
 configura acl:
   cmd.run:
     - name: 'mongosh --quiet < /tmp/mongodb_access_control.mql'
     - require:
       - file: /tmp/mongodb_access_control.mql
+      - cmd: mongodb default crypto-policy
+
+mongodb default-sha1 crypto-policy:
+  cmd.run:
+    - name: update-crypto-policies --set DEFAULT:SHA1
 
 ajusta mongod.conf:
   file.replace:
