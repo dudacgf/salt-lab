@@ -14,6 +14,10 @@ install vim-packages:
      - unless:
        - 'ls -l {{ homedir }}/.vim/autoload/pathogen.vim'
 
+{{ user }} chown .vim:
+  cmd.run:
+    - name: 'chown -R {{ user }} {{ homedir }}/.vim'
+
 {{ user }} deploy vimrc:
   file.managed:
     - name: '{{ homedir }}/.vimrc'
