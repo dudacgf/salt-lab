@@ -36,16 +36,19 @@ def get():
     for device in devices:
         interface = device.device
         if interface == 'lo': continue
-        #connection = re.sub("\(externally\)\ *", "", device.connection)
-        connection = re.sub("\(.*\)\ *", "", device.connection)
-        hwaddr = nmcli.device.show(interface)['GENERAL.HWADDR']
-        uuid = nmcli.connection.show(connection)['connection.uuid']
-        return_value[interface] = {
-          'connection': connection,
-          'state': device.state,
-          'hwaddr': hwaddr,
-          'uuid': uuid,
-        }
+        try:
+            #connection = re.sub("\(externally\)\ *", "", device.connection)
+            connection = re.sub("\(.*\)\ *", "", device.connection)
+            hwaddr = nmcli.device.show(interface)['GENERAL.HWADDR']
+            uuid = nmcli.connection.show(connection)['connection.uuid']
+            return_value[interface] = {
+              'connection': connection,
+              'state': device.state,
+              'hwaddr': hwaddr,
+              'uuid': uuid,
+            }
+        except:
+            pass
     return return_value
 
 def get_uuid(iface=None):
