@@ -1,20 +1,32 @@
-{% if grains['os_family'] != 'RedHat' %}
-
 # install prerequisites
+{% if grains['os_family'] == 'Debian' %}
 install 8814au pre-reqs:
   pkg.installed:
     - pkgs: ['linux-headers-{{ grains["kernelrelease"] }}', 'build-essential', 'bc', 'dkms', 'git', 'libelf-dev', 'rfkill', 'iw']
 
+{% elif grains['os_family'] == 'RedHat' %} 
+install 8814au pre-reqs:
+  pkg.installed:
+    - pkgs: ['dkms', 'gcc', 'bc', 'git', 'iw']
+
+{% else %}
+install 8814au pre-reqs:
+  test.fail_without_changes
+    - comment: '=== OS not supported. driver 8814au will not be installed ==='
+    - result: false
+
+{% endif %}
 # 
-'/root/src':
-  file.directory
+'/root/src': 
+  file.directory:
+    - require:
+      - install 8814au pre-reqs
 
 # download source
 'https://github.com/morrownr/8814au.git':
   git.cloned:
     - target: /root/src/8814au
     - require: 
-      - pkg: install 8814au pre-reqs
       - file: '/root/src'
 
 # install the driver
@@ -41,10 +53,3 @@ install driver 8814au:
   test.nop:
     - onfail:
       - cmd: install driver 8814au
-
-{% else %}
-
-'-- won\'t install in redhat derivatives':
-  test.nop
-
-{% endif %}
