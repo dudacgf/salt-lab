@@ -20,7 +20,7 @@ install 88x2bu pre-reqs:
 '/root/src': 
   file.directory:
     - require:
-      - install 88xbu pre-reqs
+      - install 88x2bu pre-reqs
 
 # download source
 'https://github.com/morrownr/88x2bu-20210702.git':
@@ -50,7 +50,7 @@ install driver 88x2bu:
     - require:
       - cmd: install driver 88x2bu
 
-'-- driver 8814au not installed':
+'-- driver 88x2bu not installed'
   test.nop:
     - onfail:
       - cmd: install driver 88x2bu
