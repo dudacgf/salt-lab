@@ -81,7 +81,7 @@ flag_not_dhcp:
 
 reboot nmconnection:
   cmd.run:
-    - name: /bin/bash -c 'sleep 5; shutdown -r now'
+    - name: /bin/bash -c 'sleep 9; shutdown -r now'
     - bg: True
     - onlyif:
         - fun: match.grain
