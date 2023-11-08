@@ -10,13 +10,13 @@
   test.nop
 {% else %}
   {% set interfaces = pillar['interfaces'] %}
-  {% do interfaces.pop('redefine') %}
-  {%- for nic in interfaces %}
-    {%- set this_nic = interfaces[nic] %}
+  {%- for network in interfaces %}
+    {%- set this_nic = interfaces[network] %}
     {%- if this_nic['itype'] == 'hotspot' %}
       {%- set ip4_address = this_nic['ip4_address'] %}
       {%- set ap_name = this_nic['ap_name'] %}
       {%- set ap_psk = this_nic['ap_psk'] %}
+      {%- set nic = salt.ifaces.get_iface_name(this_nic['hwaddr']) %}
 {{ ap_name }}.nmconnection:
   file.managed:
     - name: /etc/NetworkManager/system-connections/{{ ap_name }}.nmconnection
@@ -26,6 +26,7 @@
             uuid={{ salt.cmd.run('uuid') }}
             type=wifi
             autoconnect=true
+            interface-name={{ nic }}
             permissions=
             secondaries=
 
