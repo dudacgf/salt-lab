@@ -178,10 +178,10 @@ no redefine proxy:
 {% endif %} #redefine_interfaces
 
 #
-## 7. set ipv4 address if defined
-{{ mname }} ip address:
+## 7. networkmanager connections 
+{{ mname }} nmconnections:
   salt.state:
-    - sls: init.ipaddress
+    - sls: init.nmconnections
     - tgt: {{ mname }} 
     - require:
       - salt: {{ mname }} network manager
@@ -193,7 +193,7 @@ no redefine proxy:
     - id_list: [ '{{ mname }}' ]
     - timeout: 120
     - require:
-      - salt: {{ mname }} ip address
+      - salt: {{ mname }} nmconnections
 
 ### 8. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
