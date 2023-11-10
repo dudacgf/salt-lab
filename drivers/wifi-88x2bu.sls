@@ -50,7 +50,7 @@ install driver 88x2bu:
     - require:
       - cmd: install driver 88x2bu
 
-'-- driver 88x2bu not installed'
+'-- driver 88x2bu not installed':
   test.nop:
     - onfail:
       - cmd: install driver 88x2bu
