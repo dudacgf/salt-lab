@@ -7,7 +7,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-__virtual_name__ = 'nmconn'
+__virtual_name__ = 'nmconnection'
 
 def __virtual__():
     '''
@@ -26,7 +26,7 @@ def get():
 
     CLI Example::
 
-        salt minion nmconn.get
+        salt minion nmconnection.get
 
     '''
     nmcli.set_lang('C.UTF-8')
@@ -57,7 +57,7 @@ def get_uuid(iface=None):
 
     CLI Example::
 
-        salt minion nmconn.get_uuid eth0
+        salt minion nmconnection.get_uuid eth0
 
     '''
     nmcli.set_lang('C.UTF-8')
