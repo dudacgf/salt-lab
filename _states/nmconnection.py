@@ -38,26 +38,23 @@ def __virtual__():
     else:
         return False, "Install nmcli with salt-pip"
 
-def _pick_iface(hwaddr):
-    nic = None
+def _pick_device(hwaddr):
     if hwaddr is None:
         # use first ethernet nic available
         comment = 'no ethernet nic available'
         for d in nmcli.device():
             if d['device_type'] == 'ethernet':
-                nic = d
-                break
+                return d
     else:
         for d in nmcli.device():
             if nmcli.device.show(d.device)['GENERAL.HWADDR'] == hwaddr.upper():
-                nic = d
-                break
-    return nic
+                return d
+    return None
 
-def _nic_used(iface):
+def _pick_connection(iface):
     for c in nmcli.connection():
         if nmcli.connection.show(c.name)['connection.interface-name'] == iface:
-            return c.name
+            return nmcli.connection.show(c.name)
     return None
 
 def _ethernet(hwaddr, options, **kwargs):
@@ -68,84 +65,56 @@ def _ethernet(hwaddr, options, **kwargs):
     nmcli.set_lang('C.UTF-8')
     nmcli.disable_use_sudo()
 
-    nic = _pick_iface(hwaddr)
-    if nic is None:
+    device = _pick_device(hwaddr)
+    if device is None:
         return {'result': False, 'comment': f'no ethernet device with macaddress {hwaddr}'}
+
+    conn = _pick_connection(device.device)
 
     if 'autoconnect' in kwargs:
         options['connection.autoconnect'] = 'yes' if kwargs['autoconnect'] else 'no'
+    options['connection.id'] = device.device
+    options['connection.interface-name'] = device.device
 
     changes = {}
-    c_name = _nic_used(nic.device)
-    if nic.state == 'connected' or c_name is not None:
+    if conn is None:
+        try:
+            nmcli.connection.add(name=device.device, ifname=device.device, conn_type='ethernet', 
+                             options=options)
+            return{'result': True,
+                   'comment': f'connection {device.device} created',
+                   'changes': {'options': options}}
+        except e:
+            return{'result': False,
+                   'comment': f'error creating connection {device.device}: {e}'}
+    else:
         equal = True
-        c = nmcli.connection.show(c_name)
         for o in options:
-            if o in c and c[o] != options[o]:
+            if o in conn and conn[o] != options[o]:
                 equal = False
         if equal:
-            comment = f'connection {nic.device} is in the desired state'
-        else:
-            try:
-                before = nmcli.connection.show(c_name)
-                options['connection.id'] = nic.device
-                nmcli.connection.modify(name=c_name, options=options)
-                after = nmcli.connection.show(c_name)
-                diffs = deep_diff(before, after)
-                if 'old' in diffs:
-                    for key in diffs['old']:
-                        if key in options:
-                            changes[key] = {'old': before[key], 'new': after[key]}
-
-                comment = f'{nic.device} connection modified'
-            except Exception as e:
-                return {'result': False, 
-                        'comment': f'error modifying {nic.device} connection: {e}'}
-    else:
+            return {'result': True, 
+                    'comment': f'connection {conn["connection.id"]} is present and in the desired state'}
         try:
-            nmcli.connection.add(name=nic.device, conn_type='ethernet', ifname=nic.device, 
-                                 autoconnect=True, options=options)
-            changes['options'] = options
-            comment = f'connection {nic.device} created'
+            before = conn
+            nmcli.connection.modify(name=conn['connection.id'], options=options)
+            after = _pick_connection(device.device)
+            diffs = deep_diff(before, after)
+            if 'old' in diffs:
+                for key in diffs['old']:
+                    if key in options:
+                        changes[key] = {'old': before[key], 'new': after[key]}
+            return {
+                'result': True, 
+                'comment': f'{after["connection.id"]} connection modified',
+                'changes': changes}
         except Exception as e:
             return {'result': False, 
-                    'comment': f'error adding {nic.device} connection: {e}'}
-
-    if 'up' in kwargs:
-        nic = _pick_iface(hwaddr)
-        c_name = _nic_used(nic.device)
-        if nic is None:
-            return {'result': False,
-                    'comment': 'error picking nic after adding or modifying',
-                   }
-        if kwargs['up']:
-            if nic.state != 'connected':
-                try:
-                    nmcli.connection.up(c_name, wait=1)
-                    changes['connection'] = {'old': 'not connected', 'new': 'connected'}
-                    comment = f'connection {nic.device} activated'
-                except Exception as e:
-                    return {'result': False, 
-                            'comment': f'error activating {nic.connection} connection: {e}'}
-        elif nic.state != 'disconneted':
-                try:
-                    nmcli.connection.down(c_name, wait=1)
-                    changes['connection'] = {'old': 'connected', 'new': 'not connected'}
-                    comment = f'connection {nic.device} deactivated'
-                except Exception as e:
-                    return {'result': False, 
-                            'comment': f'error deactivating {nic.connection} connection: {e}'}
-
-    return {
-        'result': True, 
-        'comment': comment,
-        'changes': changes,
-    }
-
+                    'comment': f'error modifying {device.device} connection: {e}'}
 
 def present(name, con_type, hwaddr, options, **kwargs):
     """
-    ensures a NetworkManager connection is present and correctly configured. 
+    ensures that a NetworkManager connection is present and correctly configured. 
     The connection will be named after its interface
     
     name
@@ -159,7 +128,7 @@ def present(name, con_type, hwaddr, options, **kwargs):
         mac address of the interface to be connected. If not set, the first available and
         compatible interface will be used.
 
-    config
+    options
         connnection configuration fields and values. for a list of fields, 
         consult the nmcli documentation
     """
@@ -189,3 +158,40 @@ def present(name, con_type, hwaddr, options, **kwargs):
         ret['comment'] = result['comment']
 
     return ret
+
+def active(name, hwaddr):
+    """
+    ensures that a connection is active
+    """
+    device = _pick_device(hwaddr)
+    conn = _pick_connection(device.device)
+    try:
+        nmcli.connection.up(conn['connection.id'], wait=1)
+        return {'name': name, 
+                'result': True, 
+                'comment': f'connection {conn["connection.id"]} is active', 
+                'changes': {}}
+    except Exception as e:
+        return {'name': name, 
+                'result': False, 
+                'comment': f'error activating {conn["connection.id"]} connection: {e}',
+                'changes': {}}
+
+def inactive(name, hwaddr):
+    """
+    ensures that a connection is inactive
+    """
+    device = _pick_device(hwaddr)
+    conn = _pick_connection(device.device)
+    try:
+        nmcli.connection.down(conn['connection.id'], wait=1)
+        return {'name': name, 
+                'result': True, 
+                'comment': f'connection {conn["connection.id"]} is inactive', 
+                'changes': {}}
+    except Exception as e:
+        return {'name': name, 
+                'result': False, 
+                'comment': f'error deactivating {conn["connection.id"]} connection: {e}',
+                'changes': {}}
+
