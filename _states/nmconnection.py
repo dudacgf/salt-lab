@@ -140,10 +140,8 @@ def present(name, con_type, hwaddr, options, **kwargs):
 
     if 'test' not in kwargs:
         kwargs['test'] = __opts__.get("test", False)
-       
     if kwargs['test']:
         ret['comment'] = 'TEST nmconnection.present'
-        ret['result'] = None
         return ret
 
     # do the thing
@@ -159,10 +157,22 @@ def present(name, con_type, hwaddr, options, **kwargs):
 
     return ret
 
-def active(name, hwaddr):
+def active(name, hwaddr, **kwargs):
     """
     ensures that a connection is active
     """
+
+    ret = {'name': name, 
+           'changes': {}, 
+           'comment': 'Connection is present and in the desired state',
+           'result': None}
+
+    if 'test' not in kwargs:
+        kwargs['test'] = __opts__.get("test", False)
+    if kwargs['test']:
+        ret['comment'] = 'TEST nmconnection.active'
+        return ret
+
     device = _pick_device(hwaddr)
     conn = _pick_connection(device.device)
     try:
@@ -177,10 +187,22 @@ def active(name, hwaddr):
                 'comment': f'error activating {conn["connection.id"]} connection: {e}',
                 'changes': {}}
 
-def inactive(name, hwaddr):
+def inactive(name, hwaddr, **kwargs):
     """
     ensures that a connection is inactive
     """
+
+    ret = {'name': name, 
+           'changes': {}, 
+           'comment': 'Connection is present and in the desired state',
+           'result': None}
+
+    if 'test' not in kwargs:
+        kwargs['test'] = __opts__.get("test", False)
+    if kwargs['test']:
+        ret['comment'] = 'TEST nmconnection.inactive'
+        return ret
+
     device = _pick_device(hwaddr)
     conn = _pick_connection(device.device)
     try:
