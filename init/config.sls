@@ -15,8 +15,6 @@
 ### 0. Proxy - defines proxy for apt/yum and salt-minion
 #
 
-{% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get proxy') | load_yaml %}
-{% if proxy[mname] != 'none' %}
 {{ mname }} define proxy minion:
   salt.state:
     - sls: init.proxy.proxy_minion
@@ -35,12 +33,6 @@
   salt.state:
     - sls: init.proxy.proxy_syspkg
     - tgt: {{ mname }}
-
-{% else %}
-{{ mname }} no proxy:
-  test.nop:
-    - name: '=== no proxy ==='
-{% endif %}
 
 #
 ### 1. os_specific initialization (repos, yum/apt settings etc)
@@ -147,7 +139,6 @@
 ## 6a. if redefine_proxy is set, redefine proxy
 {% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get redefine_proxy') | load_yaml %}
 
-{% if proxy[mname] != 'none' %}
 {{ mname }} redefine proxy minion:
   salt.state:
     - sls: init.proxy.proxy_minion
@@ -169,16 +160,7 @@
     - tgt: {{ mname }}
     - pillar: {'proxy': {{ proxy[mname] }} }
 
-{% else %}
-no redefine proxy:
-  test.nop:
-    - name: '=== no redefine proxy ==='
-{% endif %}
-
-{% endif %} #redefine_interfaces
-
-#
-## 7. networkmanager connections 
+### 7. networkmanager connections 
 {{ mname }} nmconnections:
   salt.state:
     - sls: init.nmconnections
@@ -187,7 +169,7 @@ no redefine proxy:
       - salt: {{ mname }} network manager
 
 # waits (the previous state may restart salt-minion service)
-{{ mname }} wait ipaddress:
+{{ mname }} wait nmconnections:
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
@@ -201,7 +183,7 @@ no redefine proxy:
 
 ## aguarda minion voltar ao ar
 
-"{{ mname }} === will execute high state ===":
+"-- {{ mname }} will execute high state":
   test.nop
 
 {{ mname }} environment:
@@ -235,7 +217,7 @@ no redefine proxy:
     - tgt: {{ mname }}
 
 {% else %}
-"{{ mname }} === will not execute high state ===":
+"-- {{ mname }} will not execute high state":
   test.nop
 {%- endif %}
 
