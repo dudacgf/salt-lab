@@ -5,8 +5,6 @@
 
 {% do pillar['usb_devices'].pop('attach') %}
 {% for device in pillar['usb_devices'] | default([]) %}
-"{{ device }}":
-  test.nop
 {% set vendor = pillar['usb_devices'][device]['vendor'] %}
 {% set product_id = pillar['usb_devices'][device]['product_id'] %}
 '/tmp/{{ device }}.xml':
@@ -28,6 +26,6 @@
 {% endfor %}
 
 {% else %}
-'=== no usb devices to attach ===':
+'-- no usb devices to attach':
    test.nop
 {% endif %}

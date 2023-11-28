@@ -112,6 +112,6 @@ nrpe abre porta firewalld:
       - file: /etc/nagios/nrpe.cfg
     
 {% else %} # if pillar[nrpe_install]
-'=== nrpe não será instalado ===':
+'-- nrpe will not be installed':
   test.nop
 {% endif %}

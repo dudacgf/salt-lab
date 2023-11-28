@@ -9,7 +9,7 @@
           {%- set r = 999999 | random_hash('sha512') %}
           {%- set password = pillar['elasticsearch']['passwords'][user] | default(r) %}
           {%- if user == 'elastic' and password == r %}
-'=== User elastic must have its password defined ===':
+'-- User elastic must have its password defined.':
   test.fail_without_changes:
     - failhard: True
                {%- break %}
@@ -50,7 +50,7 @@ flag_elasticsearch_auth_set:
       - cmd: disable * user
       - cmd: reset * password
 {%- else %}
-"=== This elasticsearch install will not use authentication (it should) ===":
+"-- This elasticsearch install will not use authentication (it should).":
   test.nop
 {%- endif %}
 

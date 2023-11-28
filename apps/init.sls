@@ -11,6 +11,6 @@
 
 {% endfor %}
 {% else %}
-'== no apps to be installed ==':
+'-- no apps to be installed.':
   test.nop
 {% endif %}

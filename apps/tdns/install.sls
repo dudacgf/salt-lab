@@ -37,9 +37,8 @@ dns.service:
 
 {% else %}
 
-run installer:
-  test.nop:
-  - name: 'technitium dns installed and no updates needed'
+'-- technitium dns installed and no updates needed.':
+  test.nop
 
 {% endif %}
 

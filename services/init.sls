@@ -12,6 +12,6 @@
 
 {% endfor %}
 {% else %}
-'== no services to be installed ==':
+'-- no services to be installed.':
   test.nop
 {% endif %}

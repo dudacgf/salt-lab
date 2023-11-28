@@ -1,7 +1,5 @@
 #!jinja|yaml
 
-{% if not grains['flag_zabbix_repo_installed'] | default(False) %}
-
 {% if pillar['proxy'] != 'none' %}
 {% set proxy = 'https_proxy=' + pillar['proxy'] %}
 {% else %}
@@ -46,23 +44,10 @@ exclude zabbix from epel:
 {% elif grains['os_family'] == 'Windows' %}
 zabbix repo:
   test.nop:
-    - name: '** win repo used'
+    - name: '-- win repo used'
 {% else %}
 
-'** OS Not Supported **':
+'-- OS Not Supported':
   test.fail_without_changes:
     - failhard: True
 {% endif %} # if grains['os']
-
-flag_zabbix_repo_installed:
-  grains.present:
-    - value: True
-    - require: 
-      - zabbix repo
-
-{% else %}
-
-zabbix repo:
-  test.nop:
-    - name: '-- zabbix repo already installed'
-{% endif %} # grains['flag_

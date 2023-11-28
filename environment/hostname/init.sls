@@ -12,7 +12,7 @@
 {% if pillar['dns_hoster'] in pillar['supported_dns_hosters'] %}
 {% include 'environment/hostname/' + pillar['dns_hoster'] + '.sls' ignore missing %}
 {% else %}
-'=== register A record for this type of dns hosting is not implemented. sorry ===':
+'-- register A record for this type of dns hosting is not implemented.':
   test.nop
 {% endif %} # if pillar['dns_hoster']
 

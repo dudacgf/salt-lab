@@ -31,7 +31,7 @@ zabbix-agent:
       - file: {{ pillar['zabbix']['conffile'] }}
 
 {% else %}
-'=== zabbix agent will not be installed. ===':
+'-- zabbix agent will not be installed.':
   test.nop
 {% endif %}
 

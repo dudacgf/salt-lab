@@ -8,7 +8,7 @@ install deezer:
       - deezer: https://github.com/aunetx/deezer-linux/releases/download/v5.30.590-1/deezer-desktop_5.30.590_amd64.deb
 
 {%- else %}
-'== Deezer for this OS not supported yet ==':
+'-- Deezer for this OS not supported yet.':
   test.nop
 
 {%- endif %}

@@ -35,10 +35,10 @@ flag_selinux_mode_set:
 {% if selinux_mode == 'disabled' %}
 selinux disabled:
   test.show_notification:
-    - text: "*** selinux disabled. É necessário reiniciar o servidor ***"
+    - text: "-- selinux disabled"
 
 {% else %}
-'*** selinux set to {{ selinux_mode }}':
+'-- selinux set to {{ selinux_mode }}':
   test.nop 
 
 {% endif %}

@@ -30,7 +30,7 @@ instala nomachine:
 
 {% else %}
 
-'**** OS não suportado: {{ grains['os_family'] }}':
+'-- OS not supported: {{ grains['os_family'] }}':
   test.nop
 
 {% endif %}

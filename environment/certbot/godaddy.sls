@@ -75,7 +75,7 @@ flag_certbot_run:
 
 {% else %}
 
-'*** Server already has certificate. Not running certbot. ***':
+'-- Server already has certificate. Not running certbot.':
   test.nop
 
 {% endif %} # certbot

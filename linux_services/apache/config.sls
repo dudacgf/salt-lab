@@ -3,7 +3,7 @@
 
 #
 # relê todos os grains para pegar flag setado nessa rodada
-reload grains before config:
+'-- reload grains before config':
   test.nop:
     - reload_grains: True
 

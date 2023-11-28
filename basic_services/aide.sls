@@ -50,7 +50,7 @@ aidecheck.timer:
     - restart: true
 
 {%- else %}
-'=== aide will not be installed ===':
+'-- aide will not be installed':
   test.nop
 
 {%- endif %}

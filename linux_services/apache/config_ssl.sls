@@ -6,9 +6,8 @@
 #
 
 {% if not pillar['apache']['ssl_enable'] | default(False) %}
-nada a fazer:
-  test.nop:
-    - name: '*** servidor não usa https. nada a fazer'
+'-- servidor não usa https. nada a fazer.'
+  test.nop
    
 {% else %}
    

@@ -4,6 +4,6 @@ include:
   - .duo_system
   - .duo_ssh
 {%- else -%}
-'== Duo will not be installed ==':
+'-- Duo will not be installed.':
   test.nop
 {%- endif %}

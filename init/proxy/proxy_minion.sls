@@ -23,7 +23,7 @@ setproxy restart salt minion:
       - file: /etc/salt/minion.d/00-proxy.conf
 
 {% else %}
-'-- Este servidor não usa proxy. nada a fazer':
-  test.nop
-
+"salt/minion/{{ grains['id'] }}/start":
+  event.send:
+    - data: '-- Este servidor não usa proxy. nada a fazer'
 {% endif %}

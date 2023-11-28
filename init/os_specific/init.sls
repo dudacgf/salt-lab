@@ -4,7 +4,7 @@
 {% set osf = grains['os'] | lower() %}
 {% endif %}
 
-executando os_specific para {{ osf }}:
+'-- executando os_specific para {{ osf }}':
   test.nop
 
 ## note to me: path always from salt-base

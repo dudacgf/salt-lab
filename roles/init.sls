@@ -13,6 +13,6 @@
 
 {% endfor %}
 {% else %}
-'== no roles to be installed ==':
+'-- no roles to be installed.':
   test.nop
 {% endif %}

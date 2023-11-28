@@ -100,7 +100,7 @@ postfix.service:
       - file: /etc/postfix/*
 
 {%- else %}
-'=== postfix will not be installed ===':
+'-- postfix will not be installed':
   test.nop
 
 {%- endif %}
