@@ -9,7 +9,7 @@ copia godaddy files:
         - mode: 500
     - template: jinja
     - user: root
-    - mode: root
+    - group: root
 
 register host:
   cmd.run:
@@ -20,4 +20,5 @@ delete_secrets:
     - name: rm /root/godaddy_secrets
     - require: 
       - file: copia godaddy files
+    - order: 10100
 

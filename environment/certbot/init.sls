@@ -3,28 +3,27 @@
 #
 
 {%- if pillar['certbot'] | default(False) %}
-#
-# install pkgs
-certbot:
-  pkg.installed
+install pkgs:
+  pkg.installed:
+    - pkgs:
+      - certbot
+      - {{ pillar['pkg_data']['python']['dnspython'] }}
 
-{{ pillar['pkg_data']['python']['dnspython'] }}:
-  pkg.installed
-
-# you just need to run it once
-{% if not grains['flag_certbot_run'] | default(False) %}
-
-# calls certbot for the dns hoster used for this server
-{%- if pillar['dns_hoster'] in pillar['supported_dns_hosters'] %}
-{% include 'environment/certbot/' + pillar['dns_hoster'] + '.sls' ignore missing %}
-{%- else %}
-'-- dns hoster not supported: {{ pillar['dns_hoster'] }}.':
-  test.fail_without_changes
-{%- endif %} # if dns_hoster
-{% else %}
+  {% if not grains['flag_certbot_run'] | default(False) %}
+      {% set location = pillar['location'] %}
+      {% set domain = pillar[location + '_domain'] %}
+      {% if domain in pillar['dns_hoster_by_domain'] and domain in pillar['certbot_ok_domains'] %}
+      {% set hoster = pillar['dns_hoster_by_domain'][domain] %}
+include:
+  - environment.certbot.{{ hoster }}
+      {% else %}
+'-- certbot for {{ domain }} not implemented.':
+  test.nop
+      {%- endif %}
+  {% else %}
 '-- Server already has certificate. Not running certbot.':
   test.nop
-{% endif %} # if flag_certbot_run
+  {% endif %} # if flag_certbot_run
 {%- else %}
 '-- Server does not need certificate. Not running certbot.':
   test.nop
