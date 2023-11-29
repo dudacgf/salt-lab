@@ -159,6 +159,7 @@
     - sls: init.proxy.proxy_syspkg
     - tgt: {{ mname }}
     - pillar: {'proxy': {{ proxy[mname] }} }
+{% endif %} # if redefine
 
 ### 7. networkmanager connections 
 {{ mname }} nmconnections:
