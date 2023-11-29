@@ -21,7 +21,7 @@
 {% if salt.file.search('/etc/dnf/dnf.conf', pattern='proxy=') %}
 /etc/dnf/dnf.conf:
   file.replace:
-    - pattern: '^proxy='
+    - pattern: '^proxy=.*$'
     - repl: proxy={{ proxy }}
 {% else %}
 /etc/dnf/dnf.conf:
