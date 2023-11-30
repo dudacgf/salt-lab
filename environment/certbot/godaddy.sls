@@ -64,8 +64,7 @@ run_certbot:
     - name: certbot certonly --manual --preferred-challenges=dns-01 --email={{ domainemail }} --agree-tos --manual-public-ip-logging-ok --manual-auth-hook /usr/local/bin/validation.py --manual-cleanup-hook /usr/local/bin/cleanup.py --post-hook /usr/local/bin/post_hook.sh --reinstall --no-eff-email -d {{ domainname }}
     - require:
       - file: copia *
-      - pkg: certbot
-      - pkg: {{ pillar['pkg_data']['python']['dnspython'] }}
+      - pkg: certbot pkgs
 
 flag_certbot_run:
   grains.present:

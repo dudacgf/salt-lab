@@ -3,7 +3,7 @@
 #
 
 {%- if pillar['certbot'] | default(False) %}
-install pkgs:
+certbot pkgs:
   pkg.installed:
     - pkgs:
       - certbot
@@ -13,9 +13,8 @@ install pkgs:
       {% set location = pillar['location'] %}
       {% set domain = pillar[location + '_domain'] %}
       {% if domain in pillar['dns_hoster_by_domain'] and domain in pillar['certbot_ok_domains'] %}
-      {% set hoster = pillar['dns_hoster_by_domain'][domain] %}
-include:
-  - environment.certbot.{{ hoster }}
+        {% set hoster = pillar['dns_hoster_by_domain'][domain] %}
+        {% include 'environment/certbot/' + hoster + '.sls' ignore missing %}
       {% else %}
 '-- certbot for {{ domain }} not implemented.':
   test.nop
