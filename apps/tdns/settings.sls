@@ -1,28 +1,16 @@
-#!py
-
 #
-# use pillar 'tdns_settings' dict values to create a tdns.server_configured state
+# use map value 'tdns_settings' dict values to create a tdns.server_configured state
 #
-def run():
-    
-    config = {}
 
-    if 'tdns_settings' not in __pillar__:
-        config['nada a fazer'] = {
-            'test.show_notification': [
-                 {'text': '*** este minion não define configuração para o serviço TDNS ***'},
-            ],
-        }
-    else:
-        options = [{'dnsServerDomain': __grains__['id'].split('.')[0] 
-                                      + '.' 
-                                      + __pillar__['internal_domain']
-                  }]
-        for key in __pillar__['tdns_settings']:
-            options.append({key: __pillar__['tdns_settings'][key]})
-        config['server_settings'] = {
-            'tdns.server_configured': options
-        }
+# read the map, filter by minion id, check if tdns_settings is defined
+{% import_yaml 'maps/tdns/tdns.yaml' as tdns %}
+{% set tdns = salt.grains.filter_by(tdns, grain='id') %}
 
-    return config
-            
+{% if 'tdns_settings' in tdns %}
+server_settings:
+    tdns.server_configured: {{ tdns.tdns_settings }}
+
+{% else %}
+'-- no TDNS server settings found': test.nop
+
+{% endif %}

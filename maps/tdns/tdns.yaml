@@ -1,0 +1,240 @@
+gamatauri:
+  tdns_settings:
+    forwarders: [ '208.67.222.222:853', '208.67.220.220:853' ]
+    forwarderProtocol: Tls
+    blockListUrls: [
+      https://phishing.army/download/phishing_army_blocklist_extended.txt,
+      https://raw.githubusercontent.com/anudeepND/blacklist/master/facebook.txt,
+      https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts,
+      https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt,
+      https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt,
+      https://dbl.oisd.nl/ ]
+    tsigKeys:
+      - keyName: xfr-over-tcp.key
+        sharedSecret: ldUI8MPCCM7Q6armCqGvfRsMxxjeYC0tWQKrGNcKG1c=
+        algorithmName: hmac-sha256
+      - keyName: ddns
+        sharedSecret: Lf1GF4bMNHK w2x1zDNXNsRd8MON3qPV49N7v/AnniE=
+        algorithmName: hmac-sha256
+    enableDnsOverHttp: True
+    webServiceLocalAddresses: [ '127.0.0.1' ]
+    recursion: 'AllowOnlyForPrivateNetworks'
+
+  tdns_zones:
+    home.theshiresco.com:
+      type: Primary
+      zone: home.theshiresco.com
+      zoneTransferProtocol: Tls
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      tsigKeyName: xfr-over-tcp.key
+      dnssecValidation: True
+      responsiblePerson: rlivre@theshiresco.com
+      update: 'AllowBothZoneNameServersAndSpecifiedIpAddresses'
+      updateIpAddresses: [ '172.20.9.102' ]
+      updateSecurityPolicies:
+        - tsigKeyName: 'ddns'
+          domain: 'home.theshiresco.com'
+          allowedTypes: ['A']
+        - tsigKeyName: 'ddns'
+          domain: '*.home.theshiresco.com'
+          allowedTypes: [ 'ANY' ]
+      notify: 'ZoneNameServers'
+    home.shireslab.com.br:
+      type: Primary
+      zone: home.shireslab.com.br
+      zoneTransferProtocol: Tls
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      tsigKeyName: xfr-over-tcp.key
+      dnssecValidation: True
+      responsiblePerson: rlivre@theshiresco.com
+      update: 'AllowBothZoneNameServersAndSpecifiedIpAddresses'
+      updateIpAddresses: [ '172.20.9.102' ]
+      updateSecurityPolicies:
+        - tsigKeyName: 'ddns'
+          domain: 'home.shireslab.com.br'
+          allowedTypes: ['A']
+        - tsigKeyName: 'ddns'
+          domain: '*.home.shireslab.com.br'
+          allowedTypes: [ 'ANY' ]
+      notify: 'ZoneNameServers'
+    9.20.172.in-addr.arpa:
+      type: Secondary
+      zone: 9.20.172.in-addr.arpa
+      zoneTransferProtocol: Tls
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      tsigKeyName: xfr-over-tcp.key
+      dnssecValidation: True
+      responsiblePerson: rlivre@theshiresco.com
+      notify: 'ZoneNameServers'
+    200.1.10.in-addr.arpa:
+      type: Secondary
+      zone: 200.1.10.in-addr.arpa
+      zoneTransferProtocol: Tls
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      tsigKeyName: xfr-over-tcp.key
+      dnssecValidation: True
+      responsiblePerson: rlivre@theshiresco.com
+      notify: 'ZoneNameServers'
+
+  tdns_zonerecords:
+    - domain: home.theshiresco.com
+      type: NS
+      nameServer: betatauri.theshiresco.com
+      glue: 172.20.9.101
+    - domain: home.shireslab.com.br
+      type: NS
+      nameServer: betatauri.theshiresco.com
+      glue: 172.20.9.101
+    - domain: 9.20.172.in-addr.arpa
+      type: NS
+      nameServer: betatauri.theshiresco.com
+      glue: 172.20.9.101
+    - domain: 200.1.10.in-addr.arpa
+      type: NS
+      nameServer: betatauri.theshiresco.com
+      glue: 172.20.9.101
+
+  tdns_dhcpscopes:
+    HomeDefault:
+      name: HomeDefault
+      startingAddress: 172.20.9.1
+      domainName: home.shireslab.com.br
+      endingAddress: 172.20.9.99
+      subnetMask: 255.255.255.0
+      routerAddress: 172.20.9.1
+      allowOnlyReservedLeases: false
+      blockLocallyAdministeredMacAddresses: false
+      dnsServers: [ '208.67.220.220', '208.67.222.222' ]
+      dnsTtl: 900
+      dnsUpdates: true
+      exclusions:
+      - endingAddress: 172.20.9.1
+        startingAddress: 172.20.9.1
+      leaseTimeDays: 0
+      leaseTimeHours: 1
+      leaseTimeMinutes: 0
+      offerDelayTime: 0
+      pingCheckEnabled: true
+      pingCheckRetries: 2
+      pingCheckTimeout: 1000
+      reservedLeases:
+      - address: 172.20.9.37
+        comments: Celular cacau
+        hardwareAddress: 22-B5-C2-7F-B8-4F
+        hostName: POCO-X3-GT
+      useThisDnsServer: false
+    HomeBlock:
+      name: HomeBlock
+      domainName: home.theshiresco.com
+      endingAddress: 172.20.9.253
+      startingAddress: 172.20.9.100
+      subnetMask: 255.255.255.0
+      routerAddress: 172.20.9.1
+      allowOnlyReservedLeases: true
+      blockLocallyAdministeredMacAddresses: false
+      dnsServers: [ '172.20.9.100', '172.20.9.101' ]
+      dnsTtl: 900
+      dnsUpdates: true
+      leaseTimeDays: 14
+      leaseTimeHours: 0
+      leaseTimeMinutes: 0
+      offerDelayTime: 0
+      pingCheckEnabled: true
+      pingCheckRetries: 2
+      pingCheckTimeout: 1000
+      reservedLeases:
+      - address: 172.20.9.102
+        comments: null
+        hardwareAddress: C2-83-A7-A1-5B-D8
+        hostName: aldebaran
+      - address: 172.20.9.103
+        comments: Epson printer
+        hardwareAddress: 50-57-9C-AC-5B-BC
+        hostName: L3150
+      - address: 172.20.9.104
+        comments: Mini switch
+        hardwareAddress: 36-5C-79-38-C7-39
+        hostName: Regulus
+      - address: 172.20.9.105
+        comments: MiniS
+        hardwareAddress: 7C-83-34-B4-D5-CE
+        hostName: sumbalet
+      - address: 172.20.9.110
+        comments: MiniS
+        hardwareAddress: DC-21-5C-FC-BF-2A
+        hostName: sumbalet-w
+      - address: 172.20.9.202
+        comments: null
+        hardwareAddress: D8-08-31-24-91-4C
+        hostName: S7fe
+      - address: 172.20.9.205
+        comments: null
+        hardwareAddress: 00-03-7F-12-DF-EB
+        hostName: lgv60
+      - address: 172.20.9.207
+        comments: null
+        hardwareAddress: 9C-8C-6E-F0-F0-A2
+        hostName: SamsungTV-Sala
+      - address: 172.20.9.240
+        comments: null
+        hardwareAddress: B4-B0-24-75-14-3E
+        hostName: swLab
+      - address: 172.20.9.241
+        comments: RE200
+        hardwareAddress: 2A-A6-78-29-A6-78
+        hostName: bergamota
+      - address: 172.20.9.242
+        comments: Switch lab 8p
+        hardwareAddress: 34-60-F9-E8-84-6A
+        hostName: swLab8p
+      useThisDnsServer: false
+
+betatauri:
+  tdns_settings:
+    forwarders: [ '208.67.222.222:853', '208.67.220.220:853' ]
+    forwarderProtocol: Tls
+    blockListUrls: [
+      https://phishing.army/download/phishing_army_blocklist_extended.txt,
+      https://raw.githubusercontent.com/anudeepND/blacklist/master/facebook.txt,
+      https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts,
+      https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt,
+      https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt,
+      https://dbl.oisd.nl/ ]
+    tsigKeys:
+      - keyName: xfr-over-tcp.key
+        sharedSecret: ldUI8MPCCM7Q6armCqGvfRsMxxjeYC0tWQKrGNcKG1c=
+        algorithmName: hmac-sha256
+      - keyName: ddns
+        sharedSecret: Lf1GF4bMNHK w2x1zDNXNsRd8MON3qPV49N7v/AnniE=
+        algorithmName: hmac-sha256
+    enableDnsOverHttp: True
+    webServiceLocalAddresses: [ '127.0.0.1' ]
+    recursion: 'AllowOnlyForPrivateNetworks'
+
+  tdns_zones:
+    home.theshiresco.com:
+      type: Secondary
+      zone: home.theshiresco.com
+      tsigKeyName: xfr-over-tcp.key
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      primaryNameServerAddresses: [ '172.20.9.100' ]
+    home.shireslab.com.br:
+      type: Secondary
+      zone: home.shireslab.com.br
+      tsigKeyName: xfr-over-tcp.key
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      primaryNameServerAddresses: [ '172.20.9.100' ]
+    200.1.10.in-addr.arpa:
+      type: Secondary
+      zone: 200.1.10.in-addr.arpa
+      tsigKeyName: xfr-over-tcp.key
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      primaryNameServerAddresses: [ '172.20.9.100' ]
+    9.20.172.in-addr.arpa:
+      type: Secondary
+      zone: 9.20.172.in-addr.arpa
+      tsigKeyName: xfr-over-tcp.key
+      zoneTransferTsigKeyNames: [ xfr-over-tcp.key ]
+      primaryNameServerAddresses: [ '172.20.9.100' ]
+default:
+  no clauses

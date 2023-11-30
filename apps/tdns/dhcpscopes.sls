@@ -1,25 +1,19 @@
-#!py
-
 #
-# use pillar 'tdns_dhcpscopes' dict values to create tdns.dhcpscope_managed states
+# use map value 'tdns_dhcpscopes' dict values to create a tdns.dhcpscope_managed state
 #
-def run():
-    
-    config = {}
 
-    if 'tdns_dhcpscopes' not in __pillar__:
-        config['nada a fazer'] = {
-            'test.show_notification': [
-                 {'text': '*** host pillar has no TDNS dhcp scopes defined ***'},
-            ],
-        }
-    else:
-        for d in __pillar__['tdns_dhcpscopes']:
-            dhcpscope = __pillar__['tdns_dhcpscopes'][d]
-            options = [{k: v} for k,v in dhcpscope.items()]
-            config[dhcpscope['name']] = {
-               'tdns.dhcpscope_managed': options
-            }
+# read the map, filter by minion id, check if tdns_settings is defined
+{% import_yaml 'maps/tdns/tdns.yaml' as tdns %}
+{% set tdns = salt.grains.filter_by(tdns, grain='id') %}
 
-    return config
-            
+{% if 'tdns_dhcpscopes' in tdns %}
+{% for d in tdns.tdns_dhcpscopes %}
+{% set dhcpscope = tdns.tdns_dhcpscopes[d] %}
+{{ dhcpscope.name }}:
+    tdns.dhcpscope_managed: {{ dhcpscope }}
+{% endfor %}
+
+{% else %}
+'-- no TDNS dhcp scopes defined': test.nop
+
+{% endif %}
