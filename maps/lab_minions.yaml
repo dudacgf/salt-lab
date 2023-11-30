@@ -1,0 +1,13 @@
+- name: fw1
+  profile: r9_gold_br0
+- name: gnome_loc
+  profile: debian_gold
+- name: plasma_loc
+  profile: ubuntu_gold
+- name: lgl
+  profile: r9_gold_br0
+- name: lamp
+  profile: r9_gold_br0
+- name: cinnamon_pub
+  profile: d11_gold_br0
+

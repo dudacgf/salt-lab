@@ -18,18 +18,16 @@
 #  (c) ecgf - set/2023
 #
 
-# get list of minions from virtual_host pillar
-{% set minions = salt['cmd.run']("salt " + pillar['virtual_host'] + " pillar.item minions ") | load_yaml %}
-{% set minions = minions[pillar['virtual_host']]['minions'] %}
-
+# get list of minions from map
+{% import_yaml 'maps/lab_minions.yaml' as minions %}
 # get list of existing vms in vm host pillar['virtual_host'] 
 {% set vhost_vmlist = salt['cmd.run']("salt " + pillar['virtual_host'] + " virt.list_domains") | 
                       default(pillar['virtual_host']) | load_yaml %}
 
 
 {% for minion in minions | default([]) %}
-{% set mname = minions[minion]['name'] %}
-{% set profile = minions[minion]['profile'] %}
+{% set mname = minion.name %}
+{% set profile = minion.profile %}
 
 ### if vm does not exists yet, create it
 {% if mname not in vhost_vmlist[pillar['virtual_host']] %}
@@ -48,7 +46,7 @@
 {% endif %}
 
 ### configures the minion
-{% set temp = '{"1": ' + minions[minion] | tojson + '}' %}
+{% set temp = '{"1": ' + minion | tojson + '}' %}
 {% set pillar_minion = '{"minions": ' + temp + '}' %}
 
 {{ mname }} call config:
