@@ -1,3 +1,4 @@
+# register a minion at godaddy' dns
 copia godaddy files:
   file.managed:
     - names:

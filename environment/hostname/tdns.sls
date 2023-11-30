@@ -1,9 +1,9 @@
 {% set hostname = grains['id'].split('.')[0] %}
 {% set domain_type = pillar['location'] %}
 {% set domain = pillar[domain_type + '_domain'] %}
-{% set tdns_user = pillar['tdns']['tdns_user'] %}
-{% set tdns_password = pillar['tdns']['tdns_pw'] %}
-{% set tdns_server = pillar['tdns']['server'] %}
+{% set tdns_user = pillar['tdns_hosting']['tdns_user'] %}
+{% set tdns_password = pillar['tdns_hosting']['tdns_pw'] %}
+{% set tdns_server = pillar['tdns_hosting']['server'] %}
 {% set ip4_address = grains.ipv4 | difference(['127.0.0.1']) | first %}
 
 {% set tokenName = salt.random.get_str(10,printable=False,punctuation=False,whitespace=False) %}
