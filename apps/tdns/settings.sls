@@ -3,7 +3,7 @@
 #
 
 # read the map, filter by minion id, check if tdns_settings is defined
-{% import_yaml 'maps/tdns/tdns.yaml' as tdns %}
+{% import_yaml 'maps/apps/tdns.yaml' as tdns %}
 {% set tdns = salt.grains.filter_by(tdns, grain='id') %}
 
 {% if 'tdns_settings' in tdns %}
