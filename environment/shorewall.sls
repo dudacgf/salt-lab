@@ -4,9 +4,11 @@
 # ecgf - dez/2022
 #
 
-{% if pillar['shorewall'] is defined and 
-      pillar['shorewall']['install'] | default(False) %}
+# read map with shorewall rules 
+{% import_yaml "maps/shorewall.yaml" as shorewall %}
+{% set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') %}
 
+{% if shorewall.install %}
 #
 # redhat 8 and up doesn't offer shorewall anymore
 {% if grains['os_family'] == 'RedHat' %}
@@ -104,5 +106,5 @@ stop firewalld:
 {% else %}
 nothing to do:
   test.show_notification:
-    - text: '*** shorewall not enabled for this minion. nothing to do. ***'
+    - text: '-- shorewall not enabled for this minion. nothing to do.'
 {% endif %}

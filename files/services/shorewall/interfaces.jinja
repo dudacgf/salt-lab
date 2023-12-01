@@ -1,14 +1,17 @@
+{%- import_yaml "maps/shorewall.yaml" as shorewall %}
+{%- set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') -%}
 ?FORMAT 2
 ###############################################################################
 #ZONE       INTERFACE       OPTIONS
-{%- for interface in pillar['shorewall']['interfaces'] | default({}) %}
-   {%- set zone = pillar['shorewall']['interfaces'][interface]['zone'] | default('') %}
-   {%- set options = pillar['shorewall']['interfaces'][interface]['options'] | default ('-') %}
-   {%- set hwaddr = pillar['shorewall']['interfaces'][interface]['hwaddr'] | default('none') %}
+{%- for interface in shorewall.interfaces %}
+{%- set intf = shorewall.interfaces[interface] %}
+   {%- set zone = intf.zone | default('') %}
+   {%- set options = intf.options | default ('-') %}
+   {%- set hwaddr = intf.hwaddr | default('none') %}
    {%- if hwaddr == 'none' %}
        {%- set nic = 'enp1s0' %} 
    {% else %}
-       {%- set nic = salt['ifaces.get_iface_name'](hwaddr) %}
+       {%- set nic = salt.ifaces.get_iface_name(hwaddr) %}
    {%- endif %}
 {{ zone }}     {{ nic }}     {{ options }}
 {%- endfor %}

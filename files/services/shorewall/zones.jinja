@@ -1,7 +1,9 @@
+{%- import_yaml "maps/shorewall.yaml" as shorewall %}
+{%- set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') -%}
 ###############################################################################
 #ZONE       TYPE        OPTIONS     IN_OPTIONS  OUT_OPTIONS
 
 fw      firewall
-{%- for zone in pillar['shorewall']['zones'] | default({}) %}
+{%- for zone in shorewall.zones %}
 {{ zone }}	ipv4
 {%- endfor %}

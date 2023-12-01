@@ -1,12 +1,15 @@
+{%- import_yaml "maps/shorewall.yaml" as shorewall %}
+{%- set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') -%}
 ###############################################################################
 #ZONE       HOSTS               OPTIONS
-{%- for host in pillar['shorewall']['hosts'] | default({}) %}
-   {%- set zone = pillar['shorewall']['hosts'][host]['zone'] | default('') %}
-   {%- set nic = salt['ifaces.get_iface_name'](pillar['shorewall']['hosts'][host]['hwaddr']) %}
+{%- for h in shorewall.hosts %}
+{%- set host = shorewall.hosts[h] %}
+   {%- set zone = host.zone | default('') %}
+   {%- set nic = salt.ifaces.get_iface_name(host.hwaddr) %}
    {%- if nic == None %}
        {%- set nic = 'enp1s0' %} 
    {%- endif %}
-   {%- set hosts = ','.join(pillar['shorewall']['hosts'][host]['ipaddrs']) %}
+   {%- set hosts = ','.join(host.ipaddrs) %}
 {{ zone }}     {{ nic }}:{{ hosts }}
 {%- endfor %}
 
