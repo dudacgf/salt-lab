@@ -1,3 +1,4 @@
+# register a minion in aws route53 dns
 awscli:
   pkg.installed
 

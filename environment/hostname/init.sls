@@ -18,6 +18,6 @@
   test.nop
     {% endif %} # if domain in 
 {% else %}
-'-- will not register {{ domain }} in dns':
+'-- will not register this host in dns':
   test.nop
 {% endif %} # if pillar['register_dns']

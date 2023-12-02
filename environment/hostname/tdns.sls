@@ -1,3 +1,4 @@
+# register a minion in tdns server
 {% set hostname = grains['id'].split('.')[0] %}
 {% set domain_type = pillar['location'] %}
 {% set domain = pillar[domain_type + '_domain'] %}
