@@ -2,13 +2,14 @@
 ## add_minions_interfaces.sls - adiciona interfaces de rede a um ou mais minions
 #
 
+{% if pillar['redefine_interfaces'] | default(False) %}
+
 # which minion to apply interfaces to 
 {% set minion = pillar['minion'] %}
 
 # the interfaces to be applied to the minion
 # TODO: this should be a _utils module but 
 {% set interfaces = pillar['minion_interfaces'] %}
-
 {% set interface_list = [] %}
 {% for interface in interfaces %}
 
@@ -25,7 +26,7 @@
 {% endfor %}
 
 # aplica a lista de interface
-define interfaces:
+redefine interfaces:
   virt.defined:
     - name: {{ minion }}
     - interfaces: [ {{ interface_list | join(',') }} ]
@@ -33,18 +34,22 @@ define interfaces:
 stopped:
   virt.stopped:
     - name: {{ minion }}
-    - require:
-      - virt: define interfaces
 
 sleep a while:
   cmd.run:
-    - name: 'sleep {{ pillar['sleep_a_longer_while'] | default(15) }}'
+    - name: 'sleep {{ pillar['sleep_a_while'] | default(15) }}'
     - require:
-      - virt: stopped
+      - virt:  stopped
 
-running:
+started:
   virt.running:
     - name: {{ minion }}
-    - require: 
-      - virt: stopped
+    - require:
+      - virt:  stopped
 
+{% else %}
+
+"salt/minion/{{ grains['id'] }}/start":
+  event.send:
+    - data: '-- no interfaces will be added/redefined to {{ pillar['minion'] }}.'
+{% endif %}

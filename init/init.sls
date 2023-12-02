@@ -19,15 +19,16 @@
 #
 
 # get list of minions from map
-{% import_yaml 'maps/lab_minions.yaml' as minions %}
+{% set map = pillar['map'] | default('lab_minions') %}
+{% import_yaml 'maps/' + map + '.yaml' as minions %}
 # get list of existing vms in vm host pillar['virtual_host'] 
 {% set vhost_vmlist = salt['cmd.run']("salt " + pillar['virtual_host'] + " virt.list_domains") | 
                       default(pillar['virtual_host']) | load_yaml %}
 
-
+#
+### loop through list of minions creating and configuring each one
 {% for minion in minions | default([]) %}
 {% set mname = minion.name %}
-{% set profile = minion.profile %}
 
 ### if vm does not exists yet, create it
 {% if mname not in vhost_vmlist[pillar['virtual_host']] %}
@@ -35,8 +36,8 @@
 {{ mname }} create_instance:
   salt.runner:
     - name: cloud.profile
-    - provider: {{ pillar['virt_provider'] }}
-    - prof: {{ profile }}
+    - provider: {{ minion.virtual_provider }}
+    - prof: {{ minion.profile | default('debian_gold') }}
     - instances:
       - {{ mname }}
     - opts:
@@ -44,6 +45,29 @@
     - quiet: true
 
 {% endif %}
+
+### redefines interfaces, if needed
+{{ mname }} redefine interfaces:
+  salt.state:
+    - sls: init.redefine_interfaces
+    - tgt: {{ minion.virtual_host | default(grains['id']) }}
+    - pillar: {'minion': {{ mname }}, 'redefine_interfaces': {{ minion.redefine_interfaces | default(False) }}, 'minion_interfaces': {{ minion.interfaces | default({}) }} }
+
+# wait (add minion interfaces restarts salt-minion service)
+{{ mname }} wait interfaces:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ "{{ mname }}" ]
+    - timeout: 120
+    - require:
+      - salt: {{ mname }} redefine interfaces
+
+### attach usb devices
+{{ mname }} attach usb devices:
+  salt.state:
+    - sls: init.attach_usb
+    - tgt: {{ minion.virtual_host | default(grains['id']) }}
+    - pillar: {'minion': {{ mname }}, 'usb_devices': {{ minion.usb_devices | default(None) }}}
 
 ### configures the minion
 {% set temp = '{"1": ' + minion | tojson + '}' %}
@@ -54,4 +78,5 @@
     - name: state.orchestrate
     - mods: init.config
     - pillar: {{ pillar_minion }}
+
 {% endfor %}

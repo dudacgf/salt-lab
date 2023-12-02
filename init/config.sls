@@ -12,26 +12,11 @@
 {% set mname = pillar['minions'][minion]['name'] %}
 
 #
-### 0. Proxy - defines proxy for apt/yum and salt-minion
+### 0. Proxy - defines system wide proxy and configure proxy for apt/yum
 #
-
 {{ mname }} define proxy minion:
   salt.state:
-    - sls: init.proxy.proxy_minion
-    - tgt: {{ mname }}
-
-# waits (the previous state restarts salt-minion service)
-{{ mname }} proxy restart:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
-    - timeout: {{ pillar['sleep_a_longer_while'] }}
-    - require:
-      - salt: {{ mname }} define proxy minion
-
-{{ mname }} define proxy syspkg:
-  salt.state:
-    - sls: init.proxy.proxy_syspkg
+    - sls: init.proxy
     - tgt: {{ mname }}
 
 #
@@ -74,27 +59,9 @@
     - require:
       - salt: {{ mname }} network manager
 
-##
-# will need this in the following steps
-{% set virtual_host = salt['cmd.run']("salt " + mname + " pillar.get virtual_host") | load_yaml %}
-
 #
 #
-### 4. attach usb devices
-#
-#
-{% set usb_devices = salt['cmd.run']("salt " + mname + " pillar.get usb_devices") | load_yaml %}
-{% if usb_devices[mname]['attach'] | default(False) %}
-{{ mname }} attach usb devices:
-  salt.state:
-    - sls: init.attach_usb
-    - tgt: {{ virtual_host[mname] }}
-    - pillar: {'usb_devices': {{ usb_devices[mname] }}, 'minion': {{ mname }} }
-{% endif %}
-
-#
-#
-### 5. install drivers, if needed
+### 4. install drivers, if needed
 {{ mname }} install drivers:
   salt.state:
     - sls: drivers
@@ -110,58 +77,7 @@
     - require:
       - salt: {{ mname }} install drivers
 
-#
-#
-### 6. if host pillar defines interfaces, create them in the virtual_host and set it's ip address
-#
-#
-## adds the network virtual interfaces to the minion (this is run in the virtual_host)
-{%- set redefine = salt['cmd.run']("salt " + mname + " pillar.get redefine_interfaces") | load_yaml %}
-{%- if redefine[mname] %}
-    {%- set interfaces = salt['cmd.run']("salt " + mname + " pillar.get interfaces") | load_yaml %}
-{{ mname }} add interfaces:
-  salt.state:
-    - sls: init.add_minion_interfaces
-    - tgt: {{ virtual_host[mname] }}
-    - pillar: {'minion_interfaces': {{ interfaces[mname] }}, 'minion': {{ mname }} }
-
-#
-## wait (add minion interfaces reboots the minion)
-{{ mname }} aguarda interfaces:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ "{{ mname }}" ]
-    - timeout: 120
-    - require:
-      - salt: {{ mname }} add interfaces
-
-#
-## 6a. if redefine_proxy is set, redefine proxy
-{% set proxy = salt.cmd.run('salt ' + mname + ' pillar.get redefine_proxy') | load_yaml %}
-
-{{ mname }} redefine proxy minion:
-  salt.state:
-    - sls: init.proxy.proxy_minion
-    - tgt: {{ mname }}
-    - pillar: {'proxy': {{ proxy[mname] }} }
-
-# waits (the previous state restarts salt-minion service)
-{{ mname }} redefine proxy restart:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
-    - timeout: {{ pillar['sleep_a_longer_while'] }}
-    - require:
-      - salt: {{ mname }} redefine proxy minion
-
-{{ mname }} redefine proxy syspkg:
-  salt.state:
-    - sls: init.proxy.proxy_syspkg
-    - tgt: {{ mname }}
-    - pillar: {'proxy': {{ proxy[mname] }} }
-{% endif %} # if redefine
-
-### 7. networkmanager connections 
+### 5. networkmanager connections 
 {{ mname }} nmconnections:
   salt.state:
     - sls: init.nmconnections
@@ -178,7 +94,7 @@
     - require:
       - salt: {{ mname }} nmconnections
 
-### 8. executa o highstate desse minion
+### 6. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
 {%- if hoi[mname]['highstate_on_init'] | default(False) %}
 

@@ -1,6 +1,6 @@
 #!jinja|yaml
 
-{% if pillar['usb_devices'] is defined and
+{% if pillar['usb_devices'] and
       pillar['usb_devices']['attach'] | default(False) %}
 
 {% do pillar['usb_devices'].pop('attach') %}

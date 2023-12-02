@@ -1,13 +1,114 @@
+# lab network firewall and gateway
 - name: fw1
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
   profile: r9_gold_br0
-- name: gnome_loc
-  profile: debian_gold
-- name: plasma_loc
-  profile: ubuntu_gold
+  proxy: 'http://172.20.9.102:3128'
+  redefine_interfaces: True
+  interfaces:
+    br0:
+      itype: 'bridge'
+      dhcp: False
+      hwaddr: '52:54:10:40:f0:00'
+      ip4_address: 172.28.4.251/24
+      ip4_gateway: 172.28.4.1
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+    LOC:
+      hwaddr: '52:54:10:40:f0:01'
+      itype: 'network'
+      dhcp: False
+      ip4_address: 10.1.200.254/24
+    DMZ:
+      hwaddr: '52:54:10:40:f0:02'
+      itype: 'network'
+      dhcp: False
+      ip4_address: 10.1.201.254/24
+
+# Graylog siem server
 - name: lgl
   profile: r9_gold_br0
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
+  proxy: 'http://10.1.200.254:3128'
+  redefine_interfaces: True
+  interfaces:
+    LOC:
+      hwaddr: '52:10:01:20:22:40'
+      dhcp: False
+      itype: network
+      ip4_address: 10.1.200.240/24
+      ip4_gateway: 10.1.200.254
+      ip4_dns: [ '172.20.9.101', '172.20.9.100' ]
+
+# lamp server running wordpress
 - name: lamp
   profile: r9_gold_br0
-- name: cinnamon_pub
-  profile: d11_gold_br0
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
+  proxy: 'http://10.1.201.254:3128'
+  redefine_interfaces: True
+  interfaces:
+    DMZ:
+      hwaddr: '52:54:00:10:f0:05'
+      itype: network
+      dhcp: False
+      ip4_address: 10.1.201.133/24
+      ip4_gateway: 10.1.201.254
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
 
+# debian gnome workstation
+- name: gnome-loc
+  profile: debian_gold
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
+  proxy: 'http://10.1.200.254:3128'
+  redefine_interfaces: True
+  interfaces:
+    LOC:
+      dhcp: False
+      ip4_address: 10.1.200.102/24
+      ip4_gateway: 10.1.200.254
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+      hwaddr: '52:54:00:39:f0:01'
+      itype: network
+
+# ubuntu plasma workstation
+- name: plasma-loc
+  profile: ubuntu_gold
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
+  proxy: 'http://10.1.200.254:3128'
+  redefine_interfaces: True
+  interfaces:
+    LOC:
+      dhcp: True
+      itype: network
+
+# ubuntu cinnamon workstation
+- name: cinnamon-pub
+  profile: d11_gold_br0
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
+
+# IoT hotspot server configuration
+- name: i2
+  virtual_host: aldebaran
+  virtual_provider: aldebaran-over-ssh
+  profile: d11_gold_br0
+  redefine_interfaces: False
+  interfaces:
+    enp1s0:
+      itype: 'network'
+      dhcp: False
+      ip4_address: 172.28.4.211/24
+      ip4_gateway: 172.28.4.1
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+    wlxd03745f750f2:
+      itype: 'wifi'
+      ap_name: Mandarina
+      ap_psk: cacaududa2009
+  usb_devices:
+    attach: True
+    'TP-Link_T3U':
+       vendor: '2357'
+       product_id: '012d'
