@@ -11,24 +11,19 @@
 {% for minion in pillar['minions'] | default([]) %}
 {% set mname = pillar['minions'][minion]['name'] %}
 
-#
 ### 0. Proxy - defines system wide proxy and configure proxy for apt/yum
-#
 {{ mname }} define proxy minion:
   salt.state:
     - sls: init.proxy
     - tgt: {{ mname }}
 
-#
 ### 1. os_specific initialization (repos, yum/apt settings etc)
 {{ mname }} os_specific:
    salt.state:
      - sls: init.os_specific
      - tgt: {{ mname }}
 
-#
 ### 2. things needed for the following steps
-#
 {{ mname }} essentials:
   salt.state:
     - sls: init.essentials
@@ -43,14 +38,13 @@
     - require:
       - salt: {{ mname }} essentials
 
-#
 ### 3. NetworkManager
 {{ mname }} network manager:
   salt.state:
     - sls: init.networkmanager
     - tgt: {{ mname }}
 
-## waits (networkmanager may restart the minion)
+# waits (networkmanager may restart the minion)
 {{ mname }} wait networkmanager:
   salt.wait_for_event:
     - name: salt/minion/*/start
@@ -59,16 +53,13 @@
     - require:
       - salt: {{ mname }} network manager
 
-#
-#
 ### 4. install drivers, if needed
 {{ mname }} install drivers:
   salt.state:
     - sls: drivers
     - tgt: {{ mname }}
 
-#
-## wait (install drivers reboots the minion)
+# wait (install drivers reboots the minion)
 {{ mname }} aguarda drivers:
   salt.wait_for_event:
     - name: salt/minion/*/start
@@ -97,8 +88,6 @@
 ### 6. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
 {%- if hoi[mname]['highstate_on_init'] | default(False) %}
-
-## aguarda minion voltar ao ar
 
 "-- {{ mname }} will execute high state":
   test.nop
