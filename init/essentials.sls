@@ -25,7 +25,6 @@ minimal:
       - python3-dns
       - python3-pycurl
       - python3-tornado
-      - python3-netifaces
       - python3-pip
       - uuid
     - refresh: True
@@ -38,7 +37,7 @@ prepara-pip:
 
 minimal salt-minion:
   cmd.run:
-    - name: 'salt-pip -q install netifaces pycurl tornado keystore pyjks m2crypto'
+    - name: 'salt-pip -q install pycurl tornado keystore pyjks m2crypto'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
