@@ -80,6 +80,7 @@ basic create {{ grain }}:
 update_locatedb:
   cmd.run:
     - name: updatedb
+    - bg: true
 
 ## copia modulos locais
 refresh modules:
