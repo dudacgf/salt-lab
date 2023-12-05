@@ -8,7 +8,8 @@
 # arquivo de configuração do serviço
 /etc/snmp/snmpd.conf:
   file.managed:
-    - source: salt://files/services/snmpd.conf
+    - source: salt://files/services/snmpd.conf.jinja
+    - template: jinja
     - user: root
     - group: root
     - mode: 600

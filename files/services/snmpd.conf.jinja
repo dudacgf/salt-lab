@@ -1,16 +1,14 @@
 ###########################################################################
 #
 # snmpd.conf
-# An example configuration file for configuring the Net-SNMP agent ('snmpd')
-# See snmpd.conf(5) man page for details
 #
 ###########################################################################
 # SECTION: System Information Setup
 #
 
 # syslocation: The [typically physical] location of the system.
-sysLocation    Icatu - Sala de Servidores
-sysContact     telecom@icatu.com.br
+sysLocation    {{ pillar.address | default('') }}
+sysContact     {{ pillar.contact | default('none@example.com') }}
 # sysservices: The proper value for the sysServices object.
 sysServices    72
 
@@ -29,21 +27,12 @@ view   systemonly  included   .1.3.6.1.2.1.25.1
 
 # rocommunity: a SNMPv1/SNMPv2c read-only access community name
 # Read-only access to everyone to the systemonly view
-rocommunity  bicatu    10.1.16.135
-rocommunity  bicatu    10.1.16.35
-rocommunity  bicatu    10.1.16.243
-rocommunity  bicatu    10.1.115.243
+{% for snmpd_client in pillar.snmpd.v2clients | default([]) %}
+rocommunity  {{ pillar.snmpd.v2community }} snmpd_client
+rocommunity6 {{ pillar.snmpd.v2community }} snmpd_client
+{% endfor %}
 
-rocommunity6 bicatu    10.1.16.135
-rocommunity6 bicatu    10.1.16.35
-rocommunity6 bicatu    10.1.16.243
-rocommunity6 bicatu    10.1.115.243
-
-# createUser username (MD5|SHA|SHA-512|SHA-384|SHA-256|SHA-224) authpassphrase [DES|AES] [privpassphrase]
-# rouser: a SNMPv3 read-only access username
-#    arguments: username [noauth|auth|priv [OID | -V VIEW [CONTEXT]]]
-#rouser authPrivUser authpriv -V systemonly
-
-createUser sIcat_nmpUser SHA-512 VzL7RDaz6FtY AES A8L92m_7p2hs
-rouser sIcat_nmpUser authpriv
+# v3 user definition and permissions
+createUser {{ pillar.snmpd.v3user }} SHA-512 {{ pillar.snmpd.v3authpassphrase }} AES {{ pillar.snmpd.v3privpassphrase }}
+rouser {{ pillar.snmpd.v3user }} authpriv
 
