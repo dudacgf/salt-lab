@@ -1,6 +1,7 @@
 #!py
 import nmcli
 import logging
+import uuid
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ def hotspot_type_nmconnection(this_net, nic):
     return [
         '[connection]',
         f'id={this_net["ap_name"]}',
-        f'uuid={__salt__.cmd.run("uuid")}',
+        f'uuid={uuid.uuid4()}',
         'type=wifi',
         'autoconnect=true',
         f'interface-name={nic}',
@@ -70,7 +71,7 @@ def wifi_type_nmconnection(this_net, nic):
     return [
         '[connection]',
         f'id={this_net["ap_name"]}',
-        f'uuid={__salt__.cmd.run("uuid")}',
+        f'uuid={uuid.uuid4()}',
         'type=wifi',
         f'interface-name={nic}',
         '',
@@ -116,7 +117,7 @@ def run():
     wifi_used = False
     require = []
 
-    if 'interfaces' in __pillar__:
+    if 'interfaces' in __pillar__ and __pillar__['interfaces']:
         for network in __pillar__['interfaces']:
             this_net = __pillar__['interfaces'][network]
             log.info(f'itype: {this_net["itype"]}')
