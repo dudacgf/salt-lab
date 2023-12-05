@@ -1,0 +1,70 @@
+aldebaran:
+  minion_type: 'physical'
+  redefine_interfaces: 'False'
+  interfaces:
+    virbr1:
+      itype: 'bridge'
+      dhcp: False
+      hwaddr: 'c2:83:a7:a1:5b:d8'
+      ip4_address: 172.20.9.102/24
+      ip4_gateway: 172.20.9.1
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+    br0:
+      itype: 'bridge'
+      dhcp: False
+      ip4_address: 172.28.4.1/24
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+
+gamatauri:
+  minion_type: 'physical'
+  redefine_interfaces: 'False'
+  interfaces:
+    enp1s0:
+      itype: 'network'
+      dhcp: False
+      hwaddr: '68:1d:ef:2e:9b:47'
+      ip4_address: 172.20.9.100/24
+      ip4_gateway: 172.20.9.1
+      ip4_dns: [ '172.20.9.101', '172.20.9.100' ]
+
+betatauri:
+  minion_type: 'physical'
+  redefine_interfaces: 'False'
+  interfaces:
+    enp1s0:
+      itype: 'network'
+      dhcp: False
+      hwaddr: '68:1d:ef:2e:9b:58'
+      ip4_address: 172.20.9.101/24
+      ip4_gateway: 172.20.9.1
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+
+shiresvm01:
+  minion_type: 'physical'
+  redefine_interfaces: 'False'
+  interfaces:
+    virbr1:
+      itype: 'bridge'
+      dhcp: False
+      hwaddr: 'ee:71:de:c4:dd'
+      ip4_address: 172.20.9.222/24
+      ip4_gateway: 172.20.9.1
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+    virbr0:
+     itype: 'bridge'
+      hwaddr: '7e:1e:75:28:c7:bb'
+      dhcp: False
+      ip4_address: 172.28.4.254/24
+      ip4_dns: [ '172.20.9.100', '172.20.9.101' ]
+    wlxd03745d35b49:
+      itype: 'hotspot'
+      hwaddr: 'd0:37:45:d3:5b:49'
+      ap_name: 'IoTangs'
+      ap_psk: 'cacaududa2009'
+     
+default:
+  redefine_interfaces: 'False'
+  virtual_provider: alderaban-over-ssh
+  virtual_host: aldebaran
+  redefine_interfaces: False
+

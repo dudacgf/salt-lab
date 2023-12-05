@@ -1,0 +1,428 @@
+sw1:
+  install: True
+  ip_forward: Yes
+  startup_enabled: Yes
+  zones: [ 'mgt', 'loc', 'dmz', 'pub' ]
+  interfaces:
+    1:
+      zone: pub
+      hwaddr: '52:54:10:D0:f0:00'
+      options: dhcp
+    2:
+      zone: loc
+      hwaddr: '52:54:10:D0:f0:01'
+      options: dhcp
+    3:
+      zone: dmz
+      hwaddr: '52:54:10:D0:f0:02'
+      options: dhcp
+  hosts:
+    1:
+      zone: mgt
+      ipaddrs: ['172.20.9.102' , '172.28.4.1']
+      hwaddr: '52:54:10:D0:f0:00'
+      options: dhcp
+  policy:
+    - action: ACCEPT
+      source: fw
+      dest: all
+    - action: REJECT
+      source: mgt
+      dest: all
+    - action: REJECT
+      source: loc
+      dest: all
+    - action: REJECT
+      source: dmz
+      dest: all
+    - action: DROP
+      source: pub
+      dest: all
+  snat: 
+    - hwaddr: '52:54:10:D0:f0:00'
+      sources: ['10.1.200.0/24', '10.1.201.0/24']
+  rules:
+    - protocol: tcp
+      service: 5601,9000
+      action: ACCEPT
+      source: ['mgt']
+      dest: 'loc:10.1.200.240'
+    - protocol: tcp
+      service: 3128,3129
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: mgt
+    - protocol: tcp
+      service: 3128,3129
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: fw
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp 
+      service: http,https
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: dmz
+    - protocol: tcp 
+      service: http,https,9000
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc:10.1.200.240
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp
+      service: '4505,4506'
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: mgt:172.20.9.102
+    - protocol: icmp
+      service: echo-request
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: all
+    - protocol: udp
+      service: domain
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'pub:172.20.9.100,172.20.9.101,8.8.8.8'
+    - protocol: tcp
+      service: 'http,https'
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: 'pub'
+    - protocol: tcp
+      service: 3128
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'mgt:172.20.9.102'
+fw1:
+  install: True
+  ip_forward: Yes
+  startup_enabled: Yes
+  zones: [ 'mgt', 'loc', 'dmz', 'pub' ]
+  interfaces:
+    1:
+      zone: pub
+      hwaddr: '52:54:10:D0:f0:00'
+      options: dhcp
+    2:
+      zone: loc
+      hwaddr: '52:54:10:D0:f0:01'
+      options: dhcp
+    3:
+      zone: dmz
+      hwaddr: '52:54:10:D0:f0:02'
+      options: dhcp
+  hosts:
+    1:
+      zone: mgt
+      ipaddrs: ['172.20.9.102' , '172.28.4.1']
+      hwaddr: '52:54:10:D0:f0:00'
+      options: dhcp
+  policy:
+    - action: ACCEPT
+      source: fw
+      dest: all
+    - action: REJECT
+      source: mgt
+      dest: all
+    - action: REJECT
+      source: loc
+      dest: all
+    - action: REJECT
+      source: dmz
+      dest: all
+    - action: DROP
+      source: pub
+      dest: all
+  snat: 
+    - hwaddr: '52:54:10:D0:f0:00'
+      sources: ['10.1.200.0/24', '10.1.201.0/24']
+  rules:
+    - protocol: tcp
+      service: 5601,9000
+      action: ACCEPT
+      source: ['mgt']
+      dest: 'loc:10.1.200.240'
+    - protocol: tcp
+      service: 3128,3129
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: mgt
+    - protocol: tcp
+      service: 3128,3129
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: fw
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp 
+      service: http,https
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: dmz
+    - protocol: tcp 
+      service: http,https,9000
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc:10.1.200.240
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp
+      service: '4505,4506'
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: mgt:172.20.9.102
+    - protocol: icmp
+      service: echo-request
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: all
+    - protocol: udp
+      service: domain
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'pub:172.20.9.100,172.20.9.101,8.8.8.8'
+    - protocol: tcp
+      service: 'http,https'
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: 'pub'
+    - protocol: tcp
+      service: 3128
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'mgt:172.20.9.102'
+fw2:
+  install: True
+  ip_forward: Yes
+  startup_enabled: Yes
+  zones: [ 'mgt', 'loc', 'dmz', 'pub' ]
+  interfaces:
+    1:
+      zone: pub
+      hwaddr: '52:54:20:D0:f0:00'
+      options: dhcp
+    2:
+      zone: loc
+      hwaddr: '52:54:20:D0:f0:01'
+      options: dhcp
+    3:
+      zone: dmz
+      hwaddr: '52:54:20:D0:f0:02'
+      options: dhcp
+  hosts:
+    1:
+      zone: mgt
+      ipaddrs: ['172.20.9.102' , '172.28.4.1']
+      hwaddr: '52:54:20:D0:f0:00'
+      options: dhcp
+  policy:
+    - action: ACCEPT
+      source: fw
+      dest: all
+    - action: REJECT
+      source: mgt
+      dest: all
+    - action: REJECT
+      source: loc
+      dest: all
+    - action: REJECT
+      source: dmz
+      dest: all
+    - action: DROP
+      source: pub
+      dest: all
+  snat: 
+    - hwaddr: '52:54:20:D0:f0:00'
+      sources: ['10.1.200.0/24', '10.1.201.0/24']
+  rules:
+    - protocol: tcp
+      service: 5601,9000
+      action: ACCEPT
+      source: ['mgt']
+      dest: 'loc:10.1.200.240'
+    - protocol: tcp
+      service: 3128,3129
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: fw
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp 
+      service: http,https
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: dmz
+    - protocol: tcp 
+      service: http,https,9000
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc:10.1.200.240
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp
+      service: '4505,4506'
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: mgt:172.20.9.102
+    - protocol: icmp
+      service: echo-request
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: all
+    - protocol: udp
+      service: domain
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'pub:172.20.9.100,172.20.9.101,8.8.8.8'
+    - protocol: tcp
+      service: 'http,https'
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: 'pub'
+    - protocol: tcp
+      service: 3128
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'mgt:172.20.9.102'
+fw3:
+  install: True
+  ip_forward: Yes
+  startup_enabled: Yes
+  zones: [ 'mgt', 'loc', 'dmz', 'pub' ]
+  interfaces:
+    1:
+      zone: pub
+      hwaddr: '52:54:30:D0:f0:00'
+      options: dhcp
+    2:
+      zone: loc
+      hwaddr: '52:54:30:D0:f0:01'
+      options: dhcp
+    3:
+      zone: dmz
+      hwaddr: '52:54:30:D0:f0:02'
+      options: dhcp
+  hosts:
+    1:
+      zone: mgt
+      ipaddrs: ['172.20.9.102' , '172.28.4.1']
+      hwaddr: '52:54:30:D0:f0:00'
+      options: dhcp
+  policy:
+    - action: ACCEPT
+      source: fw
+      dest: all
+    - action: REJECT
+      source: mgt
+      dest: all
+    - action: REJECT
+      source: loc
+      dest: all
+    - action: REJECT
+      source: dmz
+      dest: all
+    - action: DROP
+      source: pub
+      dest: all
+  snat: 
+    - hwaddr: '52:54:30:D0:f0:00'
+      sources: ['10.1.200.0/24', '10.1.201.0/24']
+  rules:
+    - protocol: tcp
+      service: 5601,9000
+      action: ACCEPT
+      source: ['mgt']
+      dest: 'loc:10.1.200.240'
+    - protocol: tcp
+      service: 3128,3129
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: fw
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp 
+      service: http,https
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: dmz
+    - protocol: tcp 
+      service: http,https,9000
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc:10.1.200.240
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: loc
+    - protocol: tcp
+      service: ssh
+      action: ACCEPT
+      source: [ 'mgt' ]
+      dest: all
+    - protocol: tcp
+      service: '4505,4506'
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: mgt:172.20.9.102
+    - protocol: icmp
+      service: echo-request
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: all
+    - protocol: udp
+      service: domain
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'pub:172.20.9.100,172.20.9.101,8.8.8.8'
+    - protocol: tcp
+      service: 'http,https'
+      action: ACCEPT
+      source: [ 'loc', 'dmz' ]
+      dest: 'pub'
+    - protocol: tcp
+      service: 3128
+      action: ACCEPT
+      source: [ 'all' ]
+      dest: 'mgt:172.20.9.102'
+default:
+  install: False
