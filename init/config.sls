@@ -8,14 +8,27 @@
 #  (c) ecgf - mar/2023
 #
 
-{% for minion in pillar['minions'] | default([]) %}
-{% set mname = pillar['minions'][minion]['name'] %}
+# get map for this minion
+{% set map = pillar['map'] | default('lab_minions') %}
+{% import_yaml 'maps/' + map + '.yaml' as minions %}
+{% set minion = minions[pillar['minion']] %}
+{% set mname = minion.name %}
 
 ### 0. Proxy - defines system wide proxy and configure proxy for apt/yum
 {{ mname }} define proxy minion:
   salt.state:
     - sls: init.proxy
     - tgt: {{ mname }}
+    - pillar: {'proxy': {{ minion.proxy | default(False) }}}
+
+# waits (proxy restarts the minion)
+{{ mname }} wait proxy:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ '{{ mname }}' ]
+    - timeout: 20
+    - require:
+      - salt: {{ mname }} define proxy minion
 
 ### 1. os_specific initialization (repos, yum/apt settings etc)
 {{ mname }} os_specific:
@@ -73,6 +86,7 @@
   salt.state:
     - sls: init.nmconnections
     - tgt: {{ mname }} 
+    - pillar: {'interfaces': {{ minion.interfaces | default(False) }}}
     - require:
       - salt: {{ mname }} network manager
 
@@ -81,13 +95,13 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 120
+    - timeout: 60
     - require:
       - salt: {{ mname }} nmconnections
 
 ### 6. executa o highstate desse minion
 {% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
-{%- if hoi[mname]['highstate_on_init'] | default(False) %}
+{%- if hoi[mname]['highstate_on_init'] | default(True) %}
 
 "-- {{ mname }} will execute high state":
   test.nop
@@ -126,5 +140,3 @@
 "-- {{ mname }} will not execute high state":
   test.nop
 {%- endif %}
-
-{% endfor %} # minion in...
