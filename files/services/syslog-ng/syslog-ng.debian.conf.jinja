@@ -1,5 +1,5 @@
 {%- set version = salt['cmd.shell']("syslog-ng -V | grep 'Config version' | sed -- 's/.*: //'") %}
-@version: {{ version }}
+@version:{{ version }}
 @include "scl.conf"
 
 # Syslog-ng configuration file, compatible with default Debian syslogd

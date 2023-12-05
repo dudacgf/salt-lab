@@ -8,21 +8,8 @@
 # Note: it also sources additional configuration files (*.conf)
 #       located in /etc/syslog-ng/conf.d/
 
-{#{% set settings = salt['grains.filter_by']({
-#      '22.04': {
-#         'syslog_version': '3.35',
-#      },
-#      '20.04': {
-#         'syslog_version': '3.23',
-#      },
-#      '8.6': {
-#         'syslog_version': '3.23',
-#      },
-#    },
-#    grain='osrelease'
-#) %}
-@version:{{ settings.syslog_version }}
-#}
+{%- set version = salt['cmd.shell']("syslog-ng -V | grep 'Config version' | sed -- 's/.*: //'") %}
+@version:{{ version }}
 @include "scl.conf"
 
 options {
