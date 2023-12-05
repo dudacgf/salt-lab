@@ -18,30 +18,24 @@ update_inicial:
 minimal:
   pkg.installed:
     - pkgs:
-      - bash-completion
-      - {{ pillar['pkg_data']['bindlibs']['name'] }}
-      - {{ pillar['pkg_data']['bindutils']['name'] }}
-      - fortune-mod
-      - mlocate 
-      - {{ pillar['pkg_data']['vim']['name'] }}
+      #      - bash-completion
+      #- {{ pillar['pkg_data']['bindlibs']['name'] }}
+      #- {{ pillar['pkg_data']['bindutils']['name'] }}
+      #- fortune-mod
+      #- mlocate 
+      #- {{ pillar['pkg_data']['vim']['name'] }}
 {%- if grains['os'] == 'Rocky' and grains['osmajorrelease'] < 9 %}
       - needrestart
 {%- endif %}
-      - dos2unix
-      - traceroute
-      - tcpdump
-      - telnet
-      - net-tools
+#- dos2unix
+#- traceroute
+#- tcpdump
+#     - telnet
+#     - net-tools
       - wget
       - hostname
-      - python3-dns
       - curl
-{%- if grains['osmajorrelease'] >= 8 %}
-      - python3-pycurl
-      - python3-netifaces
-      - python3-pip
-{%- endif %}
-      - facter
+#      - facter
       - patch
       - tar
 
