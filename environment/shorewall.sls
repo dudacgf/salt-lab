@@ -5,7 +5,8 @@
 #
 
 # read map with shorewall rules 
-{% import_yaml "maps/services/shorewall.yaml" as shorewall %}
+{% set map = pillar.map | default('production') %}
+{% import_yaml "maps/services/shorewall/shorewall_" + map + ".yaml" as shorewall %}
 {% set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') %}
 
 {% if shorewall.install %}
