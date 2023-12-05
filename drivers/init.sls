@@ -22,9 +22,16 @@ reboot drivers:
 
 {% endif %}
 
-"/salt/minion/{{ grains['id'] }}/start":
-  event.send:
-    - data: "== no drivers to install =="
+restart salt minion:
+  cmd.run:
+    - name: /bin/bash -c 'sleep 5; systemctl restart salt-minion'
+    - bg: True
+    - onlyif:
+        - fun: match.grain
+          tgt: 'flag_driver_installed:false'
+
+"-- no drivers to install.":
+  test.nop:
     - onlyif:
         - fun: match.grain
           tgt: 'flag_driver_installed:false'
