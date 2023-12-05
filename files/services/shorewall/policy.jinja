@@ -1,4 +1,4 @@
-{%- import_yaml "maps/shorewall.yaml" as shorewall %}
+{% import_yaml "maps/services/shorewall.yaml" as shorewall %}
 {%- set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') -%}
 ###############################################################################
 #SOURCE     DEST        POLICY  LOGLEVEL    RATE    CONNLIMIT
