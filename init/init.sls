@@ -20,6 +20,7 @@
 
 #
 ### loop through list of minions creating and configuring each one
+{% do minions.pop('default', None) %}
 {% for mname in minions | default([]) %}
 {% set minion = minions[mname] %}
 
@@ -67,6 +68,9 @@
     - name: state.orchestrate
     - mods: init.config
     - pillar: {'minion': {{ mname }}, 'map': {{ map }}}
+    - onlyif:
+      - fun: match.pillar
+        tgt: 'do_config:true'
 
 {% endif %}
 {% endfor %}
