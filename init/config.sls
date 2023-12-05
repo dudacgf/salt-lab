@@ -110,6 +110,7 @@
   salt.state:
     - sls: environment
     - tgt: {{ mname }}
+    - pillar: {'map': {{ map }}}
 
 {{ mname }} basic_services:
   salt.state:
