@@ -17,18 +17,20 @@ upgrades:
 apt-get dist-upgrade -y: cmd.run
 {%- endif %}
 
+{% if grains['os_family'] != 'Suse' %}
 # 
 ## basic packages
 minimal:
   pkg.installed:
     - pkgs:
-      - python3-dns
+      - {{ pillar['pkg_data']['python3']['python3-dns'] }}
       - python3-pycurl
       - python3-tornado
       - python3-pip
-      - uuid
+      - python3-devel
     - refresh: True
     - allow_updates: True
+{% endif %}
 
 prepara-pip:
   pkg.installed:
@@ -37,37 +39,13 @@ prepara-pip:
 
 minimal salt-minion:
   cmd.run:
-    - name: 'salt-pip -q install pycurl tornado keystore pyjks m2crypto'
+    - name: '{{ pillar['pkg_data']['salt-pip'] }} -q install keystore pyjks m2crypto nmcli'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
   pkg.removed:
     - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
 
-{% endif %}
-
-#
-## is this a vmware vm?
-{% if grains['manufacturer'] == 'VMware, Inc.' %}
-open-vm-tools:
-  pkg.installed
-
-vmtoolsd.service:
-  service.running:
-    - enable: True
-
-{% endif %}
-
-# 
-## this one has no package
-install python3-nmcli:
-  pip.installed:
-    - name: nmcli 
-{%- if grains['os'] == 'Debian' and grains['osmajorrelease'] > 11 %}
-    #- install_options:
-      #- --break-system-packages
-    - args:
-      - --use-pep517
 {% endif %}
 
 # 

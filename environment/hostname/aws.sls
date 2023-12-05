@@ -1,5 +1,5 @@
 # register a minion in aws route53 dns
-awscli:
+{{ pillar['pkg_data']['awscli'] }}:
   pkg.installed
 
 {{ sls }} copy aws files: 
@@ -22,7 +22,7 @@ register host:
     - template: jinja
     - shell: /bin/bash
     - require:
-      - pkg: awscli
+      - pkg: {{ pillar['pkg_data']['awscli'] }}
       - file: {{ sls }} copy aws files
 {%- if pillar['proxy'] | default('none') != 'none' %}
     - env:
