@@ -1,33 +1,40 @@
-##
-# (versão 0.1 mesmo conjunto de grupos para todos os usuários. #TODO# diferenciar grupos por usuários
+# read map with os_family dependent info
+{% import_yaml "maps/users/by_os_family.yaml" as osf %}
+{% set osf = salt.grains.filter_by(osf) %}
+
+# read map with users to create and to remove
+{% import_yaml "maps/users/users.yaml" as users with context %}
 
 #
-# Obtém a lista de usuários a serem criados e grupos em que eles serão adicionados.
-{% set users_to_create = pillar.get('users_to_create', {}) %}
-# 3.9.2022 retira da lista usuários a remover
-{% set users_to_remove = pillar.get('users_to_remove', {}) %}
+# list of users to create and to remove
+{% set users_to_create = users.to_create %}
+# 3.9.2022 remove unwanted users from previous list
+{% set users_to_remove = users.to_remove + pillar.get('users_to_remove', []) %}
 {% set userlist = users_to_create | difference(users_to_remove) %}
 
 {% for user in userlist %}
-
-# obtém os atributos desse usuário
-{% set password = salt['pillar.get']( 'users_to_create:' + user + ':password', '') %}
-
-# cria esse usuário, se não existir
-# usuário root sempre existe, né 
+# create user
 {% if user != 'root' %} 
 {{ user }}:
   user.present:
-    - password: {{ password }}
+    - password: {{ users.to_create[user]['password'] | default('!') }}
     - home: /home/{{ user }}
     - shell: /bin/bash
+    - optional_groups: {{ users.to_create[user].groups | default([]) }}
 {% endif %}
 
-# copia arquivos, se informados, para a home do usuário
-{% set homefiles = salt['pillar.get']( 'users_to_create:' + user + ':homefiles', {}) %}
-{% for file in homefiles %}
-{% set source = salt['pillar.get']('users_to_create:' + user + ':homefiles:' + file, '') %}
+{% if grains['os_family'] == 'Suse' %}
+group.present_{{ user }}_{{ user }}:
+ group.present:  
+  - name: {{ user }}
+  - addusers: 
+    - {{ user }}
+{% endif %}
 
+# copy files to users home dir
+{% set homefiles = users.to_create[user].homefiles | default([]) %}
+{% for file in homefiles %}
+{% set source = users.to_create[user].homefiles[file] %}
 ~{{ user }}/{{ file }}:
   file.managed:
     - source: {{ source }}
@@ -40,39 +47,24 @@
     - backup: minion
 {% endfor %}
 
-# copia a chave pública ssh, se informada, para o diretório .ssh na home do usuário
-{% set source = salt['pillar.get']( 'users_to_create:' + user + ':ssh_authorized_key', 'none') %}
-{% if source != 'none' %}
+# copy ssh authorized_keys
+{% set source = users.to_create[user].ssh_authorized_key | default(False) %}
+{% if source %}
 ~{{ user }}/.ssh/authorized_keys:
   file.managed:
     - source: {{ source }}
     - user: {{ user }}
     - group: {{ user }}
-    - mode: 644
+    - mode: 400
     - dir_mode: 700
     - makedirs: true
     - backup: minion
 {% endif %}
-
-# insere o usuário na lista de grupos
-{% set grouplist = salt['pillar.get']('users_to_create:' + user + ':groups', {}) %}
-{% for group in grouplist %}
-
-group.present_{{ user }}_{{ group }}:
- group.present:  
-  - name: {{ group }}
-  - addusers: 
-    - {{ user }}
-
-{% endfor %} # group
-
 {% endfor %} # user
 
 #
-# apaga usuários utilizados nas imagens gold
-{% set users_to_remove = pillar['users_to_remove'] %}
-
-{% for user in users_to_remove %}
+# remove gold image common usernames
+{% for user in users.to_remove %}
 {{ user }}_delete:
   user.absent:
     - name: {{ user }}

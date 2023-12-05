@@ -1,0 +1,22 @@
+RedHat:
+  sudo_group: 'wheel'
+  bashrc: 'bashrc_redhat'
+  pkg_apps:
+    - '/usr/bin/dnf'
+    - '/usr/bin/yum'
+    - '/usr/bin/rpm'
+    - '/bin/dnf'
+    - '/bin/yum'
+    - '/bin/rpm'
+Ubuntu:
+  sudo_group: 'sudo'
+  bashrc: 'bashrc_ubuntu'
+  pkg_apps:
+    - '/usr/bin/apt'
+    - '/usr/bin/apt-get'
+Suse:
+  sudo_group: 'wheel'
+  bashrc: 'bashrc_redhat'
+  pkg_apps:
+    - '/usr/bin/zypper'
+    - '/usr/bin/zypp'

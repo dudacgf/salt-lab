@@ -3,6 +3,10 @@
 # quando for gerenciar pacotes (insecure)
 #
 
+# read map with os_family dependent info
+{% import_yaml "maps/users/by_os_family.yaml" as osf %}
+{% set osf = salt.grains.filter_by(osf) %}
+
 #
 # tem que instalar o sudo em algumas imagens
 sudo:
@@ -10,30 +14,27 @@ sudo:
 
 #
 # busca pgk_apps no pillar (pacotes instaladores de aplicação)
-{% set grouplist = pillar.get('pkg_apps', 'sudo') %}
+{#% set g = pillar['pkg_apps'] %}
+{% set group = g | difference(['dummy']) | first %}
+{% set pkg_apps = pillar['pkg_apps'][group] %#}
 
-{% for groupname in grouplist %}
-{% set pkg_apps = salt['pillar.get']('pkg_apps:' + groupname, {}) %}
-
-00-pkg_app_{{ groupname }}:
+00-pkg_app_{{ osf.sudo_group }}:
   file.managed:
     - name: /etc/sudoers.d/00-pkg_app
     - makedirs: true
     - contents: |
         #
-        ## Allow people in group {{ groupname }} to run all commands (with password)
-        %{{ groupname }}  ALL=(ALL)   ALL
+        ## Allow people in group {{ osf.sudo_group }} to run all commands (with password)
+        %{{ osf.sudo_group }}  ALL=(ALL)   ALL
 
         #
-        ## Allow people in group {{ groupname }} to manage apps (without password)
-        {% for pkg_app in pkg_apps -%}
-        %{{ groupname }}  ALL=(ALL)   NOPASSWD: {{ pkg_app }}
+        ## Allow people in group {{ osf.sudo_group }} to manage apps (without password)
+        {% for pkg_app in osf.pkg_apps -%}
+        %{{ osf.sudo_group }}  ALL=(ALL)   NOPASSWD: {{ pkg_app }}
         {% endfor %}
 
-{% endfor %}
-
-{% if grains['os_family'] == 'RedHat' %}
 {% if not salt['grains.get']('flag_etc_sudoers_set', False) %} # if not appended yet
+{% if grains['os_family'] == 'RedHat' %}
 /etc/sudoers:
   file.append:
     - text: |
@@ -45,10 +46,14 @@ sudo:
         #
         ## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)
         #includedir /etc/sudoers.d
+{% elif grains['os_family'] == 'Suse' %}
+/etc/sudoers:
+  file.managed:
+    - source: salt://files/users/sudoers_suse
+{% endif %}
 flag_etc_sudoers_set:
   grains.present: 
     - value: ok
     - require:
       - file: /etc/sudoers
-{% endif %}
 {% endif %}
