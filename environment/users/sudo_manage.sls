@@ -12,12 +12,6 @@
 sudo:
   pkg.installed
 
-#
-# busca pgk_apps no pillar (pacotes instaladores de aplicação)
-{#% set g = pillar['pkg_apps'] %}
-{% set group = g | difference(['dummy']) | first %}
-{% set pkg_apps = pillar['pkg_apps'][group] %#}
-
 00-pkg_app_{{ osf.sudo_group }}:
   file.managed:
     - name: /etc/sudoers.d/00-pkg_app
@@ -53,7 +47,7 @@ sudo:
 {% endif %}
 flag_etc_sudoers_set:
   grains.present: 
-    - value: ok
+    - value: True
     - require:
       - file: /etc/sudoers
 {% endif %}
