@@ -119,3 +119,11 @@ i2:
     'TP-Link_T3U':
        vendor: '2357'
        product_id: '012d'
+
+# default for any minion not defined before
+default:
+  redefine_interfaces: False
+  profile: r9_gold
+  virtual_provider: aldebaran-over-ssh
+  virtual_host: aldebaran
+
