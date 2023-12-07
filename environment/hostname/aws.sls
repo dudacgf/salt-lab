@@ -24,7 +24,7 @@ register host:
     - require:
       - pkg: {{ pillar['pkg_data']['awscli'] }}
       - file: {{ sls }} copy aws files
-{%- if pillar['proxy'] | default('none') != 'none' %}
+{%- if pillar['proxy'] %}
     - env:
       - https_proxy: {{ pillar['proxy'] }}
       - http_proxy: {{ pillar['proxy'] }}
