@@ -12,22 +12,23 @@ restart minion:
 '-- redhat and derivatives >= 8 already uses networkmanager':
   test.nop
 
-{% elif grains['os_family'] in ['Ubuntu', 'Suse'] %}
-{% if grains['os'] == 'Ubuntu' %}
+{% elif grains['os_family'] in ['Debian', 'Suse'] %}
+{% if grains['os_family'] == 'Debian' %}
 network-manager:
   pkg.installed
 
 /etc/network/interfaces:
   file.managed:
-    - contents:
-      - '# The loopback network interface'
-      - 'auto lo'
-      - 'iface lo inet loopback'
+    - contents: |
+          # The loopback network interface
+          auto lo
+          iface lo inet loopback
 
 /etc/network/interfaces.d:
   file.directory:
     - clean: True
 
+{% if grains['os'] == 'Ubuntu' %}
 /etc/netplan/:
   file.directory:
     - clean: True
@@ -42,6 +43,7 @@ network-manager:
 netplan generate: cmd.run
 
 netplan apply: cmd.run
+{% endif %}
 
 {% elif grains['os_family'] == 'Suse' %}
 NetworkManager:
