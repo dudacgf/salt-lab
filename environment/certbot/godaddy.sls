@@ -15,34 +15,27 @@
 {%- set domainname = hostname + '.' + domain %}
 {%- set domainemail = pillar['contact'] %}
 
-# scripts para validação
-copia validation.py:
-  file.managed:
-    - name: /usr/local/bin/validation.py
-    - source: salt://files/services/certbot/validation.py.jinja
-    - template: jinja
-    - user: root
-    - group: root
-    - mode: 750
+# installs godaddy's ACME dns authenticator
+pip3 -q install certbot-dns-godaddy:
+  cmd.run
 
-copia cleanup.py:
+# correct script (previous version works, current doesn't)
+# TODO: check new version
+{{ pillar.pkg_data.certbot_godaddy_script }}:
   file.managed:
-    - name: /usr/local/bin/cleanup.py
-    - source: salt://files/services/certbot/cleanup.py
-    - user: root
-    - group: root
-    - mode: 750
+    - source: salt://files/scripts/certbot_dns_godaddy.py
 
-#
-# arquivo com chaves para validação
+# --dns-godaddy-credentials
 copia config.ini:
   file.managed:
-    - name: /usr/local/bin/godaddy_config.ini
+    - name: /root/.godaddy/godaddy_config.ini
     - source: salt://files/secrets/godaddy_config.ini.jinja
     - template: jinja
+    - makedirs: True
+    - dir_mode: 700
     - user: root
     - group: root
-    - mode: 640
+    - mode: 400
 
 #
 ## post process hook
@@ -61,7 +54,8 @@ copia post_hook.sh:
 {% if not flag_certbot_run %}
 run_certbot:
   cmd.run:
-    - name: certbot certonly --manual --preferred-challenges=dns-01 --email={{ domainemail }} --agree-tos --manual-public-ip-logging-ok --manual-auth-hook /usr/local/bin/validation.py --manual-cleanup-hook /usr/local/bin/cleanup.py --post-hook /usr/local/bin/post_hook.sh --reinstall --no-eff-email -d {{ domainname }}
+    - name: certbot certonly --authenticator dns-godaddy --dns-godaddy-credentials /root/.godaddy/godaddy_config.ini --dns-godaddy-propagation-seconds 60 --email={{ domainemail }} --agree-tos --manual-public-ip-logging-ok --post-hook /usr/local/bin/post_hook.sh --reinstall --no-eff-email -d {{ domain }},{{ domainname }}
+
     - require:
       - file: copia *
       - pkg: certbot pkgs
