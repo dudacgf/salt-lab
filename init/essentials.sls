@@ -7,7 +7,6 @@
 {{ pillar['pkg_data']['packager'] }} clean all:
   cmd.run
 
-
 ## runs updates before anything else
 upgrades:
   pkg.uptodate:
@@ -23,11 +22,11 @@ apt-get dist-upgrade -y: cmd.run
 minimal:
   pkg.installed:
     - pkgs:
-      - {{ pillar['pkg_data']['python3']['python3-dns'] }}
-      - python3-pycurl
-      - python3-tornado
-      - python3-pip
-      - python3-devel
+      - {{ pillar.pkg_data.python3.version }}-pycurl
+      - {{ pillar.pkg_data.python3.version }}-tornado
+      - {{ pillar.pkg_data.python3.version }}-pip
+      - {{ pillar.pkg_data.python3.version }}-{{ pillar.pkg_data.python3.devel }}
+      - {{ pillar.pkg_data.python3.version }}-wheel
     - refresh: True
     - allow_updates: True
 {% endif %}
@@ -39,7 +38,7 @@ prepara-pip:
 
 minimal salt-minion:
   cmd.run:
-    - name: '{{ pillar['pkg_data']['salt-pip'] }} -q install keystore pyjks m2crypto nmcli'
+    - name: '{{ pillar.pkg_data.python3.pip_version }} -q install keystore pyjks m2crypto nmcli'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
