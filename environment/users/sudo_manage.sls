@@ -28,7 +28,11 @@ sudo:
         {% endfor %}
 
 {% if not salt['grains.get']('flag_etc_sudoers_set', False) %} # if not appended yet
-{% if grains['os_family'] == 'RedHat' %}
+
+{% if grains['os_family'] == 'Debian' %}
+/etc/sudoers:
+  test.nop
+{% elif grains['os_family'] == 'RedHat' %}
 /etc/sudoers:
   file.append:
     - text: |
@@ -45,9 +49,10 @@ sudo:
   file.managed:
     - source: salt://files/users/sudoers_suse
 {% endif %}
+
 flag_etc_sudoers_set:
   grains.present: 
     - value: True
     - require:
-      - file: /etc/sudoers
+      - /etc/sudoers
 {% endif %}
