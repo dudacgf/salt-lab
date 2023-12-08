@@ -10,20 +10,22 @@
 #
 # obtém grains e pillars necessários
 {%- set hostname = grains.id.split('.')[0] %}
-{%- set location = pillar['location'] %}
-{%- set domain = pillar[location + '_domain'] %}
+{%- set domain = pillar[pillar.location + '_domain'] %}
 {%- set domainname = hostname + '.' + domain %}
-{%- set domainemail = pillar['contact'] %}
+{%- set domainemail = pillar.contact %}
 
 # installs godaddy's ACME dns authenticator
-pip3 -q install certbot-dns-godaddy:
-  cmd.run
-
-# correct script (previous version works, current doesn't)
-# TODO: check new version
-{{ pillar.pkg_data.certbot_godaddy_script }}:
-  file.managed:
-    - source: salt://files/scripts/certbot_dns_godaddy.py
+install certbot-dns-godaddy:
+  cmd.run:
+    - name: pip3 -q install 'certbot-dns-godaddy==2.6.0'
+  
+pip3 -q install zope.interface:
+  cmd.run:
+    - require:
+      - cmd: install certbot-dns-godaddy
+    - onlyif:
+      - fun: 'match.grain'
+        tgt: 'os_family:RedHat'
 
 # --dns-godaddy-credentials
 copia config.ini:
@@ -36,6 +38,8 @@ copia config.ini:
     - user: root
     - group: root
     - mode: 400
+    - require:
+      - cmd: install certbot-dns-godaddy
 
 #
 ## post process hook
@@ -47,6 +51,8 @@ copia post_hook.sh:
     - user: root
     - group: root
     - mode: 750
+    - require:
+      - cmd: install certbot-dns-godaddy
 
 #
 # gera o novo certificado
@@ -54,11 +60,12 @@ copia post_hook.sh:
 {% if not flag_certbot_run %}
 run_certbot:
   cmd.run:
-    - name: certbot certonly --authenticator dns-godaddy --dns-godaddy-credentials /root/.godaddy/godaddy_config.ini --dns-godaddy-propagation-seconds 60 --email={{ domainemail }} --agree-tos --manual-public-ip-logging-ok --post-hook /usr/local/bin/post_hook.sh --reinstall --no-eff-email -d {{ domain }},{{ domainname }}
+    - name: certbot certonly --authenticator dns-godaddy --dns-godaddy-credentials /root/.godaddy/godaddy_config.ini --dns-godaddy-propagation-seconds 60 --email={{ domainemail }} --agree-tos --manual-public-ip-logging-ok --post-hook /usr/local/bin/post_hook.sh --reinstall --no-eff-email -d {{ domainname }}
 
     - require:
       - file: copia *
-      - pkg: certbot pkgs
+      #TODO.       - pkg: certbot pkgs
+      - cmd: install certbot-dns-godaddy
 
 flag_certbot_run:
   grains.present:

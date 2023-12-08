@@ -14,10 +14,15 @@
 '-- Server does not need certificate. Not running certbot.':
   test.nop
 {%- else %}
+## TODO - check godaddy-dns-certbot new version with corrections
+"pip3 -q install 'certbot==2.6.0' dnspython":
+  cmd.run 
+
+{# TODO - idem
 certbot pkgs:
   pkg.installed:
     - pkgs:
-      - {{ pillar.pkg_data.certbot }}
+      - '{{ pillar.pkg_data.certbot }}==2.6.0'
       - {{ pillar.pkg_data.python3.version }}-{{ pillar.pkg_data.python3.dnspython }}
 
 python3-{{ pillar.pkg_data.python3.dnspython }}:
@@ -25,7 +30,7 @@ python3-{{ pillar.pkg_data.python3.dnspython }}:
     - onlyif:
       - fun: 'match.grain'
         tgt: 'os_family:Suse'
-
+#}
 {% set hoster = pillar['dns_hoster_by_domain'][domain] %}
 {% include 'environment/certbot/' + hoster + '.sls' ignore missing %}
 {% endif %} 

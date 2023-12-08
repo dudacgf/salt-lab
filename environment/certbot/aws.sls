@@ -8,8 +8,11 @@
 {% set domainname = hostname + '.' + domain %}
 {% set domainemail = pillar['contact'] %}
 
-python3-certbot-dns-route53:
-  pkg.installed
+#python3-certbot-dns-route53:
+#  pkg.installed
+"pip3 -q install 'certbot-dns-route53==2.6.0'":
+  cmd.run
+
 
 {{ sls }} copy aws files:
   file.managed:
