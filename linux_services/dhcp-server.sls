@@ -2,10 +2,10 @@
 ## dhcp-server.sls - instala e configura um servidor dhcp
 #
 
-{{ pillar['pkg_data']['dhcp-server']['name'] }}:
+{{ pillar.pkg_data.dhcp_server.name }}:
   pkg.installed
 
-/etc/dhcp/dhcpd.conf:
+{{ pillar.pkg_data.dhcp_server.conf_file | default('/etc/dhcp/dhcpd.conf') }}:
   file.managed:
     - source: salt://files/services/dhcpd_conf.jinja
     - template: jinja
@@ -13,9 +13,9 @@
     - group: root
     - mode: 0600
     - require:
-      - pkg: {{ pillar['pkg_data']['dhcp-server']['name'] }}
+      - pkg: {{ pillar.pkg_data.dhcp_server.name }}
 
-/etc/default/isc-dhcp-server:
+{{ pillar.pkg_data.dhcp_server.sysconf_file | default('/etc/default/isc-dhcp-server:') }}:
   file.managed:
     - source: salt://files/services/default-isc-dhcp-server.jinja
     - template: jinja
@@ -23,13 +23,13 @@
     - group: root
     - mode: 0644
 
-{{ pillar['pkg_data']['dhcp-server']['service'] }}:
+{{ pillar.pkg_data.dhcp_server.service }}:
   service.running:
     - enable: True
     - restart: True
     - watch:
-      - file: /etc/dhcp/dhcpd.conf
-      - file: /etc/default/isc-dhcp-server
+      - file: {{ pillar.pkg_data.dhcp_server.sysconf_file }}
+      - file: {{ pillar.pkg_data.dhcp_server.conf_file }}
 
 isc_dhcp_leases:
   pip.installed
