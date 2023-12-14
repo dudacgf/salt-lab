@@ -24,12 +24,14 @@ master  agentx
 view   systemonly  included   .1.3.6.1.2.1.1
 view   systemonly  included   .1.3.6.1.2.1.25.1
 
-
 # rocommunity: a SNMPv1/SNMPv2c read-only access community name
 # Read-only access to everyone to the systemonly view
 {% for snmpd_client in pillar.snmpd.v2clients | default([]) %}
-rocommunity  {{ pillar.snmpd.v2community }} snmpd_client
-rocommunity6 {{ pillar.snmpd.v2community }} snmpd_client
+rocommunity  {{ pillar.snmpd.v2community }} {{ snmpd_client }}/32
+{% endfor %}
+
+{% for snmpd_client in pillar.snmpd.v2clients_ipv6 | default([]) %}
+rocommunity  {{ pillar.snmpd.v2community }} {{ snmpd_client }}/64
 {% endfor %}
 
 # v3 user definition and permissions
