@@ -116,8 +116,18 @@ stop firewalld:
     - enable: False
     - require:
       - service: restart shorewall service
+    - onlyif:
+      - fun: match.grain
+        tgt: 'os_family:RedHat'
+
+'bash -c "salt-call --local service.restart salt-minion;"': 
+  cmd.run:
+    - bg: True
+    - onlyif:
+      - fun: match.grain
+        tgt: 'os:Debian'
+
 {% else %}
-nothing to do:
-  test.show_notification:
-    - text: '-- shorewall not enabled for this minion. nothing to do.'
+'-- shorewall not enabled for this minion. nothing to do.':
+  test.show_notification
 {% endif %}
