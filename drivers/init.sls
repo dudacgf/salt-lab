@@ -12,23 +12,13 @@ flag_driver_installed:
   {%- include 'drivers/' + driver + '/init.sls' ignore missing %}
 {%- endfor %}
 
-reboot drivers:
-  cmd.run:
-    - name: /bin/bash -c 'sleep 5; shutdown -r now'
-    - bg: True
+"-- drivers {{ drivers | join(', ') }} installed":
+  test.nop:
     - onlyif:
         - fun: match.grain
           tgt: 'flag_driver_installed:true'
 
 {% endif %}
-
-restart salt minion:
-  cmd.run:
-    - name: /bin/bash -c 'sleep 5; systemctl restart salt-minion'
-    - bg: True
-    - onlyif:
-        - fun: match.grain
-          tgt: 'flag_driver_installed:false'
 
 "-- no drivers to install.":
   test.nop:
