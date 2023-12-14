@@ -7,3 +7,7 @@ maxretry = 3
 findtime = 300
 bantime = 3600
 ignoreip = 127.0.0.1
+{% if grains['os_family'] == 'RedHat' and not salt.service.status('firewalld') %}
+action = iptables
+{% endif %}
+

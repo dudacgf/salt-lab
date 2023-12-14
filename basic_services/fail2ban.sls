@@ -6,7 +6,8 @@ fail2ban:
 
 /etc/fail2ban/jail.local:
   file.append:
-    - source: salt://files/services/fail2ban.jail.local
+    - source: salt://files/services/fail2ban.jail.local.jinja
+    - template: jinja
 
 fail2ban.service:
   service.running:
