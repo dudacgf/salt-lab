@@ -9,7 +9,7 @@
 #
 
 # get map for this minion
-{% set map = pillar['map'] | default('lab_minions') %}
+{% set map = pillar['map'] | default('production') %}
 {% import_yaml 'maps/' + map + '.yaml' as minions %}
 {% set minion = minions[pillar['minion']] %}
 {% set mname = minion.name %}
@@ -21,26 +21,29 @@
     - tgt: {{ mname }}
     - pillar: {'proxy': {{ minion.proxy | default(False) }}}
 
+{#
 # waits (proxy restarts the minion)
 {{ mname }} wait proxy:
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 20
+    - timeout: 60
     - require:
       - salt: {{ mname }} define proxy minion
-
+#}
 ### 1. os_specific initialization (repos, yum/apt settings etc)
 {{ mname }} os_specific:
-   salt.state:
-     - sls: init.os_specific
-     - tgt: {{ mname }}
+  salt.state:
+    - sls: init.os_specific
+    - tgt: {{ mname }}
+    - pillar: {"proxy": {{ minion.proxy | default(False) }}}
 
 ### 2. things needed for the following steps
 {{ mname }} essentials:
   salt.state:
     - sls: init.essentials
     - tgt: {{ mname }}
+    - pillar: {"proxy": {{ minion.proxy | default(False) }}}
 
 # waits (essentials restarts the minion)
 {{ mname }} wait essentials:
@@ -57,21 +60,23 @@
     - sls: init.networkmanager
     - tgt: {{ mname }}
 
+{#
 # waits (networkmanager may restart the minion)
 {{ mname }} wait networkmanager:
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 60
+    - timeout: 90
     - require:
       - salt: {{ mname }} network manager
-
+#}
 ### 4. install drivers, if needed
 {{ mname }} install drivers:
   salt.state:
     - sls: drivers
     - tgt: {{ mname }}
 
+{#
 # wait (install drivers reboots the minion)
 {{ mname }} aguarda drivers:
   salt.wait_for_event:
@@ -80,6 +85,7 @@
     - timeout: 60
     - require:
       - salt: {{ mname }} install drivers
+#}
 
 ### 5. networkmanager connections 
 {{ mname }} nmconnections:
@@ -95,7 +101,7 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 60
+    - timeout: 30
     - require:
       - salt: {{ mname }} nmconnections
 
@@ -111,6 +117,15 @@
     - sls: environment
     - tgt: {{ mname }}
     - pillar: {'map': {{ map }}}
+
+# waits (the previous state may restart salt-minion service)
+{{ mname }} wait environment:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ '{{ mname }}' ]
+    - timeout: 30
+    - require:
+      - salt: {{ mname }} environment
 
 {{ mname }} basic_services:
   salt.state:
