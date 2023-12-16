@@ -55,12 +55,13 @@ def _pick_device(hwaddr, conn_type: str = 'ethernet'):
     conn_type
         connection type (ethernet, wifi etc)
     """
+    ctype = 'wifi' if conn_type == 'hotspot' else conn_type
     log.info('mod_init run')
     if hwaddr is None:
         # use first ethernet nic available
-        comment = 'no ethernet-like nic available'
+        comment = f'no {ctype}-like nic available'
         for d in nmcli.device():
-            if d.device_type == conn_type:
+            if d.device_type == ctype:
                 return d
     else:
         for d in nmcli.device():
@@ -229,6 +230,64 @@ def _wifi(hwaddr, options, **kwargs):
                     'comment': f'error modifying {device.device} connection: {e}'}
 
 
+def _hotspot(hwaddr, options, **kwargs):
+    """
+    creates and configures a hotspot ap-mode connection
+    """
+    device = _pick_device(hwaddr, 'wifi')
+    if device is None:
+        return {'result': False, 'comment': f'no ethernet device with macaddress {hwaddr}'}
+    _check_options(device.device, options, **kwargs)
+
+    conn = _pick_connection(device.device)
+    
+    if conn is None:
+        if 'ap_name' in kwargs and 'ap_psk' in kwargs:
+            try:
+                nmcli.device.wifi_hotspot(ifname=device.device,
+                                          con_name=kwargs['ap_name'],
+                                          password=kwargs['ap_psk'],
+                                          ssid=kwargs['ap_name'])
+                if options:
+                    nmcli.connection.modify(name=kwargs['ap_name'], options=options)
+                return{
+                    'result': True,
+                    'comment': f'{kwargs["ap_name"]} connection created',
+                    'changes': None if not options else options}
+            except Exception as e:
+                return{
+                    'result': False,
+                    'comment': f'could not create connection {kwargs["ap_name"]}: {e}'}
+        else:
+            return{
+                'result': False,
+                'comment': f'needs an ap name and ap password to create a hotspot connection'}
+    else:
+        try:
+            changes = {}
+            before = conn
+            nmcli.connection.modify(name=conn['connection.id'], options=options)
+            after = _pick_connection(device.device)
+            diffs = deep_diff(before, after)
+            if 'old' in diffs:
+                for key in diffs['old']:
+                    if key in options:
+                        changes[key] = {'old': before[key], 'new': after[key]}
+            if changes:
+                return {
+                    'result': True, 
+                    'comment': f'{after["connection.id"]} connection modified',
+                    'changes': changes}
+            else:
+                return {
+                    'result': True,
+                    'comment': f'{after["connection.id"]} connection is in the desired state',
+                    'changes': {}}
+        except Exception as e:
+            return {'result': False, 
+                    'comment': f'error modifying {device.device} connection: {e}'}
+
+
 def present(name, conn_type=None, hwaddr=None, options=None, **kwargs):
     """
     ensures that a NetworkManager connection is present and correctly configured. 
@@ -273,6 +332,8 @@ def present(name, conn_type=None, hwaddr=None, options=None, **kwargs):
         result = _ethernet(hwaddr, options, **kwargs)
     elif conn_type == 'wifi':
         result = _wifi(hwaddr, options, **kwargs)
+    else:
+        result = _hotspot(hwaddr, options, **kwargs)
     
     ret['result'] = result['result']
     if 'changes' in result and len(result['changes']) > 0:
