@@ -15,8 +15,8 @@
 
     {% set itype  = interfaces[interface]['itype'] | default('network') %}
     {% if itype != 'hotspot' %}
-        {% set hwaddr = interfaces[interface]['hwaddr'] | default('none') %}
-        {% if hwaddr != 'none' %}
+        {% set hwaddr = interfaces[interface]['hwaddr'] | default(False) %}
+        {% if hwaddr %}
            {% do interface_list.append("{'name': '" + interface + "', 'mac': '" + hwaddr + "', 'source': '" + interface + "', 'type': '" + itype + "'}") %}
         {% else %}
            {% do interface_list.append("{'name': '" + interface + "', 'source': '" + interface + "', 'type': '" + itype + "'}") %}
