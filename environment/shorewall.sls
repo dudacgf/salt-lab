@@ -5,8 +5,12 @@
 #
 
 # read map with shorewall rules 
-{% set map = pillar.map | default('production') %}
-{% import_yaml "maps/services/shorewall/shorewall_" + map + ".yaml" as shorewall %}
+{% set map = pillar.map | default('') %}
+{% load_yaml as shorewall %}
+{% include "maps/services/shorewall/shorewall_" + map + ".yaml" ignore missing %}
+default:
+  install: False
+{% endload %}
 {% set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') %}
 
 {% if shorewall.install %}
@@ -129,5 +133,5 @@ stop firewalld:
 
 {% else %}
 '-- shorewall not enabled for this minion. nothing to do.':
-  test.show_notification
+  test.nop
 {% endif %}
