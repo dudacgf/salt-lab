@@ -36,9 +36,10 @@ prepara-pip:
     - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
     - refresh: True
 
+{% set proxy = '--proxy ' + pillar.proxy if pillar.proxy else '' %}
 minimal salt-minion:
   cmd.run:
-    - name: '{{ pillar.pkg_data.python3.pip_version }} -q install keystore pyjks m2crypto nmcli'
+    - name: '{{ pillar.pkg_data.python3.pip_version }} {{ proxy }} -q install keystore pyjks m2crypto nmcli'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
