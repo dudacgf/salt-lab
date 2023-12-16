@@ -1,5 +1,5 @@
 ###
-## Creates a list of vms, initializes them and runs its first highstate 
+## Creates vms from a list in a import yaml map, initializes them and runs its first highstate 
 #
 #  You should call this as a orchestration:
 #
@@ -12,11 +12,8 @@
 #
 
 # get list of minions from map
-{% set map = pillar['map'] | default('lab_minions') %}
+{% set map = pillar.map | default('production') %}
 {% import_yaml 'maps/' + map + '.yaml' as minions %}
-# get list of existing vms in vm host pillar['virtual_host'] 
-{#% set vhost_vmlist = salt['cmd.run']("salt " + pillar['virtual_host'] + " virt.list_domains") | 
-                      default(pillar['virtual_host']) | load_yaml %#}
 
 #
 ### loop through list of minions creating and configuring each one
@@ -39,6 +36,13 @@
     - quiet: true
 
 
+### attach usb devices, if any
+{{ mname }} attach usb devices:
+  salt.state:
+    - sls: init.attach_usb
+    - tgt: {{ minion.virtual_host | default(grains['id']) }}
+    - pillar: {'minion': {{ mname }}, 'usb_devices': {{ minion.usb_devices | default(None) }}}
+
 ### redefines interfaces, if needed
 {{ mname }} redefine interfaces:
   salt.state:
@@ -51,16 +55,9 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ "{{ mname }}" ]
-    - timeout: 60
+    - timeout: 90
     - require:
       - salt: {{ mname }} redefine interfaces
-
-### attach usb devices
-{{ mname }} attach usb devices:
-  salt.state:
-    - sls: init.attach_usb
-    - tgt: {{ minion.virtual_host | default(grains['id']) }}
-    - pillar: {'minion': {{ mname }}, 'usb_devices': {{ minion.usb_devices | default(None) }}}
 
 ### configures the minion
 {{ mname }} call config:
@@ -72,5 +69,7 @@
       - fun: match.pillar
         tgt: 'do_config:true'
 
+{% else %}
+'-- {{ mname }} is already present.': test.nop
 {% endif %}
 {% endfor %}
