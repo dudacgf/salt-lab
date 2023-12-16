@@ -30,71 +30,25 @@ def ethernet_type_nmconnection(this_net):
     return connection
 
 def hotspot_type_nmconnection(this_net, nic):
-    return [
-        '[connection]',
-        f'id={this_net["ap_name"]}',
-        f'uuid={uuid.uuid4()}',
-        'type=wifi',
-        'autoconnect=true',
-        f'interface-name={nic}',
-        'permissions=',
-        'secondaries=',
-        '',
-        '[wifi]',
-        'hidden=false',
-        f'mac-address={this_net["hwaddr"]}',
-        'mac-address-blacklist=',
-        'mode=ap',
-        'seen-bssids=',
-        f'ssid={this_net["ap_name"]}',
-        '',
-        '[wifi-security]',
-        'group=ccmp;',
-        'key-mgmt=wpa-psk',
-        'pairwise=ccmp;',
-        'proto=rsn;',
-        f'psk={this_net["ap_psk"]}',
-        '',
-        '[ipv4]',
-        f'address={this_net["ip4_address"]}',
-        'dns-search=',
-        'method=shared',
-        '',
-        '[ipv6]',
-        'dns-search=',
-        'method=auto',
-        '',
-    ]
+    connection = { 
+        'nmconnection.present': [
+            {'conn_type': "hostpot"},
+            {'ap_name': this_net['ap_name']},
+            {'ap_psk': this_net['ap_psk']},
+        ]
+    }
+    hwaddr = this_net["hwaddr"] if "hwaddr" in this_net else None
+    if hwaddr:
+        connection['nmconnection.present'].append({'hwaddr': hwaddr})
+    ip4_address = this_net["ip4_address"] if "ip4_address" in this_net else None
+    if ip4_address:
+        connection['nmconnection.present'].append({'ip4_address': ip4_address})
+
+    logging.info(connection)
+
+    return connection
 
 def wifi_type_nmconnection(this_net, nic):
-    """
-    return [
-        '[connection]',
-        f'id={this_net["ap_name"]}',
-        f'uuid={uuid.uuid4()}',
-        'type=wifi',
-        f'interface-name={nic}',
-        '',
-        '[wifi]',
-        'mode=infrastructure',
-        f'ssid={this_net["ap_name"]}',
-        '',
-        '[wifi-security]',
-        'auth-alg=open',
-        'key-mgmt=wpa-psk',
-        f'psk={this_net["ap_psk"]}',
-        '',
-        '[ipv4]',
-        'method=auto',
-        '',
-        '[ipv6]',
-        'addr-gen-mode=default',
-        'method=auto',
-        '',
-        '[proxy]',
-        '',
-    ]
-    """
     connection = { 
         'nmconnection.present': [
             {'conn_type': "wifi"},
@@ -195,7 +149,7 @@ def run():
     if not dhcp_only:
         config['reboot nmconnection'] = {
             'cmd.run': [
-                {'name': '/bin/bash -c \'sleep 5; shutdown -r now\''},
+                {'name': '/bin/bash -c "sleep 5; systemctl restart salt-minion"'},
                 {'bg': True},
                 {'require': require},
             ]
