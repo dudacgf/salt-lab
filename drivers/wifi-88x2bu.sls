@@ -38,6 +38,12 @@ install driver 88x2bu:
     - require:
       - git: 'https://github.com/morrownr/88x2bu-20210702.git'
 
+# load the driver
+modprobe 88x2bu:
+  cmd.run:
+    - require:
+      - cmd: install driver 88x2bu
+
 88x2bu toggle flag_driver_installed on:
   grains.present:
     - name: flag_driver_installed
