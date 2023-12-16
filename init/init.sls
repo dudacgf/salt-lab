@@ -29,8 +29,7 @@
     - name: cloud.profile
     - provider: {{ minion.virtual_provider }}
     - prof: {{ minion.profile | default('debian_gold') }}
-    - instances:
-      - {{ mname }}
+    - instances: {{ mname }}
     - opts:
       - clone_stratety: full
     - quiet: true
