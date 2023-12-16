@@ -78,7 +78,11 @@ install complete python3.11:
         - python311-zope.interface
 
 # use pip3.11 to install latest salt
-pip3.11 install salt:
+{% if pillar.proxy %}
+pip3.11 config set global.proxy {{ pillar.proxy }}:
+  cmd.run
+{% endif %}
+pip3.11 -q install salt:
   cmd.run
 
 # change hashbang on salt-commands to point to python3.11
@@ -101,5 +105,5 @@ salt-minion:
     - restart: True
     - require:
       - pkg: install complete python3.11
-      - cmd: pip3.11 install salt
+      - cmd: pip3.11 -q install salt
       - file: /usr/bin/salt*

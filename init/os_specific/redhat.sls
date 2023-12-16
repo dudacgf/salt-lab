@@ -70,9 +70,10 @@ enable-powertools:
 python3-pip:
   pkg.installed
 
+{% set proxy = '--proxy ' + pillar.proxy if pillar.proxy else '' %}
 pip lief:
   cmd.run:
-    - name: 'pip -q install lief'
+    - name: 'pip {{ proxy }} -q install lief'
 
 md2 ldap.so.2 remove:
   cmd.script:
