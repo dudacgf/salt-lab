@@ -55,12 +55,6 @@ proxy error:
       - "proxy_port: {{ proxy | regex_replace('.*:(.*)$', '\\1') }}"
       - "no_proxy: [ '127.0.0.1', 'localhost' ]"
 
-setproxy restart salt minion:
-  cmd.run:
-    - name: 'salt-call --local service.restart salt-minion'
-    - bg: True
-    - require:
-      - file: /etc/salt/minion.d/00-proxy.conf
 {% else %}
 '-- This server does not use proxy.':
   test.nop
