@@ -1,7 +1,6 @@
 #!py
 import nmcli
 import logging
-import uuid
 
 log = logging.getLogger(__name__)
 
@@ -11,9 +10,9 @@ def ethernet_type_nmconnection(this_net):
     if 'autoconnect' in this_net:
         options['autoconnect'] = this_net['autoconnect']
     options['ipv4.addresses'] = this_net['ip4_address']
-    options['ipv4.gateway'] = this_net['ip4_gateway'] if 'ip4_gateway' in this_net else ''
-    options['ipv4.dns'] = this_net['ip4_dns'] if 'ip4_dns' in this_net else ''
-    options['ipv4.dns-search'] = this_net['ip4_dns_search'] if 'ip4_dns_search' in this_net else ''
+    options['ipv4.gateway'] = this_net['ip4_gateway'] if 'ip4_gateway' in this_net else None
+    options['ipv4.dns'] = this_net['ip4_dns'] if 'ip4_dns' in this_net else None
+    options['ipv4.dns-search'] = this_net['ip4_dns_search'] if 'ip4_dns_search' in this_net else None
     options['ipv4.method'] = 'manual'
 
     connection = { 
@@ -74,7 +73,6 @@ def run():
     if 'interfaces' in __pillar__ and __pillar__['interfaces']:
         for network in __pillar__['interfaces']:
             this_net = __pillar__['interfaces'][network]
-            log.info(f'itype: {this_net["itype"]}')
 
             if 'dhcp' in this_net and not this_net['dhcp']:
                 dhcp_only = False
@@ -149,14 +147,16 @@ def run():
     if not dhcp_only:
         config['reboot nmconnection'] = {
             'cmd.run': [
-                {'name': '/bin/bash -c "sleep 5; systemctl restart salt-minion"'},
+                {'name': 'sleep 5; salt-call --local system.reboot'},
                 {'bg': True},
                 {'require': require},
+                {'onchanges_any': require}
             ]
         }
         config[f'"-- nmconnections {str(require)} created'] = {
             'test.nop': [
-                {'require': require},
+                {'require_any': require},
+                {'onchanges_any': require}
             ]
         }
     else:
