@@ -5,5 +5,9 @@
     {%- set nic = salt['ifaces.get_iface_name'](hwaddr) %}
     {%- do nic_list.append(nic) %}
 {%- endfor %}
+{% if grains['os_family'] == 'Suse' %}
+DHCP_INTERFACE="{{ nic_list | join(' ')}}"
+{% else %}
 INTERFACESv4="{{ nic_list | join(' ') }}"
 INTERFACESv6=""
+{% endif %}
