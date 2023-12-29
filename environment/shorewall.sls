@@ -129,7 +129,7 @@ stop firewalld:
     - bg: True
     - onlyif:
       - fun: match.grain
-        tgt: 'os:Debian'
+        tgt: 'os_family:Debian'
 
 {% else %}
 '-- shorewall not enabled for this minion. nothing to do.':
