@@ -21,16 +21,6 @@
     - tgt: {{ mname }}
     - pillar: {'proxy': {{ minion.proxy | default(False) }}}
 
-{#
-# waits (proxy restarts the minion)
-{{ mname }} wait proxy:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
-    - timeout: 60
-    - require:
-      - salt: {{ mname }} define proxy minion
-#}
 ### 1. os_specific initialization (repos, yum/apt settings etc)
 {{ mname }} os_specific:
   salt.state:
@@ -60,32 +50,11 @@
     - sls: init.networkmanager
     - tgt: {{ mname }}
 
-{#
-# waits (networkmanager may restart the minion)
-{{ mname }} wait networkmanager:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
-    - timeout: 90
-    - require:
-      - salt: {{ mname }} network manager
-#}
 ### 4. install drivers, if needed
 {{ mname }} install drivers:
   salt.state:
     - sls: drivers
     - tgt: {{ mname }}
-
-{#
-# wait (install drivers reboots the minion)
-{{ mname }} aguarda drivers:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ "{{ mname }}" ]
-    - timeout: 60
-    - require:
-      - salt: {{ mname }} install drivers
-#}
 
 ### 5. networkmanager connections 
 {{ mname }} nmconnections:
@@ -101,7 +70,7 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 30
+    - timeout: 120
     - require:
       - salt: {{ mname }} nmconnections
 
@@ -123,7 +92,7 @@
   salt.wait_for_event:
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
-    - timeout: 30
+    - timeout: 90
     - require:
       - salt: {{ mname }} environment
 
