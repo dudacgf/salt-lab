@@ -42,7 +42,6 @@ def mod_init(low):
     nmcli.set_lang('C.UTF8')
     # if minion service not run by root this will be a problem
     nmcli.disable_use_sudo()
-    log.info('mod_init run')
 
     return True
 
@@ -56,7 +55,6 @@ def _pick_device(hwaddr, conn_type: str = 'ethernet'):
         connection type (ethernet, wifi etc)
     """
     ctype = 'wifi' if conn_type == 'hotspot' else conn_type
-    log.info('mod_init run')
     if hwaddr is None:
         # use first ethernet nic available
         comment = f'no {ctype}-like nic available'
@@ -76,7 +74,6 @@ def _pick_connection(iface):
     return None
 
 def _pick_connection_by_name(name):
-    log.info(f'conn name: {name}')
     try:
         return nmcli.connection.show(name)
     except Exception:
@@ -101,8 +98,10 @@ def _check_options(ifname, options, **kwargs):
         options['ipv4.routes'] = ','.join(options['ipv4.routes'])
 
     # connection type specific options
-    if 'conn_type' in kwargs:
-        if kwargs['conn_type'] == 'vpn':
+    if 'conn_type' not in kwargs:
+        kwargs['conn_type'] == 'ethernet'
+    match kwargs['conn_type']:
+        case 'vpn':
             options['connection.id'] = kwargs['ap_name']
             options['vpn-type'] = kwargs['vpn-type'] if 'vpn-type' in kwargs else 'openvpn'
             if 'vpn_data' in kwargs:
@@ -110,7 +109,7 @@ def _check_options(ifname, options, **kwargs):
                 for v in vpn_data:
                     for k in v:
                         options['vpn.data'] += f', {k}={v[k]}'
-        elif kwargs['conn_type'] == 'wifi':
+        case 'wifi|hotpspot':
             options['connection.id'] = kwargs['ap_name']
             options.update({
                 'ssid': kwargs['ap_name'],
@@ -119,10 +118,27 @@ def _check_options(ifname, options, **kwargs):
                 '802-11-wireless-security.key-mgmt': 'wpa-psk',
                 '802-11-wireless-security.auth-alg': 'open',
             })
-        elif kwargs['conn_type'] == 'hotspot':
-            options['connection.id'] = kwargs['ap_name']
-        else:
+        case _:
             options['connection.id'] = ifname
+
+
+def _clean_options(options):
+    _options = {}
+    not_nulls = [k for k in options if options[k] is not None]
+    for o in not_nulls:
+       _options[o] = options[o] 
+    return _options
+
+def _changes(ifname, before, options):
+    after = _pick_connection(ifname)
+    diffs = deep_diff(before, after)
+    changes = {}
+    if 'old' in diffs:
+        for key in diffs['old']:
+            if key in options:
+                changes[key] = {'old': before[key], 'new': after[key]}
+    return changes
+
 
 def _ethernet(hwaddr, options, **kwargs):
     """
@@ -133,44 +149,37 @@ def _ethernet(hwaddr, options, **kwargs):
     if device is None:
         return {'result': False, 'comment': f'no ethernet device with macaddress {hwaddr}'}
     _check_options(device.device, options, **kwargs)
-
     conn = _pick_connection(device.device)
 
-    changes = {}
     if conn is None:
         try:
             nmcli.connection.add(name=device.device, ifname=device.device, conn_type='ethernet', 
-                             options=options)
+                             options=_clean_options(options))
             return{'result': True,
                    'comment': f'connection {device.device} created',
                    'changes': {'options': options}}
         except e:
             return{'result': False,
                    'comment': f'error creating connection {device.device}: {e}'}
-    else:
-        equal = True
-        for o in options:
-            if o in conn and conn[o] != options[o]:
-                equal = False
-        if equal:
-            return {'result': True, 
-                    'comment': f'connection {conn["connection.id"]} is in the desired state'}
-        try:
-            before = conn
-            nmcli.connection.modify(name=conn['connection.id'], options=options)
-            after = _pick_connection(device.device)
-            diffs = deep_diff(before, after)
-            if 'old' in diffs:
-                for key in diffs['old']:
-                    if key in options:
-                        changes[key] = {'old': before[key], 'new': after[key]}
-            return {
-                'result': True, 
-                'comment': f'{after["connection.id"]} connection modified',
-                'changes': changes}
-        except Exception as e:
-            return {'result': False, 
-                    'comment': f'error modifying {device.device} connection: {e}'}
+
+    equal = True
+    for o in options:
+        if o in conn and conn[o] != options[o]:
+            equal = False
+    if equal:
+        return {'result': True, 
+                'comment': f'eth0: connection {conn["connection.id"]} is in the desired state'}
+
+    try:
+        nmcli.connection.modify(conn['connection.id'], options=_clean_options(options))
+        changes = _changes(device.device, conn, options)
+        return {
+            'result': True, 
+            'comment': f'{conn["connection.id"]} connection modified',
+            'changes': changes}
+    except Exception as e:
+        return {'result': False, 
+                'comment': f'error modifying {device.device} connection: {e}'}
 
 
 def _wifi(hwaddr, options, **kwargs):
@@ -181,53 +190,48 @@ def _wifi(hwaddr, options, **kwargs):
     if device is None:
         return {'result': False, 'comment': f'no ethernet device with macaddress {hwaddr}'}
     _check_options(device.device, options, **kwargs)
-
     conn = _pick_connection(device.device)
     
     if conn is None:
-        if 'ap_name' in kwargs and 'ap_psk' in kwargs:
-            try:
-                nmcli.connection.add(conn_type='wifi', 
-                                     ifname=device.device, 
-                                     name=kwargs['ap_name'], 
-                                     autoconnect=options['connection.autoconnect'],
-                                     options=options)
-                return{
-                    'result': True,
-                    'comment': f'{kwargs["ap_name"]} connection created',
-                    'changes': None if not options else options}
-            except Exception as e:
-                return{
-                    'result': False,
-                    'comment': f'could not create connection {kwargs["ap_name"]}: {e}'}
-        else:
+        if 'ap_name' not in kwargs or 'ap_psk' not in kwargs:
             return{
                 'result': False,
                 'comment': f'needs an ap name and ap password to create a wifi connection'}
-    else:
+
         try:
-            changes = {}
-            before = conn
-            nmcli.connection.modify(name=conn['connection.id'], options=options)
-            after = _pick_connection(device.device)
-            diffs = deep_diff(before, after)
-            if 'old' in diffs:
-                for key in diffs['old']:
-                    if key in options:
-                        changes[key] = {'old': before[key], 'new': after[key]}
-            if changes:
-                return {
-                    'result': True, 
-                    'comment': f'{after["connection.id"]} connection modified',
-                    'changes': changes}
-            else:
-                return {
-                    'result': True,
-                    'comment': f'{after["connection.id"]} connection is in the desired state',
-                    'changes': {}}
+            nmcli.connection.add(conn_type='wifi', 
+                                 ifname=device.device, 
+                                 name=kwargs['ap_name'], 
+                                 autoconnect=options['connection.autoconnect'],
+                                 options=options)
+            return{
+                'result': True,
+                'comment': f'{kwargs["ap_name"]} connection created',
+                'changes': None if not options else options}
         except Exception as e:
-            return {'result': False, 
-                    'comment': f'error modifying {device.device} connection: {e}'}
+            return{
+                'result': False,
+                'comment': f'could not create connection {kwargs["ap_name"]}: {e}'}
+
+    equal = True
+    for o in options:
+        if o in conn and conn[o] != options[o]:
+            equal = False
+    if equal:
+        return {'result': True, 
+                'comment': f'connection {conn["connection.id"]} is in the desired state'}
+
+    try:
+        nmcli.connection.modify(name=conn['connection.id'], options=_clean_options(options))
+        changes = _changes(device.device, conn, options)
+        if changes:
+            return {
+                'result': True, 
+                'comment': f'{after["connection.id"]} connection modified',
+                'changes': changes}
+    except Exception as e:
+        return {'result': False, 
+                'comment': f'error modifying {device.device} connection: {e}'}
 
 
 def _hotspot(hwaddr, options, **kwargs):
@@ -238,54 +242,49 @@ def _hotspot(hwaddr, options, **kwargs):
     if device is None:
         return {'result': False, 'comment': f'no ethernet device with macaddress {hwaddr}'}
     _check_options(device.device, options, **kwargs)
-
     conn = _pick_connection(device.device)
     
     if conn is None:
-        if 'ap_name' in kwargs and 'ap_psk' in kwargs:
-            try:
-                nmcli.device.wifi_hotspot(ifname=device.device,
-                                          con_name=kwargs['ap_name'],
-                                          password=kwargs['ap_psk'],
-                                          ssid=kwargs['ap_name'])
-                if options:
-                    nmcli.connection.modify(name=kwargs['ap_name'], options=options)
-                return{
-                    'result': True,
-                    'comment': f'{kwargs["ap_name"]} connection created',
-                    'changes': None if not options else options}
-            except Exception as e:
-                return{
-                    'result': False,
-                    'comment': f'could not create connection {kwargs["ap_name"]}: {e}'}
-        else:
+        if 'ap_name' not in kwargs or 'ap_psk' not in kwargs:
             return{
                 'result': False,
                 'comment': f'needs an ap name and ap password to create a hotspot connection'}
-    else:
+
         try:
-            changes = {}
-            before = conn
-            nmcli.connection.modify(name=conn['connection.id'], options=options)
-            after = _pick_connection(device.device)
-            diffs = deep_diff(before, after)
-            if 'old' in diffs:
-                for key in diffs['old']:
-                    if key in options:
-                        changes[key] = {'old': before[key], 'new': after[key]}
-            if changes:
-                return {
-                    'result': True, 
-                    'comment': f'{after["connection.id"]} connection modified',
-                    'changes': changes}
-            else:
-                return {
-                    'result': True,
-                    'comment': f'{after["connection.id"]} connection is in the desired state',
-                    'changes': {}}
+            nmcli.device.wifi_hotspot(ifname=device.device,
+                                      con_name=kwargs['ap_name'],
+                                      password=kwargs['ap_psk'],
+                                      ssid=kwargs['ap_name'])
+            if options:
+                nmcli.connection.modify(name=kwargs['ap_name'], options=options)
+            return{
+                'result': True,
+                'comment': f'{kwargs["ap_name"]} connection created',
+                'changes': {'': f'connection {kwargs["ap_name"]} created' if not options else options}}
         except Exception as e:
-            return {'result': False, 
-                    'comment': f'error modifying {device.device} connection: {e}'}
+            return{
+                'result': False,
+                'comment': f'could not create connection {kwargs["ap_name"]}: {e}'}
+        
+    equal = True
+    for o in options:
+        if o in conn and conn[o] != options[o]:
+            equal = False
+    if equal:
+        return {'result': True, 
+                'comment': f'connection {conn["connection.id"]} is in the desired state'}
+
+    try:
+        nmcli.connection.modify(name=conn['connection.id'], options=_clean_options(options))
+        changes = _changes(device.device, conn, options)
+        if changes:
+            return {
+                'result': True, 
+                'comment': f'{after["connection.id"]} connection modified',
+                'changes': changes}
+    except Exception as e:
+        return {'result': False, 
+                'comment': f'error modifying {device.device} connection: {e}'}
 
 
 def present(name, conn_type=None, hwaddr=None, options=None, **kwargs):
@@ -308,9 +307,10 @@ def present(name, conn_type=None, hwaddr=None, options=None, **kwargs):
         connnection configuration fields and values. for a list of fields, 
         consult the nmcli documentation
     """
+    nmcli.set_lang('C.UTF8')
 
     ret = {'name': name, 
-           'changes': {}, 
+           'changes': {},
            'comment': 'Connection is present and in the desired state',
            'result': None}
 
@@ -332,8 +332,10 @@ def present(name, conn_type=None, hwaddr=None, options=None, **kwargs):
         result = _ethernet(hwaddr, options, **kwargs)
     elif conn_type == 'wifi':
         result = _wifi(hwaddr, options, **kwargs)
-    else:
+    elif conn_type == 'hotspot':
         result = _hotspot(hwaddr, options, **kwargs)
+    else:
+        result = {'return': False, 'comment': f'connection type {conn_type} type not implemented'}
     
     ret['result'] = result['result']
     if 'changes' in result and len(result['changes']) > 0:
@@ -342,6 +344,29 @@ def present(name, conn_type=None, hwaddr=None, options=None, **kwargs):
         ret['comment'] = result['comment']
 
     return ret
+
+
+def absent(name, **kwargs):
+    """
+    ensures that a connection does not exist
+    """
+    conn = _pick_connection_by_name(name)
+    if not conn:
+        return{'name': name,
+               'result': True,
+               'comment': f'connection {name} is absent',
+               'changes': null}
+
+    try:
+        nmcli.connection.delete(name)
+        return{'name': name,
+               'result':  True,
+               'comment': f'connection {name} removed',
+               'changes': {name, ''}}
+    except Exception as e:
+        return{'name': name,
+               'result': False,
+               'comment': f'connection {name} could not be removed: {e}'}
 
 def active(name, hwaddr: str = None, **kwargs):
     """
@@ -358,6 +383,7 @@ def active(name, hwaddr: str = None, **kwargs):
     if kwargs['test']:
         ret['comment'] = 'TEST nmconnection.active'
         return ret
+
     if hwaddr is None:
         if name is None:
             name = kwargs['id']
@@ -373,7 +399,6 @@ def active(name, hwaddr: str = None, **kwargs):
                'changes': {}}
 
     if 'GENERAL.STATE' in conn and conn['GENERAL.STATE'] == 'activated':
-        log.info(f"state: {conn}")
         return{'name': name,
                'result': True,
                'comment': f'connection {conn["connection.id"]} is active', 
