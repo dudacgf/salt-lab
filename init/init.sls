@@ -49,7 +49,7 @@
     - tgt: {{ minion.virtual_host | default(grains['id']) }}
     - pillar: {'minion': {{ mname }}, 'redefine_interfaces': {{ minion.redefine_interfaces | default(False) }}, 'minion_interfaces': {{ minion.interfaces | default({}) }} }
 
-# wait (add minion interfaces restarts salt-minion service)
+# wait (add minion interfaces reboots minion)
 {{ mname }} wait interfaces:
   salt.wait_for_event:
     - name: salt/minion/*/start
