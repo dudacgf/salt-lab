@@ -60,3 +60,4 @@ restart salt minion:
     - name: /bin/bash -c 'sleep 5; shutdown -r now'
     - bg: True
 
+'-- essentials run': test.nop
