@@ -46,7 +46,7 @@ run certbot:
     - name: certbot certonly --dns-route53 --email={{ domainemail }} --reinstall --no-eff-email --agree-tos --post-hook /usr/local/bin/post_hook.sh -d {{ domainname }} 
     - require:
       - file: {{ sls }} copy aws files
-      - pkg: certbot pkgs
+      #      - pkg: certbot pkgs
 
 aws delete secrets:
   file.absent:
