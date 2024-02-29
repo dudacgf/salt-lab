@@ -3,15 +3,22 @@
 {% set osf = salt.grains.filter_by(osf) %}
 
 # read map with users to create and to remove
-{% import_yaml "maps/users/users.yaml" as users with context %}
+{% set usermap = pillar.usermap | default('users') %}
+{% import_yaml "maps/users/"  + usermap + ".yaml" as users with context %}
 
-# list of users to create and to remove
+# list of users to create and to remove (if a minion needs extra users, they can be defined in the pillar)
 {% set users_to_create = users.to_create %}
 {% set users_to_remove = users.to_remove + pillar.users_to_remove | default([]) %}
 {% set userlist = users_to_create | difference(users_to_remove) %}
 
 {% for user in userlist %}
 {% if user != 'root' %} 
+
+{#
+{{ user }} group:
+  group.present:
+    - name: {{ user }}
+#}
 {{ user }}:
   user.present:
     - password: {{ users.to_create[user].password | default('!') }}
@@ -19,13 +26,12 @@
     - shell: /bin/bash
     - optional_groups: {{ users.to_create[user].groups | default([]) }}
 
-{% if grains['os_family'] == 'Suse' %}
 group.present_{{ user }}_{{ user }}:
  group.present:  
   - name: {{ user }}
   - addusers: 
     - {{ user }}
-{% endif %}
+
 {% endif %}
 
 # copy files to users home dir
