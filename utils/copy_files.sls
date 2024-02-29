@@ -3,8 +3,10 @@
 # read map with os_family dependent info
 {% import_yaml "maps/users/by_os_family.yaml" as osf %}
 {% set osf = salt.grains.filter_by(osf) %}
+
 # read map with users to create and to remove
-{% import_yaml "maps/users/users.yaml" as users with context %}
+{% set usermap = pillar.usermap | default('users') %}
+{% import_yaml "maps/users/"  + usermap + ".yaml" as users with context %}
 
 # list of users to create and to remove
 {% set users_to_create = users.to_create %}
