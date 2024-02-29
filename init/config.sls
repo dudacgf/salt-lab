@@ -121,6 +121,11 @@
     - sls: pkgs
     - tgt: {{ mname }}
 
+{{ mname }} cis enforce:
+  salt.state:
+    - sls: cis-benchmark
+    - tgt: {{ mname }}
+    
 {% else %}
 "-- {{ mname }} will not execute high state":
   test.nop
