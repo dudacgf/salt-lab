@@ -6,10 +6,12 @@ if [ -z "$PS1" ]; then
 fi
 
 # adiciona tmout  se a sessão for originada de SSH ou TERM=linux (console direta)
-if [ ! -z "${SSH_TTY}" -o "${TERM}" == "linux" ]; then
-  TMOUT=900
-  readonly TMOUT
-  export TMOUT
+if [ ! -v SSH_TTY -o "${TERM}" == "linux" -o -v TMOUT ]; then
+    if [ ! -v TMOUT ]; then
+        TMOUT=900
+        readonly TMOUT
+        export TMOUT
+    fi
 fi
 
 unset USERNAME

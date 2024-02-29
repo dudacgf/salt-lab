@@ -46,10 +46,13 @@ function trPWD () {
 	echo -ne $newPWD
 }
 
-# tell a fortune
-echo;
-fortune;
-echo;
+#
+# tells a fortune
+if which fortune > /dev/null; then
+    echo ''
+    fortune
+    echo ''
+fi
 
 # my PS1 (with truncated path)
 PS1="\u@\h:\$(trPWD 20)\$ "
