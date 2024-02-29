@@ -2,6 +2,7 @@
 
 #ssh connections
 alias aldebaran='ssh aldebaran.theshiresco.com -o ServerAliveInterval=60 -X'
+alias colina='ssh -p 6422 colina.theshiresco.com'
 alias cacti='ssh 10.1.16.35'
 alias dirautorais='ssh 192.168.16.120'
 alias dns01='ssh dns01.icatu.com.br'
