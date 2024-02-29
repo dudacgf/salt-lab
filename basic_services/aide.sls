@@ -2,7 +2,8 @@
 ## aide.sls - instala e configura o serviço aide para checkagem do filesystem
 # 
 
-{%- if pillar['aide'] | default(False) and pillar['aide']['install'] | default(False) %}
+{%- if (pillar['aide'] | default(False) and pillar['aide']['install'] | default(False)) 
+        or pillar['cis'] | default(False) == 'enforced' %}
 aide:
   pkg.installed
   
@@ -39,6 +40,22 @@ reload system daemon:
       - file: /etc/systemd/system/aidecheck.timer
       - file: /etc/systemd/system/aidecheck.service
 
+/etc/aide/aide.conf:
+  file.line:
+    - after: '^LinkedLog = Log-n$'
+    - mode: Insert
+    - content: |
+
+          # CIS 4.1.4.11 Ensure cryptographic mechanisms are used to protect 
+          #              the integrity of audit tools
+          /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
+          /sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
+          /sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
+          /sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
+          /sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512 
+          /sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
+    - unless: 'grep /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512 /etc/aide/aide.conf'
+
 # mantém o serviço aidechek.service apenas habilitado
 aidecheck.service:
   service.enabled
@@ -48,6 +65,8 @@ aidecheck.timer:
   service.running:
     - enable: true
     - restart: true
+    - watch:
+      - file: /etc/aide/aide.conf
 
 {%- else %}
 '-- aide will not be installed':
