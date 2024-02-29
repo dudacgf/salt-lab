@@ -37,4 +37,7 @@ cifs-utils:
 systemctl daemon-reload:
   cmd.run
 
+{% else %}
+'-- not windows netshares defined': test.nop
+
 {% endif %}
