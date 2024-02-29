@@ -1,5 +1,5 @@
 #
-### shorewall.sls - instala e configura shorewall - iptables/nftables firewall
+### shorewall.sls - installs and configures shorewall - iptables/nftables firewall
 #
 # ecgf - fev/2024
 #
@@ -31,5 +31,5 @@ default:
 {% include "environment/shorewall/shorewall.sls" %}
 {% else %}
 {% include "environment/shorewall/simple_shorewall.sls" %}
-{% include "environment/shorewall/simple_shorewall6.sls" %}
 {% endif %}
+{% include "environment/shorewall/simple_shorewall6.sls" %}

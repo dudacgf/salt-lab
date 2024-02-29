@@ -10,6 +10,12 @@ instala shorewall6:
     - name: shorewall6
     - refresh: True
 
+enable startup:
+  file.replace:
+    - name: /etc/shorewall6/shorewall6.conf
+    - pattern: '^STARTUP_ENABLED=No'
+    - repl: 'STARTUP_ENABLED=Yes'
+
 /etc/shorewall6/zones:
   file.managed:
     - user: root
@@ -55,7 +61,8 @@ instala shorewall6:
           {%- for rule in pillar['simple_shorewall']['rules_in'] %}
           ACCEPT pub fw {{ rule }}
           {%- endfor %}
-          ACCEPT all all icmp echo,echo-reply
+          ACCEPT fw  pub udp  domain
+          ACCEPT all all icmp echo-request,echo-reply
 
 restart shorewall6 service:
   service.running:
@@ -73,7 +80,7 @@ stop6 firewalld:
     - name: firewalld.service
     - enable: False
     - require:
-      - service: restart shorewall service
+      - service: restart shorewall6 service
     - onlyif:
       - fun: match.grain
         tgt: 'os_family:RedHat'
@@ -82,7 +89,7 @@ stop6 ufw:
   service.dead:
     - enable: False
     - require:
-      - service: restart shorewall service
+      - service: restart shorewall6 service
     - name: ufw.service
     - onlyif:
       - fun: match.grain

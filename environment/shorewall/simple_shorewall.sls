@@ -62,7 +62,8 @@ configura shorewall.conf:
           {%- for rule in pillar['simple_shorewall']['rules_in'] %}
           ACCEPT pub fw {{ rule }}
           {%- endfor %}
-          ACCEPT all all icmp echo,echo-reply
+          ACCEPT fw  pub udp  domain
+          ACCEPT all all icmp echo-request,echo-reply
 
 restart shorewall service:
   service.running:

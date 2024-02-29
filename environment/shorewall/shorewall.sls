@@ -13,21 +13,6 @@ default:
 {% endload %}
 {% set shorewall = salt.grains.filter_by(shorewall, grain='id', default='default') %}
 
-{% if shorewall.install %}
-#
-# redhat 8 and up doesn't offer shorewall anymore
-{% if grains['os_family'] == 'RedHat' %}
-shorewall repo:
-  pkgrepo.managed:
-    - name: 'copr_shorewall'
-    - file: /etc/yum.repos.d/shorewall_copr.repo
-    - humanname: Copr repo for shorewall owned by pgfed
-    - baseurl: https://download.copr.fedorainfracloud.org/results/pgfed/shorewall/fedora-rawhide-x86_64/
-    - gpgcheck: 1
-    - gpgkey: https://download.copr.fedorainfracloud.org/results/pgfed/shorewall/pubkey.gpg
-    - enabled: 1
-{% endif %}
-
 instala shorewall:
   pkg.installed:
     - name: shorewall
@@ -106,7 +91,7 @@ copia file rules:
     - group: root
     - mode: 0600
 
-restart shorewall service:
+shorewall restart shorewall service:
   service.running:
     - name: shorewall
     - enable: True
@@ -114,15 +99,25 @@ restart shorewall service:
     - watch:
       - file: copia file*
 
-stop firewalld:
+shorewall stop firewalld:
   service.dead:
     - name: firewalld.service
     - enable: False
     - require:
-      - service: restart shorewall service
+      - service: shorewall restart shorewall service
     - onlyif:
       - fun: match.grain
         tgt: 'os_family:RedHat'
+
+shorewall stop ufw:
+  service.dead:
+    - name: ufw.service
+    - enable: False
+    - require:
+      - service: shorewall restart shorewall service
+    - onlyif:
+      - fun: match.grain
+        tgt: 'os_family:Debian'
 
 'bash -c "salt-call --local service.restart salt-minion;"': 
   cmd.run:
@@ -130,8 +125,3 @@ stop firewalld:
     - onlyif:
       - fun: match.grain
         tgt: 'os_family:Debian'
-
-{% else %}
-'-- shorewall not enabled for this minion. nothing to do.':
-  test.nop
-{% endif %}
