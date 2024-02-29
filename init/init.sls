@@ -22,7 +22,7 @@
 {% set minion = minions[mname] %}
 
 ### if vm does not exists yet, create and configure it
-{% if mname not in salt.virt.list_domains() %}
+{% if mname not in salt.virt.list_domains(connection = pillar['virt']['connection']['url']) %}
 
 {{ mname }} create_instance:
   salt.runner:
