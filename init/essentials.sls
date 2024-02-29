@@ -39,7 +39,7 @@ prepara-pip:
 {% set proxy = '--proxy ' + pillar.proxy if pillar.proxy else '' %}
 minimal salt-minion:
   cmd.run:
-    - name: '{{ pillar.pkg_data.python3.pip_version }} {{ proxy }} -q install keystore pyjks m2crypto nmcli'
+    - name: '{{ pillar.pkg_data.python3.pip_version }} {{ proxy }} -q install keystore pyjks m2crypto==0.38.0 nmcli'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
