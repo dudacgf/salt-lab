@@ -48,7 +48,7 @@ function trPWD () {
 
 #
 # tells a fortune
-if which fortune > /dev/null; then
+if which fortune > /dev/null 2>&1; then
     echo ''
     fortune
     echo ''
