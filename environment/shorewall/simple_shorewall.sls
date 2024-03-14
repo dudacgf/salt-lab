@@ -44,13 +44,16 @@ configura shorewall.conf:
           fw all REJECT
           pub all DROP
 
-/etc/shorewall/rules:
+{%- set services = ['prometheus-'] | product(pillar.get('prometheus_exporters',[])) | map('join') | list %}
+{%- do services.extend(pillar.services | default([])) %}
+{%- do services.extend(pillar.basic_services | default([])) %}
+{%- import_yaml "maps/services/shorewall/ports.sls" as sp %}
+/etc/shorewall6/rules:
   file.managed:
     - user: root
     - group: root
-    - mode: 0600
+    - mode: 0640
     - contents: |
-          ?SECTION ALL
           ?SECTION ESTABLISHED
           ?SECTION RELATED
           ?SECTION INVALID
@@ -59,10 +62,17 @@ configura shorewall.conf:
           {%- for rule in pillar['simple_shorewall']['rules_out'] %}
           ACCEPT fw pub {{ rule }}
           {%- endfor %}
+          ACCEPT fw  pub udp  domain
           {%- for rule in pillar['simple_shorewall']['rules_in'] %}
           ACCEPT pub fw {{ rule }}
           {%- endfor %}
-          ACCEPT fw  pub udp  domain
+          {%- for service in services %}
+          {%-     if service in sp %}
+          {%-         for protocol in sp[service] %}
+          ACCEPT pub fw {{ protocol }} {{ sp[service][protocol] }}
+          {%-         endfor %}
+          {%-     endif %}
+          {%- endfor %}
           ACCEPT all all icmp echo-request,echo-reply
 
 restart shorewall service:
