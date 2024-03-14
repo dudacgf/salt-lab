@@ -1,0 +1,9 @@
+
+# scanacct is used by lansweeper and openvas to scan the servers. 
+# no ssh-key configuration possible. user must login with password
+Match User scanacct
+  PubKeyAuthentication no
+  PasswordAuthentication yes
+
+Match address {{ pillar['salt_server_ip'] }}
+  PermitRootLogin yes
