@@ -1,3 +1,16 @@
+# read map with os_family dependent info
+{% import_yaml "maps/users/by_os_family.yaml" as osf %}
+{% set osf = salt.grains.filter_by(osf) %}
+
+# read map with users to create and to remove
+{% set usermap = pillar.usermap | default('users') %}
+{% import_yaml "maps/users/"  + usermap + ".yaml" as users with context %}
+
+# list of users to create and to remove (if a minion needs extra users, they can be defined in the pillar)
+{% set users_to_create = users.to_create %}
+{% set users_to_remove = users.to_remove + pillar.users_to_remove | default([]) %}
+{% set userlist = users_to_create | difference(users_to_remove) %}
+
 {% if grains['os'] == 'Ubuntu' %}
 instala gnome:
   pkg.installed:
@@ -23,9 +36,8 @@ habilita desktop:
 
 {% endif %}
 
-{% set users = pillar['users_to_create'] %}
-{% for user in users %}
-   {% set system_account = salt['pillar.get']('users_to_create:' + user + ':system_account', False) %}
+{% for user in userlist %}
+   {% set system_account = user.system_account | default(False) %}
 
 {{ user }} gdm3 Account:
   file.managed:
