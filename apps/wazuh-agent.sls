@@ -21,6 +21,16 @@ deploy agent:
     - require:
       - cmd: import key
       - file: add wazuh repo
+
+fix csa rocky 9:
+  file.line:
+    - name: /var/ossec/ruleset/sca/cis_rhel9_linux.yml
+    - after: '    - "f:/etc/redhat-release -> r:^Red Hat Enterprise Linux && r:release 9"'
+    - before: '    - "f:/etc/redhat-release -> r:^Cloud && r:release 9"'
+    - content: '     - "f:/etc/redhat-release -> r:^Rocky && r:release 9"'
+    - mode: insert
+    - unless: grep "r:^Rocky && r:release 9" /var/ossec/ruleset/sca/cis_rhel9_linux.yml
+
 {% elif grains['os_family'] == 'Debian' %}
 import key:
   cmd.run:
@@ -48,3 +58,7 @@ wazuh-agent:
   service.running:
     - enable: True
     - restart: True
+    {%- if grains['os_family'] == 'RedHat' %}
+    - watch:
+      - file: /var/ossec/ruleset/sca/cis_rhel9_linux.yml
+    {%- endif %}
