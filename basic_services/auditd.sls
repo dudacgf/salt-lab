@@ -61,10 +61,12 @@ add privileged commands:
 /etc/audit/rules.d/99-finalize.rules:
   file.managed:
     - contents: -e 2
+    - mode: 0640
 
 # CIS 4.1.1.3 Ensure auditing for processes that start prior to auditd is enabled
 # CIS 4.1.1.4 Ensure audit_backlog_limit is sufficient 
 ##
+{% if grains['os_family'] == 'Debian' %}
 audit /etc/default/grub:
   file.line:
     - name: /etc/default/grub
@@ -78,7 +80,10 @@ auditd-update-grub:
     - name: update-grub
     - onchanges:
       - file: /etc/default/grub
-
+{% elif grains['os_family'] == 'RedHat' %}
+grubby --update-kernel ALL --args 'audit=1': cmd.run
+grubby --update-kernel ALL --args 'audit_backlog_limit=8192': cmd.run
+{% endif %}
 # CIS 4.1.4.4 Ensure the audit log directory is 0750 or more restrictive
 /var/log/audit:
   file.directory:

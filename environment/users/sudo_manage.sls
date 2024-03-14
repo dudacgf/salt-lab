@@ -11,7 +11,9 @@
 sudo:
   pkg.installed
 
-## I'll keep on using this insecure config bellow for wheel/sudo groups
+{## CIS doesn't like this
+
+# I'll keep on using this insecure config bellow for wheel/sudo groups
 00-pkg_app_{{ osf.sudo_group }}:
   file.managed:
     - name: /etc/sudoers.d/00-pkg_app
@@ -26,6 +28,7 @@ sudo:
         {% for pkg_app in osf.pkg_apps -%}
         %{{ osf.sudo_group }}  ALL=(ALL)   NOPASSWD: {{ pkg_app }}
         {% endfor %}
+#}
 
 {% if grains['os_family'] == 'RedHat' %}
 /etc/sudoers.d/10-add-root:
@@ -35,10 +38,6 @@ sudo:
         # 
         ## root on sudoers so that I don't get reported
         root    ALL=(ALL)   ALL
-        
-        #
-        ## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)
-        #includedir /etc/sudoers.d
 {% elif grains['os_family'] == 'Suse' %}
 /etc/sudoers:
   file.managed:
@@ -51,9 +50,10 @@ sudo:
     - contents: Defaults use_pty
 
 ## CIS 5.3.3 Ensure sudo log file exists
-/etc/sudoers.d/33_logfile:
-  file.managed:
-    - contents: Defaults logfile="/var/log/sudo.log"
+var_sudo_logfile:
+  file.append:
+    - name: /etc/sudoers
+    - text: Defaults logfile=/var/log/sudo.log
 
 ## CIS 5.3.4 Ensure users must provide password for privilege escalation
 remove nopasswd:
@@ -76,6 +76,19 @@ remove not authenticate:
     - name:  "sed -i -- 's/^\\(.*\\)!authenticate/#\\1!authenticate/' /etc/sudoers /etc/sudoers.d/*"
 
 ## CIS 5.3.7 Ensure access to the su command is restricted
+##            Ensure the Group Used by pam_wheel.so Module Exists on System and is Empty
+sugroup:
+  group.present:
+    - members: []
+
+{% if grains['os_family'] == 'RedHat' %}
 /etc/pam.d/su:
-  file.append:
-    - text: auth       required    pam_wheel.so use_uid
+  file.replace:
+    - pattern: '^#auth(\s)+required(\s)+pam_wheel.so use_uid$'
+    - repl: 'auth\1required\2pam_wheel.so use_uid group=sugroup'
+{% elif grains['os_family'] == 'Debian' %}
+/etc/pam.d/su:
+  file.replace:
+    - pattern: '^# auth(\s)+required(\s)+pam_wheel.so$'
+    - repl: 'auth\1required\2pam_wheel.so use_uid group=sugroup'
+{% endif %}

@@ -10,6 +10,7 @@ systemd-journal-remote:
 /etc/ssl/private/journal-privkey.pem:
   file.managed:
     - source: {{ pillar.journal.cert }}
+    - makedirs: True
 
 /etc/ssl/certs/journal-cert.pem:
   file.managed:
@@ -58,8 +59,8 @@ systemd-journal-remote.service:
       - file: /etc/systemd/journal-remote.conf
 {% else %}
 ## 4.2.1.1.4 Ensure journald is not configured to receive logs from a remote client
-systemd-journal-remote.socket:
-  service.disabled
+'systemctl stop systemd-journal-remote.socket': cmd.run
+'systemctl mask systemd-journal-remote.socket': cmd.run
 {% endif %}
 
 ## 4.2.1.3 Ensure journald is configured to compress large log files
@@ -73,10 +74,10 @@ systemd-journal-remote.socket:
          Compress=yes
          Storage=persistent
          ForwardToSyslog=no
-         SystemMaxUse=15%
-         SystemKeepFree=15%
-         RuntimeMaxUse=15%
-         RuntimeKeepFree=15%
+         SystemMaxUse=15
+         SystemKeepFree=15
+         RuntimeMaxUse=15
+         RuntimeKeepFree=15
          MaxFileSec=1year
 
 ## 4.2.1.2 Ensure journald service is enabled

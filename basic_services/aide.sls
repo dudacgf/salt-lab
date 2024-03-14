@@ -8,10 +8,9 @@ aide:
   pkg.installed
   
 # gera o db inicial
-{{ pillar['pkg_data']['aide']['aide_db'] }}:
+{{ pillar.pkg_data.aide.aide_db }}:
   cmd.run:
-    - name: aide --config {{ pillar['pkg_data']['aide']['conf'] }}  --init && mv {{ pillar['pkg_data']['aide']['new_db'] }} {{ pillar['pkg_data']['aide']['aide_db'] }}
-    - unless: ls /var/lib/aide/aide.db
+    - name: aideinit -y -f
 
 # Ajusta os serviços do aide
 
@@ -40,21 +39,24 @@ reload system daemon:
       - file: /etc/systemd/system/aidecheck.timer
       - file: /etc/systemd/system/aidecheck.service
 
-/etc/aide/aide.conf:
-  file.line:
-    - after: '^LinkedLog = Log-n$'
-    - mode: Insert
-    - content: |
+# CIS 4.1.4.11 Ensure cryptographic mechanisms are used to protect 
+#              the integrity of audit tools
+{% set after = salt.grains.filter_by({'Debian': 'LinkedLog = Log-n', 'RedHat': '/etc    PERMS'}) %}
+{{ pillar.pkg_data.aide.conf }}:
+  file.replace:
+    - pattern: '^({{ after }})$'
+    - repl: |
+          \1
 
-          # CIS 4.1.4.11 Ensure cryptographic mechanisms are used to protect 
-          #              the integrity of audit tools
-          /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
-          /sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
-          /sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
-          /sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
-          /sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512 
-          /sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
-    - unless: 'grep /sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512 /etc/aide/aide.conf'
+          # CIS 4.1.4.11 Ensure cryptographic mechanisms are used to protect the integrity of audit tools
+          /usr/sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
+          /usr/sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
+          /usr/sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
+          /usr/sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
+          /usr/sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
+          /usr/sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
+          /usr/sbin/rsyslogd p+i+n+u+g+s+b+acl+xattrs+sha512
+    - unless: 'grep /sbin/auditctl {{ pillar.pkg_data.aide.conf }}'
 
 # mantém o serviço aidechek.service apenas habilitado
 aidecheck.service:
@@ -66,7 +68,7 @@ aidecheck.timer:
     - enable: true
     - restart: true
     - watch:
-      - file: /etc/aide/aide.conf
+      - file: {{ pillar.pkg_data.aide.conf }}
 
 {%- else %}
 '-- aide will not be installed':

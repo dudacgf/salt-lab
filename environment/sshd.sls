@@ -35,10 +35,18 @@
 
 
 {% if grains['os_family'] == 'RedHat' %}
+# ssh_host_*_key must be group owned by ssh_keys
+'chgrp ssh_keys /etc/ssh/ssh_host_*_key': cmd.run
+
 # precisa restaurar contexto selinux 
-'restorecon /etc/ssh/ssh_host_*':
-  cmd.run
+'restorecon /etc/ssh/ssh_host_*': cmd.run
+
+/etc/ssh/sshd_config.d/50-redhat.conf:
+  file.replace:
+    - pattern: '^X11Forwarding yes$'
+    - repl: 'X11Forwarding no'
 {% endif %}
+
 
 # restarta serviço sshd pra garantir que vai passar a usar as novas chaves
 systemctl restart {{ pillar['pkg_data']['sshd']['service'] }}:
@@ -66,6 +74,14 @@ flag_ssh_hostkeys_new:
     - mode: 0600
     - template: jinja
 
+/etc/ssh/sshd_config.d/99_sshd_users.conf:
+  file.managed:
+    - source: salt://files/services/ssh/99_sshd_users
+    - user: root
+    - group: root
+    - mode: 0600
+    - template: jinja
+
 #
 # arquivo que determina quais modulos serão aceitos (cifra baixa <3072 cortados)
 /etc/ssh/moduli:
@@ -85,6 +101,7 @@ flag_ssh_hostkeys_new:
     - watch:
       - file: /etc/ssh/sshd_config
       - file: /etc/ssh/moduli
+      - file: /etc/ssh/sshd_config.d/99_sshd_users.conf
 
 {% else %}
 {{ pillar['pkg_data']['sshd']['name'] }}: pkg.removed

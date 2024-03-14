@@ -1,8 +1,8 @@
 ########
 #### 
-# CIS BENCHMARKS UBUNTU 20.04/21.04 SERVER LEVEL 1
+# CIS BENCHMARKS DEBIAN 12 SERVER LEVEL 1
 ####
-# PDF: https://learn.cisecurity.org/l/799323/2022-09-15/3l9d2k
+# PDF: https://learn.cisecurity.org/l/799323/2024-02-21/4thxkw
 #
 
 ####
@@ -12,12 +12,43 @@
 ### 1.1 File System Configuration
 {% include "cis-benchmark/os_agnostic/1_1_file_system.sls" %}
 
-### 1.2 Configure Software Updates. já executado no State packages.sls
+### 1.2 
+
+### 1.3.1 Configure AppArmor
+## 1.3.1.1 Ensure AppArmor is installed
+install apparmor:
+  pkg.installed:
+    - pkgs: ['apparmor', 'apparmor-utils']
+
+## 1.3.1.2 Ensure AppArmor is enabled in the bootloader configuration
+/etc/default/grub:
+  file.line:
+    - after: '^GRUB_CMDLINE_LINUX=""$'
+    - content: 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX apparmor=1 security=apparmor"'
+    - mode: insert
+    - unless: grep 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX apparmor=1 security=apparmor"'
+
+apparmor-update-grub:
+  cmd.run:
+    - name: update-grub
+    - onchanges:
+      - file: /etc/default/grub
+
+## 1.3.1.3 Ensure all AppArmor Profiles are in enforce or complain mode
+## 1.3.1.4 Ensure all AppArmor Profiles are enforcing
+{%- if pillar.cis_parms.apparmor | default('enforced') == 'enforced' %}
+# enforce
+aa-enforce /etc/apparmor.d/*: cmd.run
+{%- else %}
+# complain
+aa-complain /etc/apparmor.d/*: cmd.run
+{%- endif %}
 
 ### 1.3 Filesystem Integrity Checking
 ## 1.3.1/1.3.2 Instalação do pacote aide e assegurar que roda regularmente
 {% include 'basic_services/aide.sls' %}
 
+### 1.4 Configure bootloader
 ## 1.4.1 Ensure bootloader password is set
 ## I will not implement this options because it needs an operator present at every boot
 ## this commented state would create a superuser with values from pillar
@@ -52,27 +83,15 @@ grubreadonly:
 ### I will not implement this option because the atacker would need physical access to the host
 ### or network access to its virtual host to gain single user access to the server
 
+### 1.5 Configure Additional Process Hardening
 ## 1.5.1 Ensure address space layout randomization (ASLR) is enabled
 /etc/sysctl.d/60-kernel.conf:
   file.managed:
     - contents: |
         kernel.randomize_va_space = 2
+        kernel.yama.ptrace_scope = 1
 
-## 1.5.2 Ensure prelink is not installed 
-prelink: pkg.purged
-
-
-## 1.5.3 Ensure Automatic Error Reporting is not enabled
-apport.service:
-  service.dead:
-    - enable: False
-
-/etc/default/apport:
-  file.replace:
-    - pattern: '^enabled=1$'
-    - repl: 'enabled=0'
-    
-## 1.5.4 Ensure core dumps are restricted
+## 1.5.3 Ensure core dumps are restricted
 /etc/security/limits.d/60-restrict-core-dumps:
   file.managed:
     - contents: |
@@ -91,33 +110,10 @@ apport.service:
           ProcessSizeMax=0
     - onlyif: systemctl is-enabled coredump.service
 
-### 1.6.1 Configure AppArmor
-## 1.6.1.1 Ensure AppArmor is installed
-apparmor: pkg.installed
+## 1.5.4 Ensure prelink is not installed 
+prelink: pkg.purged
 
-## 1.6.1.2 Ensure AppArmor is enabled in the bootloader configuration
-/etc/default/grub:
-  file.line:
-    - after: '^GRUB_CMDLINE_LINUX=""$'
-    - content: 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX apparmor=1 security=apparmor"'
-    - mode: insert
-    - unless: grep 'GRUB_CMDLINE_LINUX="$GRUB_CMDLINE_LINUX apparmor=1 security=apparmor"'
-
-apparmor-update-grub:
-  cmd.run:
-    - name: update-grub
-    - onchanges:
-      - file: /etc/default/grub
-
-## 1.6.1.3 Ensure all AppArmor Profiles are in enforce or complain mode
-## 1.6.1.4 Ensure all AppArmor Profiles are enforcing
-# essa eu não entendi muito bem as consequências, vou pular até poder testar
-# enforce
-#aa-enforce /etc/apparmor.d/*: cmd.run
-# complain
-#aa-complain /etc/apparmor.d/*: cmd.run
-
-### 1.7 Command Line Warning Banners
+### 1.6 Command Line Warning Banners
 {% include "cis-benchmark/os_agnostic/1_7_banners.sls" %}
 
 ### 1.8 Gnome Display Manager
@@ -130,107 +126,36 @@ apparmor-update-grub:
 #### 2. SERVICES
 ####
 
-### 2.1 Configure Time Synchronization
+### 2.1 Special Purpose Services
+{% include "cis-benchmark/os_agnostic/2_1_services.sls" %}
 
-## 2.1.1.1 Ensure a single time synchronization daemon is in use
-## 2.1.2 Configure chrony
-{% include 'basic_services/chrony.sls' %}
+### 2.2 Service Clients
 
-# resto de 2.1.xxxx configuraria os outros serviços (NTP ou systemd-timesyncd)
-# não será configurado pois usamos chrony
-
-### 2.2 Special Purpose Services
-
-## 2.2.2 Ensure Avahi Server is not installed
-avahi-daemon: pkg.purged
-
-## 2.2.4 Ensure DHCP Server is not installed 
-{% if not 'dhcp-server' in pillar['services'] | default(False) %}
-isc-dhcp-server: pkg.purged
-{% endif %}
-
-## 2.2.5 Ensure LDAP server is not installed 
-{% if not 'ldap-server' in pillar['services'] | default(False) %}
-ldapd: pkg.purged
-{% endif %}
-
-## 2.2.6 Ensure NFS is not installed 
-nfs-kernel-server: pkg.purged
-
-## 2.2.7 Ensure DNS Server is not installed 
-{% if not 'bind9' in pillar['services'] | default(False) %}
-bind9: pkg.purged
-{% endif %}
-
-## 2.2.8 Ensure FTP Server is not installed
-vsftpd: pkg.purged
-
-## 2.2.9 Ensure HTTP server is not installed 
-{% if not 'apache' in pillar['services'] | default(False) %}
-apache2: pkg.purged
-{% endif %}
-
-## 2.2.10 Ensure IMAP and POP3 server are not installed
-apt purge dovecot-imapd dovecot-pop3d: cmd.run
-
-## 2.2.11 Ensure Samba is not installed
-samba: pkg.purged
-
-## 2.2.12 Ensure HTTP Proxy Server is not installed 
-{% if not 'squid' in pillar['services'] | default(False) %}
-squid: pkg.purged
-{% endif %}
-
-## 2.2.13 Ensure SNMP Server is not installed 
-{% if not 'snmpd' in pillar['basic_services'] | default(False) %}
-snmp: pkg.purged
-{% endif %}
-
-## 2.2.14 Ensure NIS Server is not installed
-nis: pkg.purged
-
-## 2.2.15 Ensure mail transfer agent is configured for local-only mode
-/etc/postfix/main.cf:
-  file.managed:
-    - pattern: 'inet_interface.*=.*'
-    - repl: 'inet_interface=loopback-only'
-    - onlyif:
-      - fun: pkg.info_installed
-        args: ['postfix']
-
-postfix.service:
-  service.running:
-    - restart: true
-    - watch:
-      - file: /etc/postfix/main.cf
-    - onlyif:
-      - fun: pkg.info_installed
-        args: ['postfix']
-
-## 2.2.16 Ensure rsync service is either not installed or masked
-rsync.service:
-  service.dead:
-    - enable: False
-
-### 2.3 Service Clients
-
-## 2.3.1 Ensure NIS Client is not installed
+## 2.2.1 Ensure NIS Client is not installed
 ## já executado em 2.2.14
 
-## 2.3.2 Ensure rsh client is not installed
+## 2.2.2 Ensure rsh client is not installed
 rsh-client: pkg.purged
 
-## 2.3.3 Ensure talk client is not installed
+## 2.2.3 Ensure talk client is not installed
 talk: pkg.purged
 
-## 2.3.4 Ensure telnet client is not installed
+## 2.2.4 Ensure telnet client is not installed
 telnet: pkg.purged
 
-## 2.3.5 Ensure LDAP client is not installed 
+## 2.2.5 Ensure LDAP client is not installed 
 ldap-utils: pkg.purged
 
-## 2.3.6 Ensure RPC is not installed 
+## 2.2.6 Ensure RPC is not installed 
 rpcbind: pkg.purged
+
+### 2.3 Configure Time Synchronization
+
+## 2.3.1.1 Ensure a single time synchronization daemon is in use
+## 2.3.2 Configure chrony
+{% include 'basic_services/chrony.sls' %}
+
+# remainings 2.3.xxxx directives would setup other time servicess (NTP or systemd-timesyncd)
 
 
 ####

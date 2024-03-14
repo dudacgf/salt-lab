@@ -16,4 +16,5 @@
     readarray &> /dev/null -t OLD_DATA < "${AUDIT_RULE_FILE}"
     COMBINED_DATA=( "${OLD_DATA[@]}" "${NEW_DATA[@]}" )
     printf '%s\n' "${COMBINED_DATA[@]}" | sort -u > "${AUDIT_RULE_FILE}"
+    chmod 0640 "${AUDIT_RULE_FILE}"
 }

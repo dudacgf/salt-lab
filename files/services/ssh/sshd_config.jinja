@@ -32,7 +32,7 @@ RekeyLimit default none
 # Logging
 SyslogFacility AUTH
 ## CIS 5.2.5 Ensure SSH LogLevel is appropriate 
-LogLevel INFO
+LogLevel VERBOSE
 
 # Authentication:
 
@@ -46,7 +46,7 @@ LogLevel INFO
 {%- endfor %}
 AllowUsers {{ allowed_users | join(' ') }}
 ## CIS 5.2.21 Ensure SSH LoginGraceTime is set to one minute or less
-LoginGraceTime 60m
+LoginGraceTime 60
 ## 5.2.7 Ensure SSH root login is disabled (match for salt ip at end of file)
 PermitRootLogin no
 StrictModes yes
@@ -57,8 +57,8 @@ MaxStartups 10:30:60
 ## CIS 5.2.20 Ensure SSH MaxSessions is set to 10 or less 
 MaxSessions 10
 ## CIS 5.2.22 Ensure SSH Idle Timeout Interval is configured
-ClientAliveInterval 15
-ClientAliveCountMax 3
+ClientAliveInterval 300
+ClientAliveCountMax 1
 
 
 ## CIS 5.2.10 Ensure SSH PermitUserEnvironment is disabled
@@ -114,7 +114,7 @@ Subsystem sftp	/usr/lib/openssh/sftp-server
 # Restrict key exchange, cipher, and MAC algorithms, as per sshaudit.com
 # hardening guide.
 ## CIS 5.2.15 Ensure only strong Key Exchange algorithms are used
-KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256
+KexAlgorithms diffie-hellman-group-exchange-sha256,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256
 ## CIS 5.2.13 Ensure only strong Ciphers are used
 Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
 ## CIS 5.2.14 Ensure only strong MAC algorithms are used
@@ -125,12 +125,13 @@ HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com
 HostKeyAlgorithms ssh-ed25519,ssh-ed25519-cert-v01@openssh.com,sk-ssh-ed25519@openssh.com,sk-ssh-ed25519-cert-v01@openssh.com,rsa-sha2-256,rsa-sha2-512,rsa-sha2-256-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com
 {% endif %}
 
+Include sshd_config.d/*
 
 # scanacct is used by lansweeper and openvas to scan the servers. 
 # no ssh-key configuration possible. user must login with password
-Match User scanacct
-  PubKeyAuthentication no
-  PasswordAuthentication yes
+#Match User scanacct
+#  PubKeyAuthentication no
+#  PasswordAuthentication yes
 
-Match address {{ pillar['salt_server_ip'] }}
-  PermitRootLogin yes
+#Match address {{ pillar['salt_server_ip'] }}
+#  PermitRootLogin yes

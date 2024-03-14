@@ -1,16 +1,17 @@
-syslog-ng: pkg.remove
+syslog-ng: pkg.removed
 
 rsyslog: pkg.installed
 
-/etc/systemd/journald.conf:
+Forward to syslog:
   file.replace:
+    - name: /etc/systemd/journald.conf
     - pattern: '^ForwardToSyslog=no$'
     - repl: 'ForwardToSyslog=yes'
 
 /etc/rsyslog.d/10_file_create_mode.conf:
   file.managed:
     - contents: |
-          $FileCreateMode: 0640
+          $FileCreateMode 0640
     - unless: 'grep FileCreate rsyslog.* -ri'
 
 {% if pillar['audit2graylog'] | default(False) %}
