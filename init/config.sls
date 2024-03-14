@@ -75,11 +75,18 @@
       - salt: {{ mname }} nmconnections
 
 ### 6. executa o highstate desse minion
-{% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init") | load_yaml %}
+{% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init --out yaml") | load_yaml %}
 {%- if hoi[mname]['highstate_on_init'] | default(True) %}
 
 "-- {{ mname }} will execute high state":
   test.nop
+
+# create a snapshot before the highstate
+{{ mname }} create pre-highstate snapshot:
+  salt.function:
+    - name: virt.snapshot
+    - tgt: {{ pillar.salt_server }}
+    - kwarg: {'domain': {{ mname }}, 'name': 'pre-highstate', 'connection': '{{ pillar.virt.connection.url }}' }
 
 {{ mname }} environment:
   salt.state:
@@ -121,10 +128,18 @@
     - sls: pkgs
     - tgt: {{ mname }}
 
+# create a snapshot before enforcing cis-benchmark
+{{ mname }} create pre-cis snapshot:
+  salt.function:
+    - name: virt.snapshot
+    - tgt: {{ pillar.salt_server }}
+    - kwarg: {'domain': {{ mname }}, 'name': 'pre-cis', 'connection': '{{ pillar.virt.connection.url }}' }
+
 {{ mname }} cis enforce:
   salt.state:
     - sls: cis-benchmark
     - tgt: {{ mname }}
+    - pillar: {'map': {{ map }}}
     
 {% else %}
 "-- {{ mname }} will not execute high state":

@@ -58,6 +58,13 @@
     - require:
       - salt: {{ mname }} redefine interfaces
 
+# create a snapshot before configuring anything
+{{ mname }} create pre-config snapshot:
+  salt.function:
+    - name: virt.snapshot
+    - tgt: {{ pillar.salt_server }}
+    - kwarg: {'domain': {{ mname }}, 'name': 'pre-config', 'connection': '{{ pillar.virt.connection.url }}' }
+
 ### configures the minion
 {{ mname }} call config:
   salt.runner:
