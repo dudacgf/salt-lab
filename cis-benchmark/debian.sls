@@ -147,7 +147,8 @@ telnet: pkg.purged
 ldap-utils: pkg.purged
 
 ## 2.2.6 Ensure RPC is not installed 
-rpcbind: pkg.purged
+# already done at 2_1_services
+#rpcbind: pkg.purged
 
 ### 2.3 Configure Time Synchronization
 
