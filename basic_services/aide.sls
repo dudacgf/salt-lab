@@ -8,9 +8,21 @@ aide:
   pkg.installed
   
 # gera o db inicial
+{% if grains['os_family'] == 'RedHat' %}
+{{ pillar.pkg_data.aide.new_db }}:
+  cmd.run:
+    - name: aide --init -c /etc/aide.conf
+{{ pillar.pkg_data.aide.aide_db }}:
+  file.managed:
+    - source: {{ pillar.pkg_data.aide.new_db }}
+    - mode: 0600
+    - require:
+      - cmd: {{ pillar.pkg_data.aide.new_db }}
+{% elif grains['os_family'] == 'Debian' %}
 {{ pillar.pkg_data.aide.aide_db }}:
   cmd.run:
     - name: aideinit -y -f
+{% endif %}
 
 # Ajusta os serviços do aide
 
