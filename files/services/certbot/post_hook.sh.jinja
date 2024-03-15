@@ -4,7 +4,7 @@
 #                 to be used by services
 
 #
-# services currently supported: apache, elasticsearch, kibana, tdns, graylog, squid, salt-api
+# services currently supported: apache, elasticsearch, grafana, kibana, tdns, graylog, squid, salt-api
 {%- set ssl_services = {
                        'apache': {'dir': pillar['pkg_data']['apache']['etc_dir'], 
                                   'user': pillar['pkg_data']['apache']['user'],
@@ -12,6 +12,7 @@
                                  },
                        'elasticsearch': {'dir': '/etc/elasticsearch', 'user': 'elastisearch', 'group': 'elasticsearch'},
                        'graylog': {'dir': '/etc/graylog', 'user': 'graylog', 'group': 'graylog'},
+                       'grafana': {'dir': '/etc/grafana', 'user': 'grafana', 'group': 'grafana'},
                        'kibana': {'dir': '/etc/kibana', 'user': 'kibana', 'group': 'kibana'},
                        'salt-api': {'dir': '/etc/salt/pki', 'user': 'salt', 'group': 'salt'},
                        'squid': {'dir': '/etc/squid', 'user': 'squid', 'group': 'squid'},
