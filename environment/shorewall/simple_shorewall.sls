@@ -48,7 +48,7 @@ configura shorewall.conf:
 {%- do services.extend(pillar.services | default([])) %}
 {%- do services.extend(pillar.basic_services | default([])) %}
 {%- import_yaml "maps/services/shorewall/ports.sls" as sp %}
-/etc/shorewall6/rules:
+/etc/shorewall/rules:
   file.managed:
     - user: root
     - group: root

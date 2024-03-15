@@ -47,7 +47,7 @@ enable startup:
 {%- do services.extend(pillar.services | default([])) %}
 {%- do services.extend(pillar.basic_services | default([])) %}
 {%- import_yaml "maps/services/shorewall/ports.sls" as sp %}
-/etc/shorewall/rules:
+/etc/shorewall6/rules:
   file.managed:
     - user: root
     - group: root
