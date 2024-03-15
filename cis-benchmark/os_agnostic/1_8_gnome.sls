@@ -7,7 +7,7 @@
 ### 1.8 Gnome Display Manager
 {% if not pillar['apps']['gnome-desktop'] | default(False) %}
 ## 1.8.1 Ensure GNOME Display Manager is removed 
-{% set gdm = salt.grains.filter_by({'Debian': 'gdm3', 'RedHat': 'gdm') %}
+{% set gdm = salt.grains.filter_by({'Debian': 'gdm3', 'RedHat': 'gdm'}) %}
 {{ gdm }}: pkg.purged
 
 ## 2.2.1 Ensure X Window System is not installed (antecipated)
