@@ -1,7 +1,8 @@
 ### 2.1 Special Purpose Services
 
 ## 2.1.1 Ensure autofs are not in use
-autofs: pkg.purged
+## already done in 1_1_file_systems.sls
+## autofs: pkg.purged
 
 ## 2.1.2 Ensure Avahi Server is not installed
 {{ pillar.pkg_data.avahi.name }}: pkg.purged
@@ -69,16 +70,17 @@ squid: pkg.purged
 
 ## 2.1.18 Ensure HTTP server is not installed 
 {% if not 'apache' in pillar['services'] | default(False) %}
-{{ pillar.pkg_data.apache/name }}: pkg.purged
+{{ pillar.pkg_data.apache.name }}: pkg.purged
 {% endif %}
 
 ## 2.1.19 Ensure xinetd services are not in use
 xinetd: pkg.purged
 
 ## 2.1.20 Ensure X window server services are not in use
-{% if 'apps' in pillar and 'gnome-desktop' not in pillar.apps %}
+# already done at 1_8_gnome
+{#% if 'apps' in pillar and 'gnome-desktop' not in pillar.apps %}
 {{ pillar.pkg_data.gnome.xserver }}: pkg.purged
-{% endif %}
+{% endif %#}
 
 ## 2.1.21 Ensure mail transfer agent is configured for local-only mode
 /etc/postfix/main.cf:
