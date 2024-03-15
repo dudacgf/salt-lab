@@ -19,10 +19,11 @@ audispd-plugins:
 ##
 /etc/audit/auditd.conf:
   file.managed:
-    - source: salt://files/services/auditd/auditd.conf
+    - source: salt://files/services/auditd/auditd.conf.jinja
     - user: root
     - group: root
     - mode: 640
+    - template: jinja
     
 # CIS recommended auditd rules
 # CIS 4.1.3.1 Ensure changes to system administration scope (sudoers) is collected 
