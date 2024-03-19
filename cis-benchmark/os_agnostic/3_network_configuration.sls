@@ -66,6 +66,7 @@ disable wireless:
           net.ipv6.conf.default.accept_redirects = 0
           net.ipv4.conf.default.secure_redirects = 0
           net.ipv4.conf.all.secure_redirects = 0
+          net.ipv4.icmp_echo_ignore_broadcasts = 1
           net.ipv4.icmp_ignore_bogus_error_responses = 1 
 
 ## 3.3.4 Ensure suspicious packets are logged 
