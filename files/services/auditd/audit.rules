@@ -13,21 +13,21 @@
 # CIS 4.1.3.3
 -a always,exit -F arch=b64 -S adjtimex -F key=time-change
 -a always,exit -F arch=b32 -S adjtimex -F key=time-change
--a always,exit -F arch=b64 -S settimeofday -F a=0x0 -F key=time-change
--a always,exit -F arch=b32 -S settimeofday -F a=0x0 -F key=time-change
--a always,exit -F arch=b64 -S clock_settime -F a=0x0 -F key=time-change
--a always,exit -F arch=b32 -S clock_settime -F a=0x0 -F key=time-change
+-a always,exit -F arch=b64 -S settimeofday -F a0=0x0 -F key=time-change
+-a always,exit -F arch=b32 -S settimeofday -F a0=0x0 -F key=time-change
+-a always,exit -F arch=b64 -S clock_settime -F a0=0x0 -F key=time-change
+-a always,exit -F arch=b32 -S clock_settime -F a0=0x0 -F key=time-change
+-a always,exit -F arch=b64 -S stime -F key=time-change
+-a always,exit -F arch=b32 -S stime -F key=time-change
 -w /etc/localtime -p wa -k time-change
 
 # CIS 4.1.3.4
--a always,exit -F arch=b64 -S sethostname,setdomainname -k system-locale
--a always,exit -F arch=b32 -S sethostname,setdomainname -k system-locale
--w /etc/issue -p wa -k system-locale
--w /etc/issue.net -p wa -k system-locale
--w /etc/hosts -p wa -k system-locale
--w /etc/networks -p wa -k system-locale
--w /etc/network/ -p wa -k system-locale
--w /etc/sysconfig/network/ -p wa -k system-locale
+-a always,exit -F arch=b64 -S sethostname,setdomainname -F key=audit_rules_networkconfig_modification
+-a always,exit -F arch=b32 -S sethostname,setdomainname -F key=audit_rules_networkconfig_modification
+-w /etc/issue -p wa -k audit_rules_networkconfig_modification
+-w /etc/issue.net -p wa -k audit_rules_networkconfig_modification
+-w /etc/hosts -p wa -k audit_rules_networkconfig_modification
+-w /etc/sysconfig/network -p wa -k audit_rules_networkconfig_modification
 
 # CIS 4.1.3.7 Ensure unsuccessful file access attempts are collected - b32 EACCES
 -a always,exit -F arch=b64 -S creat,open,openat,truncate,ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=unset -k access
@@ -42,8 +42,9 @@
 -a always,exit -F arch=b64 -S execve -F euid=0 -F auid>=1000 -F auid!=unset -F key=sudo_log
 -a always,exit -F arch=b32 -S execve -F euid=0 -F auid>=1000 -F auid!=unset -F key=sudo_log
 -w /var/log/sudo.log -p wa -k sudo_log_file
+
 -w /etc/sudoers -p wa -F key=scope
--w /etc/sudoers.d -p wa -F key=scope
+-w /etc/sudoers.d/ -p wa -F key=scope
 
 # CIS 4.1.3.8
 -w /etc/group -p wa -k identity
