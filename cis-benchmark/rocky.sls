@@ -19,29 +19,8 @@
 {% include 'basic_services/aide.sls' %}
 
 ## 1.4.1 Ensure bootloader password is set
-## I will not implement this options because it needs an operator present at every boot
-## this commented state would create a superuser with values from pillar
-{#
-/etc/grub.d/10-bootpw:
-  file.managed:
-    - mode: 0755
-    - contents: |
-          #!/bin/bash
-          USER={{ pillar['cis_parms']['user'] }}
-          PASSWORD={{ pillar['cis_parms']['password'] }}
-          PW=`echo -e "$PASSWORD\n$PASSWORD\n" | grub-mkpasswd-pbkdf2 | tail -n 1 | sed -- 's/^.*password is //'`
-          cat <<EOF
-          set superusers=$USER
-          password_pbkdf2 boot_root $PW
-          EOF
-#}
-
 ## 1.4.2 Ensure permissions on bootloader config are configured
-{#grubreadonly:
-#  cmd.run:
-    - name: sed -ri 's/chmod\\s+[0-7][0-7][0-7]\\s+\\$\\{grub_cfg\\}\\.new/chmod 400 ${grub_cfg}.new/' /usr/sbin/grub2-mkconfig
-#}
-
+## pillar.cis_parms.grub_boot_password must be previously generated with the command grub2-mkpasswd-pbkdf2
 protect grub config:
   file.managed:
     - user: root
@@ -50,11 +29,15 @@ protect grub config:
     - names: 
       - /boot/grub2/grub.cfg
       - /boot/grub2/grubenv
-      - /boot/grub2/user.cfg
+      - /boot/grub2/user.cfg:
+        - contents: GRUB2_PASSWORD={{ pillar.cis_parms.grub_boot_password }}
 
 ## 1.4.3 Ensure authentication required for single user mode 
 ### I will not implement this option because the atacker would need physical access to the host
 ### or network access to its virtual host to gain single user access to the server
+
+# finalize grub configuration
+/usr/sbin/grub2-mkconfig: cmd.run
 
 ## 1.5.1 Ensure core dump storage is disabled 
 ## 1.5.2 Ensure core dump backtraces are disabled
