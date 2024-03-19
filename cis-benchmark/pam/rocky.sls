@@ -107,18 +107,18 @@ authselect apply-changes:
       - file: /etc/authselect/custom/cis-profile/system-auth
 
 ## CIS 5.5.3 Ensure password reuse is limited 
-#old_pw_remember:
-#  cmd.script:
-#    - source: salt://cis-benchmark/scripts/old_pw_remember.sh
-#    - cwd: /root
-#
-#'authselect enable-feature with-pwhistory': cmd.run
+old_pw_remember:
+  cmd.script:
+    - source: salt://cis-benchmark/scripts/old_pw_remember.sh
+    - cwd: /root
+
+'authselect enable-feature with-pwhistory': cmd.run
 
 ## CIS 5.5.4 Ensure password hashing algorithm is SHA-512 or yescrypt
-## ALREADY SHA-512
-#/etc/login.defs:
-#  file.replace:
-#    - pattern: '^ENCRIPT_METHOD .*$'
-#    - repl: 'ENCRYPT_METHOD yescript'
+## ALREADY SHA-512 - changing to yescrypt
+/etc/login.defs:
+  file.replace:
+    - pattern: '^ENCRYPT_METHOD .*$'
+    - repl: 'ENCRYPT_METHOD SHA512'
 
 
