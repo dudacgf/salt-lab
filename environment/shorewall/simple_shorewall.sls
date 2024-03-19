@@ -74,6 +74,7 @@ configura shorewall.conf:
           {%-     endif %}
           {%- endfor %}
           ACCEPT all all icmp echo-request,echo-reply
+          DROP fw:127.0.0.1 all:!127.0.0.1
 
 restart shorewall service:
   service.running:

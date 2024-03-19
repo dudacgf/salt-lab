@@ -73,6 +73,7 @@ enable startup:
 {%-     endif %}
 {%- endfor %}
           ACCEPT all all icmp echo-request,echo-reply
+          DROP fw:[::1] all:![::1]
 
 restart shorewall6 service:
   service.running:
