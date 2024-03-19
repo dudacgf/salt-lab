@@ -76,7 +76,8 @@ useradd -D -f 30: cmd.run
     - text: |
           # adiciona tmout  se a sessão for originada de SSH ou TERM=linux (console direta)
           if [ ! -z "${SSH_TTY}" -o "${TERM}" == "linux" ]; then
-              readonly TMOUT=900; export TMOUT
+              typeset -xr TMOUT=900
+              export TMOUT
           fi
 
 ### CIS 6 System Maintenance
