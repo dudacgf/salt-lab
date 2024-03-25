@@ -12,16 +12,23 @@ aide:
 {{ pillar.pkg_data.aide.new_db }}:
   cmd.run:
     - name: aide --init -c /etc/aide.conf
+    - require: 
+      - pkg: aide
+    - order: 10000
 {{ pillar.pkg_data.aide.aide_db }}:
   file.managed:
     - source: {{ pillar.pkg_data.aide.new_db }}
     - mode: 0600
     - require:
       - cmd: {{ pillar.pkg_data.aide.new_db }}
+    - order: last
 {% elif grains['os_family'] == 'Debian' %}
 {{ pillar.pkg_data.aide.aide_db }}:
   cmd.run:
     - name: aideinit -y -f
+    - require: 
+      - pkg: aide
+    - order: last
 {% endif %}
 
 # Ajusta os serviços do aide
@@ -54,6 +61,7 @@ reload system daemon:
 # CIS 4.1.4.11 Ensure cryptographic mechanisms are used to protect 
 #              the integrity of audit tools
 {% set after = salt.grains.filter_by({'Debian': 'LinkedLog = Log-n', 'RedHat': '/etc    PERMS'}) %}
+{% set sbin = salt.grains.filter_by({'Debian': '/bin', 'RedHat': '/usr/sbin'}) %}
 {{ pillar.pkg_data.aide.conf }}:
   file.replace:
     - pattern: '^({{ after }})$'
@@ -61,13 +69,13 @@ reload system daemon:
           \1
 
           # CIS 4.1.4.11 Ensure cryptographic mechanisms are used to protect the integrity of audit tools
-          /usr/sbin/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
-          /usr/sbin/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
-          /usr/sbin/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
-          /usr/sbin/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
-          /usr/sbin/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
-          /usr/sbin/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
-          /usr/sbin/rsyslogd p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/auditctl p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/auditd p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/ausearch p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/aureport p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
+          {{ sbin }}/rsyslogd p+i+n+u+g+s+b+acl+xattrs+sha512
     - unless: 'grep /sbin/auditctl {{ pillar.pkg_data.aide.conf }}'
 
 # mantém o serviço aidechek.service apenas habilitado
