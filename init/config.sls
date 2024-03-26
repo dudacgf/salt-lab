@@ -94,14 +94,7 @@
     - tgt: {{ mname }}
     - pillar: {'map': {{ map }}}
 
-# waits (the previous state may restart salt-minion service)
-{{ mname }} wait environment:
-  salt.wait_for_event:
-    - name: salt/minion/*/start
-    - id_list: [ '{{ mname }}' ]
-    - timeout: 90
-    - require:
-      - salt: {{ mname }} environment
+'sleep 15s': cmd.run
 
 {{ mname }} basic_services:
   salt.state:
@@ -141,6 +134,14 @@
     - tgt: {{ mname }}
     - pillar: {'map': {{ map }}}
     
+# waits (the previous state may restart salt-minion service)
+{{ mname }} wait cis enforce:
+  salt.wait_for_event:
+    - name: salt/minion/*/start
+    - id_list: [ '{{ mname }}' ]
+    - timeout: 90
+    - require:
+      - salt: {{ mname }} cis enforce
 {% else %}
 "-- {{ mname }} will not execute high state":
   test.nop
