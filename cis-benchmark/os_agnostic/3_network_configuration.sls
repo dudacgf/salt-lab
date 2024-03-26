@@ -130,7 +130,8 @@ disable wireless:
 #    - contents: blacklist tipc
 
 ### 3.5 Firewall Configuration
-{% include "environment/shorewall/init.sls" %}
+### ALREADY COVERED IN environment.shorewall
+###{#% include "environment/shorewall/init.sls" %#}
 # LOG_MARTIANS=Keep
 shorewall log_martians keep:
   file.replace:
