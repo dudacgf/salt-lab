@@ -46,6 +46,7 @@ enable startup:
 {%- set services = ['prometheus-'] | product(pillar.get('prometheus_exporters',[])) | map('join') | list %}
 {%- do services.extend(pillar.services | default([])) %}
 {%- do services.extend(pillar.basic_services | default([])) %}
+{%- do services.extend(pillar.apps | default([])) %}
 {%- import_yaml "maps/services/shorewall/ports.sls" as sp %}
 /etc/shorewall6/rules:
   file.managed:
@@ -65,13 +66,17 @@ enable startup:
           {%- for rule in pillar['simple_shorewall']['rules_in'] %}
           ACCEPT pub fw {{ rule }}
           {%- endfor %}
-{%- for service in services %}
-{%-     if service in sp %}
-{%-         for protocol in sp[service] %}
-          ACCEPT pub fw {{ protocol }} {{ sp[service][protocol] }}
-{%-         endfor %}
-{%-     endif %}
-{%- endfor %}
+          {%- for service in services %}
+          {%-     if service in sp['in'] %}
+          {%-         for protocol in sp['in'][service] %}
+          ACCEPT pub fw {{ protocol }} {{ sp['in'][service][protocol] }}
+          {%-         endfor %}
+          {%-     elif service in sp['out'] %}
+          {%-         for protocol in sp['out'][service] %}
+          ACCEPT fw  pub {{ protocol }} {{ sp['out'][service][protocol] }}
+          {%-         endfor %}
+          {%-     endif %}
+          {%- endfor %}
           ACCEPT all all icmp echo-request,echo-reply
           DROP fw:[::1] all:![::1]
 

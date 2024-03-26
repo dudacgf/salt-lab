@@ -47,6 +47,7 @@ configura shorewall.conf:
 {%- set services = ['prometheus-'] | product(pillar.get('prometheus_exporters',[])) | map('join') | list %}
 {%- do services.extend(pillar.services | default([])) %}
 {%- do services.extend(pillar.basic_services | default([])) %}
+{%- do services.extend(pillar.apps | default([])) %}
 {%- import_yaml "maps/services/shorewall/ports.sls" as sp %}
 /etc/shorewall/rules:
   file.managed:
@@ -59,6 +60,7 @@ configura shorewall.conf:
           ?SECTION INVALID
           ?SECTION UNTRACKED
           ?SECTION NEW
+          # specific rules for this minion
           {%- for rule in pillar['simple_shorewall']['rules_out'] %}
           ACCEPT fw pub {{ rule }}
           {%- endfor %}
@@ -66,10 +68,15 @@ configura shorewall.conf:
           {%- for rule in pillar['simple_shorewall']['rules_in'] %}
           ACCEPT pub fw {{ rule }}
           {%- endfor %}
+          # rules from services and apps defined in pillar
           {%- for service in services %}
-          {%-     if service in sp %}
-          {%-         for protocol in sp[service] %}
-          ACCEPT pub fw {{ protocol }} {{ sp[service][protocol] }}
+          {%-     if service in sp['in'] %}
+          {%-         for protocol in sp['in'][service] %}
+          ACCEPT pub fw {{ protocol }} {{ sp['in'][service][protocol] }}
+          {%-         endfor %}
+          {%-     elif service in sp['out'] %}
+          {%-         for protocol in sp['out'][service] %}
+          ACCEPT fw  pub {{ protocol }} {{ sp['out'][service][protocol] }}
           {%-         endfor %}
           {%-     endif %}
           {%- endfor %}
