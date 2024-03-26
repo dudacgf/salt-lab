@@ -10,6 +10,11 @@
       - 'APT::Get::Always-Include-Phased-Updates "1";'
 
 #
+## no unattended upgrades
+unattended-upgrades:
+  pkg.purged
+
+#
 ## remove snapd em sistemas Ubuntu
 {% if grains['os'] == 'Ubuntu' and grains['osmajorrelease'] > 20 and pillar['remove_snapd'] | default(False) %}
 apt-get purge snapd -y:
