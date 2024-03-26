@@ -290,10 +290,12 @@ crond:
           root
 
 ### 5.2 Configure SSH Server
-{% include "environment/sshd.sls" %}
+### already done in environment.sshd
+{#% include "environment/sshd.sls" %#}
 
 ### 5.3 Configure privilege escalation (SUDO/PKEXEC)
-{% include "environment/users/sudo_manage.sls" %}
+### already done in environment.users
+{#% include "environment/users/sudo_manage.sls" %#}
 
 ### 5.4 Configure PAM
 {% include "cis-benchmark/pam/init.sls" %}
@@ -303,7 +305,4 @@ crond:
 
 ### 6.1 file permissions
 {% include "cis-benchmark/os_agnostic/6_file_permissions.sls" %}
-
-### CIS EXTRA. ajusta conta root
-{% include "environment/users/root_manage.sls" %}
 
