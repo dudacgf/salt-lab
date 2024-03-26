@@ -14,21 +14,21 @@ aide:
     - name: aide --init -c /etc/aide.conf
     - require: 
       - pkg: aide
-    - order: 10000
+    - order: 100000
 {{ pillar.pkg_data.aide.aide_db }}:
   file.managed:
     - source: {{ pillar.pkg_data.aide.new_db }}
     - mode: 0600
     - require:
       - cmd: {{ pillar.pkg_data.aide.new_db }}
-    - order: last
+    - order: 100001
 {% elif grains['os_family'] == 'Debian' %}
 {{ pillar.pkg_data.aide.aide_db }}:
   cmd.run:
     - name: aideinit -y -f
     - require: 
       - pkg: aide
-    - order: last
+    - order: 100000
 {% endif %}
 
 # Ajusta os serviços do aide
