@@ -49,6 +49,18 @@ def run():
         }
 
         config['console-data'] =  'pkg.installed' 
+        config['create-keymaps-dir'] = {
+            'cmd.run': [
+                {'name': 'mkdir -p /usr/share/kbd/keymaps'},
+                {'require': [{'pkg': 'console-data'}]},
+            ],
+        }
+        config['copy-keymaps'] = {
+            'cmd.run': [
+                {'name': f'gunzip -c /usr/share/keymaps/i386/qwerty/{keymap}.kmap.gz > /usr/share/kbd/keymaps/br-abnt2.map'},
+                {'require': [{'cmd': 'create-keymaps-dir'}]},
+            ],
+        }
         config[f'loadkeys {keymap}'] =  'cmd.run' 
 
         config['set-locale'] = {
@@ -58,6 +70,11 @@ def run():
             ],
         }
         config[f'localectl set-x11-keymap {keymap}'] = {
+            'cmd.run': [
+                {'require': [{'cmd': 'set-locale'}]},
+            ],
+        }
+        config[f'localectl set-keymap {keymap}'] = {
             'cmd.run': [
                 {'require': [{'cmd': 'set-locale'}]},
             ],
