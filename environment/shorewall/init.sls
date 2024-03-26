@@ -33,3 +33,20 @@ default:
 {%- include "environment/shorewall/simple_shorewall.sls" %}
 {%- endif %}
 {%- include "environment/shorewall/simple_shorewall6.sls" %}
+
+# debian has a problem here, let's try to fix it
+shorewall restart minion:
+  cmd.run:
+    - name: 'bash -c "salt-call --local service.restart salt-minion;"'
+    - bg: True
+    - onlyif:
+      - fun: match.grain
+        tgt: 'os_family:Debian'
+
+'-- minion service restarted --':
+  test.nop:
+    - require:
+      - cmd: shorewall restart minion
+    - onlyif:
+      - fun: match.grain
+        tgt: 'os_family:Debian'

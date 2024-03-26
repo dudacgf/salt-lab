@@ -119,9 +119,3 @@ shorewall stop ufw:
       - fun: match.grain
         tgt: 'os_family:Debian'
 
-'bash -c "salt-call --local service.restart salt-minion;"': 
-  cmd.run:
-    - bg: True
-    - onlyif:
-      - fun: match.grain
-        tgt: 'os_family:Debian'
