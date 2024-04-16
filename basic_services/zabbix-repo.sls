@@ -10,29 +10,30 @@
 
 download repo deb:
   cmd.run: 
-    - name: {{ proxy }} wget https://repo.zabbix.com/zabbix/6.0/debian/pool/main/z/zabbix-release/zabbix-release_6.0-4+debian{{ grains['osmajorrelease'] }}_all.deb -O /tmp/zabbix-release.deb
+    - name: {{ proxy }} wget https://repo.zabbix.com/zabbix/6.5/debian/pool/main/z/zabbix-release/zabbix-release_6.5-1+debian{{ grains['osmajorrelease'] }}_all.deb -O /tmp/zabbix-release.deb
 
 zabbix repo:
   cmd.run:
-    - name: dpkg -i /tmp/zabbix-release.deb
+    - name: dpkg --force-confdef -i /tmp/zabbix-release.deb
     - require:
       - cmd: download repo deb
 {% elif grains['os'] == 'Ubuntu' %}
 
 download repo deb:
   cmd.run:
-    - name:  {{ proxy }} wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu{{ grains['osrelease'] }}_all.deb -O /tmp/zabbix-release.deb 
+    - name:  {{ proxy }} wget https://repo.zabbix.com/zabbix/6.5/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.5-1+ubuntu{{ grains['osrelease'] }}_all.deb -O /tmp/zabbix-release.deb 
 
 zabbix repo:
   cmd.run:
-    - name: dpkg -i /tmp/zabbix-release.deb
+    - name: dpkg --force-confdef -i /tmp/zabbix-release.deb
     - require:
       - cmd: download repo deb
 
 {% elif grains['os_family'] == 'RedHat' %}
 zabbix repo:
   cmd.run:
-    - name:  {{ proxy }} rpm -Uvh https://repo.zabbix.com/zabbix/6.0/rhel/{{ grains['osmajorrelease'] }}/x86_64/zabbix-release-6.0-4.el{{ grains['osmajorrelease'] }}.noarch.rpm
+    - name:  {{ proxy }} rpm -Uvh https://repo.zabbix.com/zabbix/6.5/rhel/{{ grains['osmajorrelease'] }}/x86_64/zabbix-release-6.5-1.el{{ grains['osmajorrelease'] }}.noarch.rpm
+    - unless: grep -qs 'baseurl=https://repo.zabbix.com/zabbix/6.5/rhel/' /etc/yum.repos.d/zabbix.repo 
 
 exclude zabbix from epel:
   file.line:

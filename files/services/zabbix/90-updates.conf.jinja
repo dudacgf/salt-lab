@@ -1,0 +1,7 @@
+UserParameter=linux.secupdates,cat /var/run/zabbix/sec_updates.txt
+UserParameter=linux.updates,cat /var/run/zabbix/updates.txt
+{%- if grains['os_family'] == 'RedHat' %}
+UserParameter=linux.boot_needed,needs-restarting -r > /dev/null && echo 0 || echo 1
+{%- elif grains['os_family'] == 'Debian' %}
+UserParameter=linux.boot_needed,test -f /var/run/reboot-required && echo 1 || echo 0
+{%- endif %}
