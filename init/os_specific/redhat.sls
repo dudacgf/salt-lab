@@ -65,6 +65,9 @@ enable-powertools:
   cmd.run:
     - name: crb enable
 
+## needs-restarting
+yum-utils: pkg.installed
+
 ## if salt_version == 'Sulfur' [3006.x], 'import pycurl' or 'import ldap' raises an error
 {% if salt.salt_version.equal('Sulfur') %}
 python3-pip:
