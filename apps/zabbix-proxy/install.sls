@@ -2,7 +2,7 @@
 ## zabbix-proxy - installs zabbix proxy via zabbix official repos
 #
 
-{% include 'environment/zabbix-repo.sls' %}
+{% include 'basic_services/zabbix-repo.sls' %}
 
 {% if grains['os_family'] == 'RedHat' and pillar['selinux_mode'] | default('disabled') == 'enforcing' %}
 {% set install_selinux_policy = ', zabbix-selinux-policy' %}
