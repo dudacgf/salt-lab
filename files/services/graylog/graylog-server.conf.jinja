@@ -62,6 +62,8 @@ elasticsearch_max_docs_per_index = 20000000
 elasticsearch_max_number_of_indices = 20
 elasticsearch_shards = 4
 elasticsearch_replicas = 0
+elasticsearch_mute_deprecation_warnings = true
+elasticsearch_compression_enabled = true
 allow_leading_wildcard_searches = false
 allow_highlighting = false
 elasticsearch_analyzer = standard
@@ -79,6 +81,7 @@ inputbuffer_wait_strategy = blocking
 
 message_journal_enabled = true
 message_journal_dir = /var/lib/graylog-server/journal
+skip_preflight_checks = true
 
 lb_recognition_period_seconds = 3
 {%- set credentials = '' %}
