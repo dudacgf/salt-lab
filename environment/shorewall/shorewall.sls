@@ -99,6 +99,7 @@ shorewall restart shorewall service:
     - watch:
       - file: copia file*
 
+{% if salt.service.status('firewalld.service') %}
 shorewall stop firewalld:
   service.dead:
     - name: firewalld.service
@@ -108,7 +109,9 @@ shorewall stop firewalld:
     - onlyif:
       - fun: match.grain
         tgt: 'os_family:RedHat'
+{% endif %}
 
+{% if salt.service.status('ufw.service') %}
 shorewall stop ufw:
   service.dead:
     - name: ufw.service
@@ -118,4 +121,5 @@ shorewall stop ufw:
     - onlyif:
       - fun: match.grain
         tgt: 'os_family:Debian'
+{% endif %}
 
