@@ -65,7 +65,6 @@ configura shorewall.conf:
           {%- for rule in pillar['simple_shorewall']['rules_out'] %}
           ACCEPT fw pub {{ rule }}
           {%- endfor %}
-          ACCEPT fw  pub udp  domain
           {%- for rule in pillar['simple_shorewall']['rules_in'] %}
           ACCEPT pub fw {{ rule }}
           {%- endfor %}
@@ -73,6 +72,7 @@ configura shorewall.conf:
           {%- for service in services %}
           {%-     if service in sp['in'] %}
           {%-         for protocol in sp['in'][service] %}
+          # service: {{ service }} || protocol: {{ protocol }}
           ACCEPT pub fw {{ protocol }} {{ sp['in'][service][protocol] }}
           {%-         endfor %}
           {%-     elif service in sp['out'] %}
@@ -81,6 +81,14 @@ configura shorewall.conf:
           {%-         endfor %}
           {%-     endif %}
           {%- endfor %}
+          # mgmt always has access via ssh
+          {% for ip in pillar.shorewall.mgt %}
+          ACCEPT pub:{{ ip }} fw tcp ssh
+          {% endfor %}
+          # general rules
+          ACCEPT fw  pub tcp http,https
+          ACCEPT fw  pub:{{ grains.master }} tcp 4505,4506
+          ACCEPT fw  pub udp  domain
           ACCEPT all all icmp echo-request,echo-reply
           DROP fw:127.0.0.1 all:!127.0.0.1
 
