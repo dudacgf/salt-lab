@@ -87,7 +87,7 @@ kibana.yml:
 {% endif %}
   
 # ajusta portas de firewalld
-{% if grains['os_family'] == 'RedHat' %}
+{% if grains['os_family'] == 'RedHat' and salt.service.status('firewalld.service') %}
 kibana firewalld port:
   cmd.run:
     - name: 'firewall-cmd --permanent --add-port=5601/tcp'
