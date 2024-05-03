@@ -1,0 +1,90 @@
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+{%- if 'localnets' in pillar.named %}
+acl query_allowed {
+{%- for network in pillar.named.localnets %}
+    {{ network }};
+{%- endfor %}
+};
+{%- endif %}
+
+options {
+        listen-on port 53 { 127.0.0.1; };
+        listen-on-v6 port 53 { ::1; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        secroots-file   "/var/named/data/named.secroots";
+        recursing-file  "/var/named/data/named.recursing";
+        allow-query { {{ 'query_allowed' if 'localnets' in pillar.named | default(False) else 'any' }}; };
+        recursion {{ 'yes' if pillar.named.recursion | default(False) else 'no' }};
+
+        dnssec-validation {{ 'yes' if pillar.named.dnssec_validation | default(False) else 'no' }};
+
+        managed-keys-directory "/var/named/dynamic";
+        geoip-directory "/usr/share/GeoIP";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+
+        /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+        include "/etc/crypto-policies/back-ends/bind.config";
+};      
+
+// heavy logging
+logging {
+    channel default_syslog {
+        syslog local7;
+        severity info;
+    };
+    category queries { default_syslog; };
+    category resolver { default_syslog; };
+    category client { default_syslog; };
+    category lame-servers {    null; };
+};
+
+zone "." IN { 
+        type hint;
+        file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+{% if 'named' in pillar %}
+{%- for zone_name in pillar.named.zones %}
+{%- set zone = pillar.named.zones[zone_name] %}
+zone "{{ zone_name }}" {
+    {%- if zone['type'] == 'primary' %}
+    type master;
+    file "data/primary/{{ zone_name }}.dns";
+    allow-transfer {
+    {%- for s in zone['secondaries'] %}
+        {{ s['ipv4'] }};
+    {%- endfor %}
+    };
+    {%- elif zone['type'] == 'secondary' %}
+    type slave;
+    file "data/secondary/{{ zone_name }}.dns";
+    masters { 
+        {{ zone['primary'] }};
+    };
+    {%- elif zone['type'] == 'forwarder' %}
+    type forward;
+    forwarders {
+    {%- for s in zone['forwarders'] %}
+        {{ s }};
+    {%- endfor %}
+    };
+    {%- endif %}
+};
+{% endfor %}
+{%- endif %}
