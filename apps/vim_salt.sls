@@ -1,8 +1,12 @@
 # install packages
 #
+
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) %}
+
 install vim-packages:
   pkg.installed:
-    - pkgs: {{ pillar['pkg_data']['vim']['install_pkgs'] }}
+    - pkgs: {{ pkg_data.vim.install_pkgs }}
 
 {%- set users = ['duda', 'root'] %}
 
@@ -21,7 +25,7 @@ install vim-packages:
 {{ user }} deploy vimrc:
   file.managed:
     - name: '{{ homedir }}/.vimrc'
-    - source: salt://files/users/vimrc
+    - source: salt://files/users/vimrc.jinja
     - template: jinja
     - user: {{ user }}
     - mode: 640
