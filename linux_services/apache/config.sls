@@ -31,12 +31,11 @@ a2enconf hardening:
 
 {% endif %}
 
-{% if grains['os_family'] == 'RedHat' %}
+{% if grains['os_family'] == 'RedHat' and salt.service.status('firewalld.service') %}
 # habilita portas http/https para o apache
 public:
   firewalld.present:
     - services: [ 'http', 'https' ]
-
 {% endif %}
 
 #
