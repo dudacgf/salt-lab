@@ -4,8 +4,8 @@
 ## ecgf - apr/2024
 #
 
-{%- import_yaml "maps/pkgs_data/by_os_family.yaml" as pkg_data %}
-{%- set pkg_data = grains.items.filter_by(pkg_data) %}
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) %}
 
 {{ pkg_data.bind.name }}:
   pkg.installed
@@ -44,7 +44,7 @@
                              NS {{ z['name'] }}
               {%- endfor %}
 {%- elif zone['type'] == 'secondary' %}
-{{ zone['name'] }} create secondary data dir:
+{{ zone_name }} create secondary data dir:
   file.directory:
     - name: /var/named/data/secondary
     - user: named
