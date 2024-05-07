@@ -43,7 +43,7 @@ filebeat:
 # copia as chaves para comunicação com o graylog
 /etc/filebeat/files/pki/CA_Icatu.crt:
   file.managed:
-    - source: salt://files/pki/CA_Icatu.crt
+    - source: salt://files/pki/CA/CA_Icatu.pem
     - user: root
     - group: root
     - mode: 644
