@@ -1,18 +1,20 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ### postfix.sls - instala e configura postfix para uso de relay via office365 (authenticated)
 #
 ### ecgf
 
-{%- if pillar['postfix'] | default(False) and pillar['postfix']['install'] | default(False) %}
+{%- if pillar['postfix'] | default(False) and pillar['postfix.install'] | default(False) %}
 
 postfix:
   pkg.installed
 
 install cyrus:
   pkg.installed:
-    - pkgs: [ {{ pillar['pkg_data']['cyrus_sasl']['install'] }} ]
+    - pkgs: [ {{ pkg_data.cyrus_sasl.install }} ]
 
-{{ pillar['pkg_data']['mail']['install'] }}:
+{{ pkg_data.mail.install }}:
   pkg.installed
 
 {% if pillar['postfix']['auth'] | default(False) %}

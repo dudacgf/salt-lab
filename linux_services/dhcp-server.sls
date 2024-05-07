@@ -1,11 +1,13 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## dhcp-server.sls - instala e configura um servidor dhcp
 #
 
-{{ pillar.pkg_data.dhcp_server.name }}:
+{{ pkg_data.dhcp_server.name }}:
   pkg.installed
 
-{{ pillar.pkg_data.dhcp_server.conf_file | default('/etc/dhcp/dhcpd.conf') }}:
+{{ pkg_data.dhcp_server.conf_file | default('/etc/dhcp/dhcpd.conf') }}:
   file.managed:
     - source: salt://files/services/dhcpd_conf.jinja
     - template: jinja
@@ -13,9 +15,9 @@
     - group: root
     - mode: 0600
     - require:
-      - pkg: {{ pillar.pkg_data.dhcp_server.name }}
+      - pkg: {{ pkg_data.dhcp_server.name }}
 
-{{ pillar.pkg_data.dhcp_server.sysconf_file | default('/etc/default/isc-dhcp-server:') }}:
+{{ pkg_data.dhcp_server.sysconf_file | default('/etc/default/isc-dhcp-server:') }}:
   file.managed:
     - source: salt://files/services/default-isc-dhcp-server.jinja
     - template: jinja
@@ -23,13 +25,13 @@
     - group: root
     - mode: 0644
 
-{{ pillar.pkg_data.dhcp_server.service }}:
+{{ pkg_data.dhcp_server.service }}:
   service.running:
     - enable: True
     - restart: True
     - watch:
-      - file: {{ pillar.pkg_data.dhcp_server.sysconf_file }}
-      - file: {{ pillar.pkg_data.dhcp_server.conf_file }}
+      - file: {{ pkg_data.dhcp_server.sysconf_file }}
+      - file: {{ pkg_data.dhcp_server.conf_file }}
 
 isc_dhcp_leases:
   pip.installed

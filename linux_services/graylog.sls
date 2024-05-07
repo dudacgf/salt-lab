@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## graylog.sls - installs e setups graylog service
 # 
@@ -35,7 +37,7 @@ graylog failure:
 {% endif %}
 
 # o jre is a prerequisite to graylog but is not installed as a dependency 
-{{ pillar['pkg_data']['jdk']['name'] }}:
+{{ pkg_data.jdk.name }}:
   pkg.installed
 
 # install 
@@ -213,19 +215,19 @@ graylog sysconfig patch:
 # will graylog run under an apache proxy? is apache installed?
 {%- if pillar['graylog'] is defined and
        pillar['graylog']['apache_proxy'] | default(False) and 
-       salt.service.running(pillar['pkg_data']['apache']['service']) | default(False) %}
+       salt.service.running(pkg_data.apache.service) | default(False) %}
 /etc/httpd/conf.d/graylog_proxy.conf:
   file.managed:
     - source: salt://files/services/graylog/graylog_apache_proxy.conf.jinja
     - template: jinja
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 0644
 
 graylog restart apache service:
   module.run:
     - name: service.reload
-    - m_name: {{ pillar['pkg_data']['apache']['service'] }}
+    - m_name: {{ pkg_data.apache.service }}
     - require:
       - file: /etc/httpd/conf.d/graylog_proxy.conf
     - watch:

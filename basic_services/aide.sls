@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## aide.sls - instala e configura o serviço aide para checkagem do filesystem
 # 
@@ -9,21 +11,21 @@ aide:
   
 # gera o db inicial
 {% if grains['os_family'] == 'RedHat' %}
-{{ pillar.pkg_data.aide.new_db }}:
+{{ pkg_data.aide.new_db }}:
   cmd.run:
     - name: aide --init -c /etc/aide.conf
     - require: 
       - pkg: aide
     - order: 100000
-{{ pillar.pkg_data.aide.aide_db }}:
+{{ pkg_data.aide.aide_db }}:
   file.managed:
-    - source: {{ pillar.pkg_data.aide.new_db }}
+    - source: {{ pkg_data.aide.new_db }}
     - mode: 0600
     - require:
-      - cmd: {{ pillar.pkg_data.aide.new_db }}
+      - cmd: {{ pkg_data.aide.new_db }}
     - order: 100001
 {% elif grains['os_family'] == 'Debian' %}
-{{ pillar.pkg_data.aide.aide_db }}:
+{{ pkg_data.aide.aide_db }}:
   cmd.run:
     - name: aideinit -y -f
     - require: 
@@ -62,7 +64,7 @@ reload system daemon:
 #              the integrity of audit tools
 {% set after = salt.grains.filter_by({'Debian': 'LinkedLog = Log-n', 'RedHat': '/etc    PERMS'}) %}
 {% set sbin = salt.grains.filter_by({'Debian': '/bin', 'RedHat': '/usr/sbin'}) %}
-{{ pillar.pkg_data.aide.conf }}:
+{{ pkg_data.aide.conf }}:
   file.replace:
     - pattern: '^({{ after }})$'
     - repl: |
@@ -76,7 +78,7 @@ reload system daemon:
           {{ sbin }}/autrace p+i+n+u+g+s+b+acl+xattrs+sha512
           {{ sbin }}/augenrules p+i+n+u+g+s+b+acl+xattrs+sha512
           {{ sbin }}/rsyslogd p+i+n+u+g+s+b+acl+xattrs+sha512
-    - unless: 'grep /sbin/auditctl {{ pillar.pkg_data.aide.conf }}'
+    - unless: 'grep /sbin/auditctl {{ pkg_data.aide.conf }}'
 
 # mantém o serviço aidechek.service apenas habilitado
 aidecheck.service:
@@ -88,7 +90,7 @@ aidecheck.timer:
     - enable: true
     - restart: true
     - watch:
-      - file: {{ pillar.pkg_data.aide.conf }}
+      - file: {{ pkg_data.aide.conf }}
 
 {%- else %}
 '-- aide will not be installed':

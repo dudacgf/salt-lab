@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 ## config.sls - configura apache (hardening, modules etc)
 #
 
@@ -11,11 +13,11 @@
 ## hardening básico
 hardening:
   file.managed:
-    - name: {{ pillar['pkg_data']['apache']['confd_dir'] }}/hardening.conf
+    - name: {{ pkg_data.apache.confd_dir }}/hardening.conf
     - source: salt://files/services/apache/hardening.conf.jinja
     - template: jinja
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 644
 
 {% if grains['os_family'] == 'Debian' %}
@@ -51,7 +53,7 @@ public:
 ## reinicia o serviço se houver alterações no diretório de configuração
 hardening restart:
   service.running:
-    - name:  '{{ pillar['pkg_data']['apache']['service'] }}'
+    - name:  '{{ pkg_data.apache.service }}'
     - enable: true
     - reload: true
     - watch:

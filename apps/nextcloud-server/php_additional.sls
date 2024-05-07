@@ -21,8 +21,8 @@ ajusta php-fpm ini:
 
 #
 # ajusta php.ini
-{% set php_ini = salt.cmd.shell("php --ini | grep -i 'loaded configuration file' | sed -- 's/.*: *//'") | 
-                 default(pillar['pkg_data']['php']['php_ini']) %}
+{% set php_ini = salt.cmd.shell("php --ini 2> /dev/null | grep -i 'loaded configuration file' | sed -- 's/.*: *//'") | 
+                 default(pkg_data.php.php_ini) %}
 php ini max_execution_time:
   file.replace:
     - name: {{ php_ini }}

@@ -1,3 +1,5 @@
+    {%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 ### 2.1 Special Purpose Services
 
 ## 2.1.1 Ensure autofs are not in use
@@ -5,16 +7,16 @@
 ## autofs: pkg.purged
 
 ## 2.1.2 Ensure Avahi Server is not installed
-{{ pillar.pkg_data.avahi.name }}: pkg.purged
+{{ pkg_data.avahi.name }}: pkg.purged
 
 ## 2.1.3 Ensure DHCP Server is not installed 
 {% if not 'dhcp-server' in pillar['services'] | default(False) %}
-{{ pillar.pkg_data.dhcp_server.name }}: pkg.purged
+{{ pkg_data.dhcp_server.name }}: pkg.purged
 {% endif %}
 
 ## 2.1.4 Ensure DNS Server is not installed 
 {% if not 'bind9' in pillar['services'] | default(False) %}
-{{ pillar.pkg_data.bind.name }}: pkg.purged
+{{ pkg_data.bind.name }}: pkg.purged
 {% endif %}
 
 ## 2.1.5 Ensure dnsmasq is not installed
@@ -31,10 +33,10 @@ ldapd: pkg.purged
 ## 2.1.8 Ensure IMAP and POP3 server are not installed
 purge imap pop3:
   pkg.purged:
-    - pkgs: [{{ pillar.pkg_data.dovecot.name | join(', ') }} ]
+    - pkgs: [{{ pkg_data.dovecot.name | join(', ') }} ]
 
 ## 2.1.9 Ensure NFS is not installed 
-{{ pillar.pkg_data.nfs.name }}: pkg.purged
+{{ pkg_data.nfs.name }}: pkg.purged
 
 ## 2.1.10 Ensure NIS Server is not installed
 nis: pkg.purged
@@ -57,11 +59,11 @@ samba: pkg.purged
 
 ## 2.1.15 Ensure SNMP Server is not installed 
 {% if not 'snmpd' in pillar['basic_services'] | default(False) %}
-{{ pillar.pkg_data.snmpd.name }}: pkg.purged
+{{ pkg_data.snmpd.name }}: pkg.purged
 {% endif %}
 
 ## 2.1.16 Ensure tftp server services are not in use
-{{ pillar.pkg_data.tftp.server }}: pkg.purged
+{{ pkg_data.tftp.server }}: pkg.purged
 
 ## 2.1.17 Ensure HTTP Proxy Server is not installed 
 {% if not 'squid' in pillar['services'] | default(False) %}
@@ -70,7 +72,7 @@ squid: pkg.purged
 
 ## 2.1.18 Ensure HTTP server is not installed 
 {% if not 'apache' in pillar['services'] | default(False) %}
-{{ pillar.pkg_data.apache.name }}: pkg.purged
+{{ pkg_data.apache.name }}: pkg.purged
 {% endif %}
 
 ## 2.1.19 Ensure xinetd services are not in use
@@ -79,7 +81,7 @@ xinetd: pkg.purged
 ## 2.1.20 Ensure X window server services are not in use
 # already done at 1_8_gnome
 {#% if 'apps' in pillar and 'gnome-desktop' not in pillar.apps %}
-{{ pillar.pkg_data.gnome.xserver }}: pkg.purged
+{{ pkg_data.gnome.xserver }}: pkg.purged
 {% endif %#}
 
 ## 2.1.21 Ensure mail transfer agent is configured for local-only mode

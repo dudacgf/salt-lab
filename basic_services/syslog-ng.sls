@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## snmpd.sls - instala e configura o serviço snmpd para monitoramento via nagios e/ou cacti
 # 
@@ -9,7 +11,7 @@ rsyslog:
 
 install-syslog-ng:
   pkg.installed:
-    - pkgs: [ {{ pillar['pkg_data']['syslog-ng']['name'] }}, {{ pillar['pkg_data']['syslog-ng']['mod_http'] }} ]
+    - pkgs: [ {{ pkg_data.syslog-ng.name }}, {{ pkg_data.syslog-ng.mod_http }} ]
   
 #
 # arquivo de configuração do serviço

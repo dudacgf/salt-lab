@@ -1,3 +1,6 @@
+
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #!/bin/bash
 #
 ## post_hook.sh - copy certbot generated ou renewed certificates to apropriated directories 
@@ -6,9 +9,9 @@
 #
 # services currently supported: apache, elasticsearch, grafana, kibana, tdns, graylog, squid, salt-api
 {%- set ssl_services = {
-                       'apache': {'dir': pillar['pkg_data']['apache']['etc_dir'], 
-                                  'user': pillar['pkg_data']['apache']['user'],
-                                  'group': pillar['pkg_data']['apache']['group']
+                       'apache': {'dir': pkg_data.apache.etc_dir, 
+                                  'user': pkg_data.apache.user,
+                                  'group': pkg_data.apache.group,
                                  },
                        'elasticsearch': {'dir': '/etc/elasticsearch', 'user': 'elastisearch', 'group': 'elasticsearch'},
                        'graylog': {'dir': '/etc/graylog', 'user': 'graylog', 'group': 'graylog'},
@@ -18,19 +21,15 @@
                        'squid': {'dir': '/etc/squid', 'user': 'squid', 'group': 'squid'},
                       }
 %}
-{%- set hostname = grains.id.split('.')[0] %}
-{%- set location = pillar['location'] | default('internal') %}
-{%- set domain = pillar[location + '_domain'] %}
-{%- set domainname = hostname + '.' + domain %}
 
 {%- for service in ssl_services %}
 {%- if pillar[service] is defined and pillar[service]['ssl_enable'] | default(False) %}
 
 # {{ service }} uses ssl
 mkdir -p {{ ssl_services[service]['dir'] }}/ssl 2> /dev/null
-cp /etc/letsencrypt/live/{{ domainname }}/cert.pem {{ ssl_services[service]['dir'] }}/ssl/
-cp /etc/letsencrypt/live/{{ domainname }}/privkey.pem {{ ssl_services[service]['dir'] }}/ssl/
-cp /etc/letsencrypt/live/{{ domainname }}/chain.pem {{ ssl_services[service]['dir'] }}/ssl/
+cp /etc/letsencrypt/live/{{ grains.fqdn }}/cert.pem {{ ssl_services[service]['dir'] }}/ssl/
+cp /etc/letsencrypt/live/{{ grains.fqdn }}/privkey.pem {{ ssl_services[service]['dir'] }}/ssl/
+cp /etc/letsencrypt/live/{{ grains.fqdn }}/chain.pem {{ ssl_services[service]['dir'] }}/ssl/
 if id -u {{ ssl_services[service]['user'] }} > /dev/null 2>&1; then 
    chown -R {{ ssl_services[service]['user'] }}:{{ ssl_services[service]['group'] }} {{ ssl_services[service]['dir'] }}/ssl/
 fi
@@ -40,10 +39,10 @@ fi
 {%- if pillar['tdns'] is defined and pillar['tdns']['ssl_enable'] %}
 # technitium dns uses pfx format
 mkdir -p /etc/dns/ssl
-openssl pkcs12 -export -out /etc/dns/ssl/{{ domainname }}.pfx \
-    -inkey /etc/letsencrypt/live/{{ domainname }}/privkey.pem \
-    -in /etc/letsencrypt/live/{{ domainname }}/cert.pem \
-    -certfile /etc/letsencrypt/live/{{ domainname }}/chain.pem \
+openssl pkcs12 -export -out /etc/dns/ssl/{{ grains.fqdn }}.pfx \
+    -inkey /etc/letsencrypt/live/{{ grains.fqdn }}/privkey.pem \
+    -in /etc/letsencrypt/live/{{ grains.fqdn }}/cert.pem \
+    -certfile /etc/letsencrypt/live/{{ grains.fqdn }}/chain.pem \
     -passout pass:
 
 {%- endif %}

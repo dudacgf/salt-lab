@@ -18,8 +18,8 @@ nextcloud download:
     - name: /var/www/
     - source: https://download.nextcloud.com/server/releases/latest.zip
     - skip_verify: True
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - unless: test -f /var/www/nextcloud/occ
 
 {% if not grains['flag_nextcloud_users'] | default(False) %}
@@ -37,12 +37,12 @@ nextcloud cria db e user:
 nextcloud initialize:
   cmd.run:
     - name: echo "{{ pillar['nextcloud']['admin_password'] }}" | php /var/www/nextcloud/occ maintenance:install --database "mysql" --database-name '{{ db_name }}' --database-user '{{ db_user }}' --database-pass '{{ db_password }}'
-    - runas: {{ pillar['pkg_data']['apache']['user'] }}
+    - runas: {{ pkg_data.apache.user }}
 
 nextcloud create admin:
   cmd.run:
     - name: php /var/www/nextcloud/occ user:add --password-from-env --group admin --display-name {{ pillar['nextcloud']['admin_user'] }} {{ pillar['nextcloud']['admin_user'] }}
-    - runas: {{ pillar['pkg_data']['apache']['user'] }}
+    - runas: {{ pkg_data.apache.user }}
     - env: 
       - OC_PASS: '{{ pillar['nextcloud']['admin_password'] }}'
 

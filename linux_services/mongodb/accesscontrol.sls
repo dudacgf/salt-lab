@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 # Access Control
 {%- if not pillar['mongodb']['auth'] | default(False) %}
@@ -8,8 +10,8 @@ mongodb access control nothing to do:
 {%- if not pillar['flag_mongodb_acctl_set'] | default(False) %}
 /tmp/mongodb_access_control.mql:
   file.managed:
-    - user: {{ pillar['pkg_data']['mongodb']['user'] }}
-    - group: {{ pillar['pkg_data']['mongodb']['group'] }}
+    - user: {{ pkg_data.mongodb.user }}
+    - group: {{ pkg_data.mongodb.group }}
     - contents: 
       - 'use admin;'
       - 'db.createUser('

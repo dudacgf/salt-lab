@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 ###########
 ## DEBIAN 12 - THIS APPEARS AT 1.7
 ## UBUNTU 22.04 - THIS APPEARS AT 1.8
@@ -11,9 +13,9 @@
 {{ gdm }}: pkg.purged
 
 ## 2.2.1 Ensure X Window System is not installed (antecipated)
-{{ pillar.pkg_data.gnome.xserver }}: pkg.purged
+{{ pkg_data.gnome.xserver }}: pkg.purged
 
-'{{ pillar.pkg_data.packager }} autoremove -y': cmd.run
+'{{ pkg_data.packager }} autoremove -y': cmd.run
 
 {% else %}
 ## 1.8.2 Ensure GDM login banner is configured 
@@ -89,7 +91,7 @@
 #gsettings set org.gnome.desktop.media-handling automount false: cmd.run
 
 ## 1.8.10 Ensure XDCMP is not enabled 
-{{ pillar.pkg_data.gnome.conf }}:
+{{ pkg_data.gnome.conf }}:
   file.replace:
     - pattern: '(\[xdmcp\]\n)Enable.*=.*true'
     - repl: '\1Enable=false'

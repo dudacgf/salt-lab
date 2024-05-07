@@ -1,9 +1,11 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## nrpe.sls - instala e configura o serviço nrpe para monitoramento via nagios
 #
 
 {% if pillar['nrpe_install'] | default(False) %}
-{% set settings = pillar['pkg_data']['nrpe'] %}
+{% set settings = pkg_data.nrpe %}
 
 {{ settings.name }}:
   pkg.installed

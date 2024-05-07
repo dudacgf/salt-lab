@@ -30,7 +30,7 @@ nextcloud copia apache conf:
 
 nextcloud reload apache:
   service.running:
-    - name: {{ pillar['pkg_data']['apache']['service'] }}
+    - name: {{ pkg_data.apache.service }}
     - restart: True
     - watch:
       - file: nextcloud copia apache conf

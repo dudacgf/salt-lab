@@ -1,10 +1,12 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## essentials.sls - packages and basic setup needed for everything and some
 # 
 
 #
 ## clean packager cache before anything
-{{ pillar['pkg_data']['packager'] }} clean all:
+{{ pkg_data.packager }} clean all:
   cmd.run
 
 ## runs updates before anything else
@@ -22,29 +24,29 @@ apt-get dist-upgrade -y: cmd.run
 minimal:
   pkg.installed:
     - pkgs:
-      - {{ pillar.pkg_data.python3.version }}-pycurl
-      - {{ pillar.pkg_data.python3.version }}-tornado
-      - {{ pillar.pkg_data.python3.version }}-pip
-      - {{ pillar.pkg_data.python3.version }}-{{ pillar.pkg_data.python3.devel }}
-      - {{ pillar.pkg_data.python3.version }}-wheel
+      - {{ pkg_data.python3.version }}-pycurl
+      - {{ pkg_data.python3.version }}-tornado
+      - {{ pkg_data.python3.version }}-pip
+      - {{ pkg_data.python3.version }}-{{ pkg_data.python3.devel }}
+      - {{ pkg_data.python3.version }}-wheel
     - refresh: True
     - allow_updates: True
 {% endif %}
 
 prepara-pip:
   pkg.installed:
-    - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
+    - pkgs: [ {{ pkg_data.salt_pycurl_requirements }} ]
     - refresh: True
 
 {% set proxy = '--proxy ' + pillar.proxy if pillar.proxy else '' %}
 minimal salt-minion:
   cmd.run:
-    - name: '{{ pillar.pkg_data.python3.pip_version }} {{ proxy }} -q install keystore pyjks m2crypto==0.38.0 nmcli'
+    - name: '{{ pkg_data.python3.pip_version }} {{ proxy }} -q install keystore pyjks m2crypto==0.38.0 nmcli'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
   pkg.removed:
-    - pkgs: [ {{ pillar['pkg_data']['salt-pycurl-requirements'] }} ]
+    - pkgs: [ {{ pkg_data.salt_pycurl_requirements }} ]
 
 {% endif %}
 

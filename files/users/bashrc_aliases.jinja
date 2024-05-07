@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) %}
 {%- raw -%}
 #!/bin/bash
 
@@ -26,8 +28,8 @@ alias ps='ps auxw'
 alias rm='/bin/rm -i'
 alias svi='sudo vim'
 {%- endraw %}
-alias ta='sudo tail -f /var/log/{{ pillar['pkg_data']['apache']['name'] }}/{{ pillar['pkg_data']['apache']['access_log'] }}'
-alias te='sudo tail -f /var/log/{{ pillar['pkg_data']['apache']['name'] }}/{{ pillar['pkg_data']['apache']['error_log'] }}'
+alias ta='sudo tail -f /var/log/{{ pkg_data.apache.name }}/{{ pkg_data.apache.access_log }}'
+alias te='sudo tail -f /var/log/{{ pkg_data.apache.name }}/{{ pkg_data.apache.error_log }}'
 {%- raw %}
 alias tm='sudo tail -f /var/log/messages'
 alias tmm='sudo tail -f /var/log/maillog'
@@ -47,47 +49,15 @@ fi
 {% endraw %}
 
 # extra functions for a particular minion
-{%- set functions = salt['pillar.get']('functions', {}) %}
+{%- set functions = pillar.functions | default({}) %}
 {%- for function in functions %}
 function {{ function }}
 {%- endfor %}
 
 # extra aliases for a particular minion
-{%- set aliases = salt['pillar.get']('aliases', {}) %}
+{%- set aliases = pillar.aliases | default({}) %}
 {%- for alias in aliases %}
 alias {{ alias }}
 {%- endfor %}
 
-{%- set hostname = grains['id'].split('.')[0] %}
-{#- comandos que só quero presentes nos servidores elastic #}
-{%- if hostname == "netflow" or hostname == 'graylog' %}
-   {%- set kibanapw = salt['pillar.get']( 'kibana:password', 'nada') %}
-function xg () {
-   http_proxy= https_proxy= curl -u kibana:{{ kibanapw }} -XGET -s https://localhost:9200/$*
-}
-
-function xd () {
-   http_proxy= https_proxy= curl -u kibana:{{ kibanapw }} -XDELETE -s https://localhost:9200/$*
-}
-
-function xp () {
-   http_proxy= https_proxy= curl -u kibana:{{ kibanapw }} -XPOST -s https://localhost:9200/$*
-}
-
-alias tg='sudo tail -f /var/log/graylog-server/server.log'
-{#- servidores elastic #}
-{#- servidor do salt #}
-{%- elif hostname == 'openvas' %}
-alias ow='while true; do clear ; ps | grep -E -o "openvas: testing ([0-9]{1,3}[\.]){3}[0-9]{1,3}$" | sed -- "s/.*testing //" | sort -u | column -c 80; read -n 1 -t 5 y; if [ ! -z $y ] ; then break ; fi ; done'
-
-{%- elif hostname == 'lduda' %}
-alias vmprep='sudo virt-sysprep --operations bash-history,backup-files,dhcp-client-state,machine-id,-ssh-hostkeys,-ssh-userdir,tmp-files,yum-uuid -d '
-
-{%- elif grains['os_family'] == 'RedHat' %}
-user1=/usr/lib64/nagios/plugins
-
-{%- else %}
-user1=/usr/lib/nagios/plugins
-
-{%- endif %} 
 

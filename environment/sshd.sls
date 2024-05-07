@@ -1,10 +1,12 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## sshd.sls - configura segurança do serviço sshd
 # 
 
 {% if pillar['sshd_install'] | default(True) %}
 
-{{ pillar['pkg_data']['sshd']['name'] }}:
+{{ pkg_data.sshd.name }}:
   pkg.installed
   
 #
@@ -49,7 +51,7 @@
 
 
 # restarta serviço sshd pra garantir que vai passar a usar as novas chaves
-systemctl restart {{ pillar['pkg_data']['sshd']['service'] }}:
+systemctl restart {{ pkg_data.sshd.service }}:
   cmd.run:
     - watch:
       - /etc/ssh/ssh_host_ecdsa_key
@@ -94,7 +96,7 @@ flag_ssh_hostkeys_new:
 
 # 
 # ajusta o serviço sshd
-{{ pillar['pkg_data']['sshd']['service'] }}: 
+{{ pkg_data.sshd.service }}: 
   service.running:
     - enable: true
     - restart: true
@@ -104,12 +106,12 @@ flag_ssh_hostkeys_new:
       - file: /etc/ssh/sshd_config.d/99_sshd_users.conf
 
 {% else %}
-{{ pillar['pkg_data']['sshd']['name'] }}: pkg.removed
+{{ pkg_data.sshd.name }}: pkg.removed
 
 '-- openssh-server removed':
   test.nop:
     - onchanges:
-      - pkg: {{ pillar['pkg_data']['sshd']['name'] }}
+      - pkg: {{ pkg_data.sshd.name }}
 {% endif %}
 
 

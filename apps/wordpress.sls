@@ -8,6 +8,9 @@
 {% set domain = salt['pillar.get'](location + '_domain') %}
 {% set domainname = hostname + '.' + domain %}
 
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) %}
+
 # configura envvar tempdir para o caso da partição /tmp ter sido montada com noexec
 # {{ salt['sdb.set']('sdb://osenv/TEMP', '/root') }}
 
@@ -30,8 +33,8 @@
   archive.extracted:
     - name: /var/www/html
     - source: salt://files/wordpress/{{ wp_site }}.tar.gz
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - trim_output: 10
     - require:
       - cmd: {{ wp_site }} cria db e user
@@ -57,10 +60,10 @@
   cmd.script:
     - source: https://github.com/wp-cli/wp-cli/releases/download/v2.6.0/wp-cli-2.6.0.phar
     - args: --path=/var/www/html/{{ wp_site }} search-replace {{ pillar['wordpress'][wp_site]['site_orig_url'] }} {{ domainname }}
-    - runas: {{ pillar['pkg_data']['apache']['user'] }}
+    - runas: {{ pkg_data.apache.user }}
     - env: 
-      - TEMP: {{ pillar['pkg_data']['apache']['home_dir'] }}
-    - cwd: {{ pillar['pkg_data']['apache']['home_dir'] }}
+      - TEMP: /root
+    - cwd: /root
     - require:
       - cmd: {{ wp_site }} restaura db data
 
@@ -68,10 +71,10 @@
   cmd.script:
     - source: https://github.com/wp-cli/wp-cli/releases/download/v2.6.0/wp-cli-2.6.0.phar
     - args: --path=/var/www/html/{{ wp_site }} option update permalink_structure ''
-    - runas: {{ pillar['pkg_data']['apache']['user'] }}
+    - runas: {{ pkg_data.apache.user }}
     - env: 
-      - TEMP: {{ pillar['pkg_data']['apache']['home_dir'] }}
-    - cwd: {{ pillar['pkg_data']['apache']['home_dir'] }}
+      - TEMP: /root
+    - cwd: /root
     - require:
       - cmd: {{ wp_site }} restaura db data
 

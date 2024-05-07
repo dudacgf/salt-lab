@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 # instala mariadb-server e roda script que emula mysql_security_installation
 
 mariadb-server:
@@ -5,7 +7,7 @@ mariadb-server:
 
 ajusta innodb:
   file.line:
-    - name: {{ pillar['pkg_data']['mariadb']['server_conf'] }}
+    - name: {{ pkg_data.mariadb.server_conf }}
     - after: 'pid-file.*=.*'
     - mode: insert
     - content: 'innodb_strict_mode=0'
@@ -32,7 +34,7 @@ copia mysql security script:
 
 executa mysql security script:
   cmd.run:
-    - name: /usr/local/bin/mysql_security.sh {{ pillar['mariadb_root_pw'] }}
+    - name: /usr/local/bin/mysql_security.sh {{ pillar.mariadb_root_pw }}
     - require:
       - file: copia mysql security script
 

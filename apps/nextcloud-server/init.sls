@@ -10,10 +10,12 @@ nextcloud failure:
     - name: '** OS not supported yet **'
     - failhard: True
 {% else %}
-include:
-  - apps.nextcloud-server.php_additional
-  - apps.nextcloud-server.nextcloud_install
-  - apps.nextcloud-server.nextcloud_config
-  - apps.nextcloud-server.apache_config
-  - apps.nextcloud-server.nextcloud_selinux
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) %}
+
+{% include "apps/nextcloud-server/php_additional.sls" %}
+{% include "apps/nextcloud-server/nextcloud_install.sls" %}
+{% include "apps/nextcloud-server/nextcloud_config.sls" %}
+{% include "apps/nextcloud-server/apache_config.sls" %}
+{% include "apps/nextcloud-server/nextcloud_selinux.sls" %}
 {% endif %}

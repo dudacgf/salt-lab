@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 # aumenta limite de file descriptors (open files)
 ulimit -n 65000:
   cmd.run
@@ -25,8 +27,8 @@ mongod copia chain file:
   file.managed:
     - name: /etc/mongodb/chain.pem
     - source: {{ salt.sslfile.chain() }}
-    - user: {{ pillar['pkg_data']['mongodb']['user'] }}
-    - group: {{ pillar['pkg_data']['mongodb']['group'] }}
+    - user: {{ pkg_data.mongodb.user }}
+    - group: {{ pkg_data.mongodb.group }}
     - makedirs: True
 
 # cria arquivo temporário com cert + privkey em /tmp e depois o copia para o diretório de destino
@@ -48,8 +50,8 @@ mongod copia cert+key file:
   file.managed:
     - name: /etc/mongodb/cert+key.pem
     - source: /tmp/cert+key.pem
-    - user: {{ pillar['pkg_data']['mongodb']['user'] }}
-    - group: {{ pillar['pkg_data']['mongodb']['group'] }}
+    - user: {{ pkg_data.mongodb.user }}
+    - group: {{ pkg_data.mongodb.group }}
     - makedirs: True
     - require:
       - file: mongod temp cert file

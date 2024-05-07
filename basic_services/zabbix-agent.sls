@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## zabbix-agent2 - installs zabbix agent2 via zabbix official repos
 #
@@ -10,12 +12,12 @@ zabbix-agent:
 
 {% include 'basic_services/zabbix-repo.sls' ignore missing %}
 
-{{ pillar.pkg_data.zabbix.agent_name }}:
+{{ pkg_data.zabbix.agent_name }}:
   pkg.installed:
     - require:
       - zabbix repo
 
-{{ pillar.pkg_data.zabbix.conffile }}:
+{{ pkg_data.zabbix.conffile }}:
   file.managed:
     - source: salt://files/services/zabbix/zabbix_agent2.conf.jinja
     - template: jinja
@@ -68,12 +70,12 @@ cron sec_updates:
 LANG=C apt-get -qq upgrade -s | grep ^Inst | grep -c security > /var/run/zabbix/sec_updates.txt || true: cmd.run
 {% endif %}
 
-{{ pillar.pkg_data.zabbix.agent_name }}.service:
+{{ pkg_data.zabbix.agent_name }}.service:
   service.running:
     - enable: True
     - restart: True
     - watch:
-      - file: {{ pillar.pkg_data.zabbix.conffile }}
+      - file: {{ pkg_data.zabbix.conffile }}
       - file: /etc/zabbix/zabbix_agent2.d/plugins.d/90-updates.conf
       - cron: cron updates
       - cron: cron sec_updates

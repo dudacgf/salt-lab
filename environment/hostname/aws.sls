@@ -1,5 +1,7 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 # register a minion in aws route53 dns
-{{ pillar['pkg_data']['awscli'] }}:
+{{ pkg_data.awscli }}:
   pkg.installed
 
 {{ sls }} copy aws files: 
@@ -22,7 +24,7 @@ register host:
     - template: jinja
     - shell: /bin/bash
     - require:
-      - pkg: {{ pillar['pkg_data']['awscli'] }}
+      - pkg: {{ pkg_data.awscli }}
       - file: {{ sls }} copy aws files
 {%- if pillar['proxy'] %}
     - env:

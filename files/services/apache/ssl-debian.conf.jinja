@@ -1,6 +1,6 @@
-{%- set hostname = grains.id.split('.')[0] %}
-{%- set domainname = grains['domain'] %}
-{%- set etc_dir = pillar['pkg_data']['apache']['etc_dir'] %}
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
+{%- set etc_dir = pkg_data.apache.etc_dir %}
 <IfModule mod_ssl.c>
 
     SSLSessionCacheTimeout  300
@@ -9,7 +9,7 @@
     <VirtualHost _default_:443>
 
         ServerAdmin {{ pillar['contact'] }}
-        ServerName {{ hostname }}.{{ domainname }}
+        ServerName {{ grains.host }}.{{ grains.domain }}
 
         DocumentRoot /var/www/html
 

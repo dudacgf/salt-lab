@@ -5,7 +5,7 @@
 #
 # Adiciona o repositório atomicorp (gvm [ex-openVAS] %}
 
-{% el grains['os_family'] == 'RedHat' %}
+{% if grains['os_family'] == 'RedHat' %}
 gvm_repo:
   pkgrepo.managed:
     - name: atomic

@@ -1,7 +1,9 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #
 ## auditd.sls - instala e configura o serviço auditd para auditoria do servidor
 # 
-{{ pillar['pkg_data']['audit']['name'] }}:
+{{ pkg_data.audit.name }}:
   pkg.installed
   
 {% if grains['os_family'] == 'Debian' %}

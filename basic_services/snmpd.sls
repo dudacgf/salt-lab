@@ -1,7 +1,11 @@
+{%- if not pkg_data is defined %}
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
+{%- endif %}
 #
 ## snmpd.sls - instala e configura o serviço snmpd para monitoramento via nagios e/ou cacti
 # 
-{{ pillar['pkg_data']['snmpd']['name'] }}:
+{{ pkg_data.snmpd.name }}:
   pkg.installed
   
 #

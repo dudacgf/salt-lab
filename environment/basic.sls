@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 #!jinja|yaml
 ##
 #
@@ -18,12 +20,12 @@ update_inicial:
 minimal:
   pkg.installed:
     - pkgs:
-      #      - bash-completion
-      #- {{ pillar['pkg_data']['bindlibs']['name'] }}
-      #- {{ pillar['pkg_data']['bindutils']['name'] }}
+      - bash-completion
+      #- {{ pkg_data.bindlibs.name }}
+      #- {{ pkg_data.bindutils.name }}
       #- fortune-mod
       #- mlocate 
-      #- {{ pillar['pkg_data']['vim']['name'] }}
+      - {{ pkg_data.vim.name }}
 {%- if grains['os'] == 'Rocky' and grains['osmajorrelease'] < 9 %}
       - needrestart
 {%- endif %}

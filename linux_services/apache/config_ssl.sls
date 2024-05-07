@@ -4,6 +4,8 @@
 #                   disponibilizados em ssl/cert.pem, ssl/privkey.pem e ssl/chain.pem
 #                   abaixo do diretório apache
 #
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 
 {% if not pillar['apache']['ssl_enable'] | default(False) %}
 '-- servidor não usa https. nada a fazer.'
@@ -14,30 +16,30 @@
 # copia certificados et all
 copy certificate:
   file.managed:
-    - name: {{ pillar['pkg_data']['apache']['etc_dir'] }}/ssl/cert.pem
+    - name: {{ pkg_data.apache.etc_dir }}/ssl/cert.pem
     - source: {{ salt.sslfile.cert() }}
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 640
     - makedirs: True
     - dir_mode: 750
    
 copy privkey:
   file.managed:
-    - name: {{ pillar['pkg_data']['apache']['etc_dir'] }}/ssl/privkey.pem
+    - name: {{ pkg_data.apache.etc_dir }}/ssl/privkey.pem
     - source: {{ salt.sslfile.privkey() }}
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 640
     - makedirs: True
     - dir_mode: 750
    
 copy chain:
   file.managed:
-    - name: {{ pillar['pkg_data']['apache']['etc_dir'] }}/ssl/chain.pem
+    - name: {{ pkg_data.apache.etc_dir }}/ssl/chain.pem
     - source: {{ salt.sslfile.chain() }}
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 640
     - makedirs: True
     - dir_mode: 750
@@ -50,11 +52,11 @@ a2enmod ssl:
    
 ssl configuration:
   file.managed:
-    - name: {{ pillar['pkg_data']['apache']['etc_dir'] }}/sites-available/default-ssl.conf
+    - name: {{ pkg_data.apache.etc_dir }}/sites-available/default-ssl.conf
     - source: salt://files/services/apache/ssl-debian.conf.jinja
     - template: jinja
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 640
    
 a2ensite default-ssl:
@@ -69,18 +71,18 @@ mod_ssl:
    
 ssl configuration:
   file.managed:
-    - name: {{ pillar['pkg_data']['apache']['etc_dir'] }}/conf.d/ssl.conf
+    - name: {{ pkg_data.apache.etc_dir }}/conf.d/ssl.conf
     - source: salt://files/services/apache/ssl-redhat.conf.jinja
     - template: jinja
-    - user: {{ pillar['pkg_data']['apache']['user'] }}
-    - group: {{ pillar['pkg_data']['apache']['group'] }}
+    - user: {{ pkg_data.apache.user }}
+    - group: {{ pkg_data.apache.group }}
     - mode: 640
   
 {% endif %}
    
 ssl restart apache:
   cmd.run:
-    - name: systemctl restart {{ pillar['pkg_data']['apache']['service'] }}
+    - name: systemctl restart {{ pkg_data.apache.service }}
     - require:
       - file: ssl configuration
 

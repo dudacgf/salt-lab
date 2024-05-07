@@ -1,3 +1,5 @@
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
 {% if grains['os'] == 'Ubuntu' %}
 add duo repo:
   pkgrepo.managed:
@@ -29,7 +31,7 @@ failure:
     - failhard: True
 {% endif %}
 
-{{ pillar['pkg_data']['duo']['name'] }}:
+{{ pkg_data.duo.name }}:
   pkg.installed:
     - require:
       - pkgrepo: add duo repo
