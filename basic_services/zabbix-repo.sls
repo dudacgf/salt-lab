@@ -1,6 +1,6 @@
 #!jinja|yaml
 
-{% if pillar['proxy'] != 'none' %}
+{% if 'proxy' in pillar and pillar.proxy | default(False) %}
 {% set proxy = 'https_proxy=' + pillar['proxy'] %}
 {% else %}
 {% set proxy = '' %}
