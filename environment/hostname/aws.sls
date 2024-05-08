@@ -23,6 +23,7 @@ register host:
     - source: salt://files/scripts/aws-register.sh.jinja
     - template: jinja
     - shell: /bin/bash
+    - cwd: /root
     - require:
       - pkg: {{ pkg_data.awscli }}
       - file: {{ sls }} copy aws files
