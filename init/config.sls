@@ -1,18 +1,20 @@
 ###
 ## Initializes networks and runs first highstate for a group of minions
 #
-#  You should call this as a orchestration, passing the name of the minions as a pillar:
+#  You should call this as a orchestration, passing the hosts map and the name of the minion as a pillar:
 #
-#  sudo salt-run state.orch init pillar='{minions: [m1, m2, m3...]}'
+#  sudo salt-run state.orch init pillar='{map: production, minion: db1}'
 #
 #  (c) ecgf - mar/2023
 #
 
 # get map for this minion
-{% set map = pillar['map'] | default('production') %}
-{% import_yaml 'maps/' + map + '.yaml' as minions %}
-{% set minion = minions[pillar['minion']] %}
-{% set mname = minion.name %}
+{%- set map = pillar['map'] | default('production') %}
+{%- import_yaml 'maps/' + map + '.yaml' as minions %}
+{%- set minion = minions[pillar['minion']] %}
+{%- set mname = minion.name %}
+# list of mname's snapshots 
+{%- set snapshot_names = salt.virt.list_snapshots(domain=mname, connection=pillar.virt.connection.url)[mname]|map(attribute="name")|list() %}
 
 ### 0. Proxy - defines system wide proxy and configure proxy for apt/yum
 {{ mname }} define proxy minion:
@@ -82,11 +84,16 @@
   test.nop
 
 # create a snapshot before the highstate
+{%- if not 'pre-highstate' in snapshot_names %}
+# create a snapshot before the highstate
 {{ mname }} create pre-highstate snapshot:
   salt.function:
     - name: virt.snapshot
     - tgt: {{ pillar.salt_server }}
     - kwarg: {'domain': {{ mname }}, 'name': 'pre-highstate', 'connection': '{{ pillar.virt.connection.url }}' }
+{%- else %}
+'-- snapshot pre-highstate already exists @ {{ mname }}': test.nop
+{%- endif %}
 
 {{ mname }} environment:
   salt.state:
@@ -122,11 +129,15 @@
     - tgt: {{ mname }}
 
 # create a snapshot before enforcing cis-benchmark
+{%- if not 'pre-cis' in snapshot_names %}
 {{ mname }} create pre-cis snapshot:
   salt.function:
     - name: virt.snapshot
     - tgt: {{ pillar.salt_server }}
     - kwarg: {'domain': {{ mname }}, 'name': 'pre-cis', 'connection': '{{ pillar.virt.connection.url }}' }
+{%- else %}
+'-- snapshot pre-cis already exists @ {{ mname }}': test.nop
+{%- endif %}
 
 {{ mname }} cis enforce:
   salt.state:
