@@ -20,6 +20,8 @@
 {% do minions.pop('default', None) %}
 {% for mname in minions | default([]) %}
 {% set minion = minions[mname] %}
+# list of mname's snapshots 
+{%- set snapshot_names = salt.virt.list_snapshots(domain=mname, connection=pillar.virt.connection.url)[mname]|map(attribute="name")|list() %}
 
 ### if vm does not exists yet, create and configure it
 {% if mname not in salt.virt.list_domains(connection = pillar['virt']['connection']['url']) %}
@@ -59,11 +61,15 @@
       - salt: {{ mname }} redefine interfaces
 
 # create a snapshot before configuring anything
+{%- if not 'pre-config' in snapshot_names %}
 {{ mname }} create pre-config snapshot:
   salt.function:
     - name: virt.snapshot
     - tgt: {{ pillar.salt_server }}
     - kwarg: {'domain': {{ mname }}, 'name': 'pre-config', 'connection': '{{ pillar.virt.connection.url }}' }
+{%- else %}
+'-- snapshot pre-config already exists @ {{ mname }}': test.nop
+{%- endif %}
 
 ### configures the minion
 {{ mname }} call config:
