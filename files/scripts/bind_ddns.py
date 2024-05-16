@@ -24,7 +24,7 @@
 #
 # -i|--info - information to be updated for {domain}.{zone}. defaults to ipv4
 #
-# -s|--dns-server - dns server to send the update message. defaults to localhost
+# -s|--dns-server - dns server to send the update message. defaults to 127.0.0.1
 #
 # 
 # TODO: try to add PTR record when record-type is A or AAAA
@@ -122,4 +122,5 @@ except ValueError as exc:
     print(f'Value Error: {dns_server}')
     sys.exit(1)
 
+# check response and exit
 print(response.rcode())
