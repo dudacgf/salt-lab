@@ -11,8 +11,10 @@ zabbix-agent:
 
 {% include 'basic_services/zabbix-repo.sls' ignore missing %}
 
+
 {{ pkg_data.zabbix.agent_name }}:
   pkg.installed:
+    - refresh: True
     - require:
       - zabbix repo
 
