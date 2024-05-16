@@ -11,5 +11,5 @@ cis system restart at the end:
   test.nop:
     - order: 100110
 {% else %}
-'-- CIS recommendations will not be enforced': test.nop
+'-- CIS recommendations will not be enforced': test.succeed_without_changes
 {% endif %}
