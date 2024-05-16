@@ -1,6 +1,5 @@
-include:
-  - .install
-  - .configure
+{% include "linux_services/elasticsearch/install.sls" %}
+{% include "linux_services/elasticsearch/configure.sls" %}
 
 #
 # restarts the service 
