@@ -37,7 +37,7 @@ default:
 # debian has a problem here, let's try to fix it
 shorewall restart minion:
   cmd.run:
-    - name: 'bash -c "salt-call --local service.restart salt-minion;"'
+    - name: 'bash -c "sleep 5s; salt-call --local service.restart salt-minion;"'
     - bg: True
     - onlyif:
       - fun: match.grain
