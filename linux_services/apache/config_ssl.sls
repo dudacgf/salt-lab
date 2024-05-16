@@ -4,8 +4,7 @@
 #                   disponibilizados em ssl/cert.pem, ssl/privkey.pem e ssl/chain.pem
 #                   abaixo do diretório apache
 #
-{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
-{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
+{%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
 
 {% if not pillar['apache']['ssl_enable'] | default(False) %}
 '-- servidor não usa https. nada a fazer.'

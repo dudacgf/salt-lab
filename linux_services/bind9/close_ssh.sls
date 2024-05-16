@@ -1,7 +1,5 @@
-
 # prepares primary and secondary for a scp file transfer using root login
-{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
-{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
+{%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
 
 {%- if 'named' in pillar and pillar.named.type | default('primary') | lower == 'primary' %}
 {%- for secondary in pillar.named.secondaries %}

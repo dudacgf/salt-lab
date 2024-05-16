@@ -8,8 +8,7 @@
 {% set domain = salt['pillar.get'](location + '_domain') %}
 {% set domainname = hostname + '.' + domain %}
 
-{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
-{%- set pkg_data = salt.grains.filter_by(pkg_data) %}
+{%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
 
 # configura envvar tempdir para o caso da partição /tmp ter sido montada com noexec
 # {{ salt['sdb.set']('sdb://osenv/TEMP', '/root') }}

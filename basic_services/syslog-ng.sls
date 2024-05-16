@@ -1,5 +1,4 @@
-{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
-{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
+{%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
 #
 ## snmpd.sls - instala e configura o serviço snmpd para monitoramento via nagios e/ou cacti
 # 
