@@ -22,7 +22,7 @@ minimal:
     - pkgs:
       - bash-completion
       #- {{ pkg_data.bindlibs.name }}
-      #- {{ pkg_data.bindutils.name }}
+      - {{ pkg_data.bindutils.name }}
       #- fortune-mod
       #- mlocate 
       - {{ pkg_data.vim.name }}
