@@ -5,8 +5,10 @@
 
 #
 # Adiciona o repositório do elasticsearch
-{%- if pillar['kibana'] is defined %}
-    {%- set version = pillar['kibana']['version'] | default('8.x') %}
+{%- if pillar.kibana is defined %}
+    {%- set version = pillar.kibana.version | default('8.x') %}
+{%- else %}
+    {%- set version = '8.x' %}
 {%- endif %}
 {% if grains['os_family'] == 'Debian' %}
 add kibana repo:
@@ -53,7 +55,7 @@ kibana.yml:
     - mode: 660
     - backup: minion
 
-{% if pillar['kibana']['ssl_enable'] | default(False) %}
+{% if pillar.kibana is defined and pillar.kibana.ssl_enable | default(False) %}
 # chaves para tráfego encriptado com o servidor elasticsearch
 /etc/kibana/pki/chain.pem:
   file.managed:
