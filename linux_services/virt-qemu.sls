@@ -6,7 +6,7 @@
 
 virt-manager:
   pkg.installed:
-    - pkgs: ['virt-manager', {{ pkg_data.guestfs-tools.name }}]
+    - pkgs: ['virt-manager', {{ pkg_data.guestfs_tools.name }}]
 
 libvirt:
   group.present:
