@@ -1,0 +1,78 @@
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+{%- import_yaml "maps/pkg_data/by_os_family.yaml" as pkg_data %}
+{%- set pkg_data = salt.grains.filter_by(pkg_data) -%}
+
+{%- if 'localnets' in pillar.named %}
+acl query_allowed {
+{%- for network in pillar.named.localnets %}
+    {{ network }};
+{%- endfor %}
+};
+{%- endif %}
+
+options {
+        listen-on port 53 { any; };
+        listen-on-v6 port 53 { any; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        secroots-file   "/var/named/data/named.secroots";
+        recursing-file  "/var/named/data/named.recursing";
+        allow-query { {{ 'query_allowed' if 'localnets' in pillar.named | default(False) else 'any' }}; };
+        recursion {{ 'yes' if pillar.named.recursion | default(False) else 'no' }};
+
+        dnssec-validation {{ 'yes' if pillar.named.dnssec_validation | default(False) else 'no' }};
+
+        managed-keys-directory "/var/named/dynamic";
+        geoip-directory "/usr/share/GeoIP";
+
+        pid-file "/run/named/named.pid";
+        session-keyfile "/run/named/session.key";
+
+        /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
+        include "/etc/crypto-policies/back-ends/bind.config";
+};      
+
+// heavy logging
+logging {
+    channel default_syslog {
+        syslog local7;
+        severity info;
+    };
+    category queries { default_syslog; };
+    category resolver { default_syslog; };
+    category client { default_syslog; };
+    category lame-servers {    null; };
+};
+
+zone "." IN { 
+        type hint;
+        file "named.ca";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+
+{% if 'named' in pillar %}
+  {%- for zone_name in pillar.named.zones %}
+    {%- set zone = pillar.named.zones[zone_name] %}
+    {%- if zone.type | default('primary') | lower in ['primary', 'secondary'] %}
+include "{{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key";
+    {%- endif %}
+    {%- if zone.type | default('primary') | lower == 'primary' and
+           'allow-updates' in zone and zone.allow-updates | default(False) -%}
+include "{{pkg_data.named.conf_dir}}/{{zone_name}}-update-key";
+    {%- endif %}
+include "{{pkg_data.named.conf_dir}}/{{zone_name}}-def.zone";
+  {% endfor %}
+{%- endif %}
+
