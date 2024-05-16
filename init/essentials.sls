@@ -18,9 +18,9 @@ upgrades:
 apt-get dist-upgrade -y: cmd.run
 {%- endif %}
 
-{% if grains['os_family'] != 'Suse' %}
 # 
 ## basic packages
+{% if grains['os_family'] != 'Suse' %}
 minimal:
   pkg.installed:
     - pkgs:
@@ -49,6 +49,19 @@ prepara-pip_remove:
     - pkgs: [ {{ pkg_data.salt_pycurl_requirements }} ]
 
 {% endif %}
+
+#
+# x509 deprecation handling
+/etc/salt/minion.d/x509.conf:
+  file.managed:
+    - user: root
+    - group: root
+    - mode: 0644
+    - contents: |
+        # 
+        # handling of x509 module deprecation
+        features:
+          x509_v2: true
 
 # 
 ## sync modules, functions etc

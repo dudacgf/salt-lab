@@ -13,8 +13,6 @@
 {%- import_yaml 'maps/' + map + '.yaml' as minions %}
 {%- set minion = minions[pillar['minion']] %}
 {%- set mname = minion.name %}
-# list of mname's snapshots 
-{%- set snapshot_names = salt.virt.list_snapshots(domain=mname, connection=pillar.virt.connection.url)[mname]|map(attribute="name")|list() %}
 
 ### 0. Proxy - defines system wide proxy and configure proxy for apt/yum
 {{ mname }} define proxy minion:
@@ -77,23 +75,18 @@
       - salt: {{ mname }} nmconnections
 
 ### 6. executa o highstate desse minion
-{% set hoi = salt['cmd.run']("salt " + mname + " pillar.item highstate_on_init --out yaml") | load_yaml %}
-{%- if hoi[mname]['highstate_on_init'] | default(True) %}
-
+{%- if minion.highstate_on_init | default(True) %}
 "-- {{ mname }} will execute high state":
   test.nop
 
 # create a snapshot before the highstate
-{%- if not 'pre-highstate' in snapshot_names %}
-# create a snapshot before the highstate
+{% if minion.take_snapshot | default(True) %}
 {{ mname }} create pre-highstate snapshot:
   salt.function:
     - name: virt.snapshot
     - tgt: {{ pillar.salt_server }}
     - kwarg: {'domain': {{ mname }}, 'name': 'pre-highstate', 'connection': '{{ pillar.virt.connection.url }}' }
-{%- else %}
-'-- snapshot pre-highstate already exists @ {{ mname }}': test.nop
-{%- endif %}
+{% endif %}
 
 {{ mname }} environment:
   salt.state:
@@ -101,7 +94,11 @@
     - tgt: {{ mname }}
     - pillar: {'map': {{ map }}}
 
-'sleep 15s': cmd.run
+'sleep 15s': 
+  cmd.run:
+    - onlyif:
+      - fun: match.grain
+        tgt: 'os_family:Debian'
 
 {{ mname }} basic_services:
   salt.state:
@@ -129,21 +126,19 @@
     - tgt: {{ mname }}
 
 # create a snapshot before enforcing cis-benchmark
-{%- if not 'pre-cis' in snapshot_names %}
+{% if minion.take_snapshot | default(True) %}
 {{ mname }} create pre-cis snapshot:
   salt.function:
     - name: virt.snapshot
     - tgt: {{ pillar.salt_server }}
     - kwarg: {'domain': {{ mname }}, 'name': 'pre-cis', 'connection': '{{ pillar.virt.connection.url }}' }
-{%- else %}
-'-- snapshot pre-cis already exists @ {{ mname }}': test.nop
-{%- endif %}
+{% endif %}
 
 {{ mname }} cis enforce:
   salt.state:
     - sls: cis-benchmark
     - tgt: {{ mname }}
-    - pillar: {'map': {{ map }}}
+    - pillar: {'map': {{ map }}, 'cis': {{ minion.cis | default('nonenforced') }} }
     
 # waits (the previous state may restart salt-minion service)
 {{ mname }} wait cis enforce:
@@ -151,7 +146,7 @@
     - name: salt/minion/*/start
     - id_list: [ '{{ mname }}' ]
     - timeout: 90
-    - require:
+    - onchanges:
       - salt: {{ mname }} cis enforce
 {% else %}
 "-- {{ mname }} will not execute high state":
