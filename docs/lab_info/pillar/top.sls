@@ -2,5 +2,5 @@ base:
   '*':
     - defaults
     - organization
-    - users
     - hosts
+    - virt
