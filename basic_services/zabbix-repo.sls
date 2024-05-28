@@ -6,11 +6,11 @@
 {% set proxy = '' %}
 {% endif %}
 
-{% if grains['os'] == 'Debian' %}
-
+{% if grains['os'] in ['Debian', 'Mint'] %}
+{% set osmr = '12' if grains['os'] == 'Mint' else grains['osmajorrelease'] %}
 download repo deb:
   cmd.run: 
-    - name: {{ proxy }} wget https://repo.zabbix.com/zabbix/6.5/debian/pool/main/z/zabbix-release/zabbix-release_6.5-1+debian{{ grains['osmajorrelease'] }}_all.deb -O /tmp/zabbix-release.deb
+    - name: {{ proxy }} wget https://repo.zabbix.com/zabbix/6.5/debian/pool/main/z/zabbix-release/zabbix-release_6.5-1+debian{{ osmr }}_all.deb -O /tmp/zabbix-release.deb
 
 zabbix repo:
   cmd.run:
