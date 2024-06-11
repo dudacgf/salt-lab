@@ -25,6 +25,7 @@
     - home: /home/{{ user }}
     - shell: /bin/bash
     - optional_groups: {{ users.to_create[user].groups | default([]) }}
+    - remove_groups: False
 
 group.present_{{ user }}_{{ user }}:
  group.present:  
