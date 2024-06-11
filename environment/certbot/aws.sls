@@ -45,12 +45,6 @@ run certbot:
       - file: {{ sls }} copy aws files
       #      - pkg: certbot pkgs
 
-aws delete secrets:
-  file.absent:
-    - name: /root/.aws/credentials
-    - require:
-      - file: {{ sls }} copy aws files
-
 flag_certbot_run:
   grains.present:
     - value: True
