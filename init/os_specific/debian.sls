@@ -30,5 +30,10 @@ firmware-intel-sound:
 firmware-realtek:
   pkg.installed
 
+ajusta umask:
+  file.replace:
+    - name: /etc/login.defs
+    - pattern: UMASK.*022
+    - repl: UMASK         027 
 {% endif %}
 
