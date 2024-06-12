@@ -15,7 +15,7 @@
 
 ## 2.1.4 Ensure DNS Server is not installed 
 {% if not 'bind9' in pillar['services'] | default(False) %}
-{{ pkg_data.bind.name }}: pkg.purged
+{{ pkg_data.named.name }}: pkg.purged
 {% endif %}
 
 ## 2.1.5 Ensure dnsmasq is not installed
