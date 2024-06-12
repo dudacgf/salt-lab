@@ -68,7 +68,7 @@ include "/etc/named.root.key";
 include "{{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key";
     {%- endif %}
     {%- if zone.type | default('primary') | lower == 'primary' and
-           'allow-updates' in zone and zone.allow-updates | default(False) -%}
+           'allow_updates' in zone and zone.allow_updates | default(False) -%}
 include "{{pkg_data.named.conf_dir}}/{{zone_name}}-update-key";
     {%- endif %}
 include "{{pkg_data.named.conf_dir}}/{{zone_name}}-def.zone";
