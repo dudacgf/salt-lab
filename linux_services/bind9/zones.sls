@@ -11,17 +11,19 @@
     - group: {{ pkg_data.named.group }}
     - mode: 0640
     - contents: | 
-        {{ tsig_key | indent(8) }}
+       {{ tsig_key | indent(8) }} 
     - unless: test -f {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key
-{%- if 'allow_updates' in zone %}
-{%- set tsig_update_key = salt.cmd.run('tsig-keygen -a hmac-sha512' + zone_name + '-update-key') %}
+{%- if zone.allow_updates | default(True) %}
 {{pkg_data.named.conf_dir}}/{{zone_name}}-update-key:
   file.managed:
     - user: {{ pkg_data.named.user }}
     - group: {{ pkg_data.named.group }}
     - mode: 0640
     - contents: | 
-        {{ tsig_key | indent(8) }}
+        key "{{ zone.update_key.name }}-update-key " {
+            algorithm "{{ zone.update_key.algorithm }}";
+            secret "{{ zone.update_key.secret }}";
+        };
     - unless: test -f {{pkg_data.named.conf_dir}}/{{zone_name}}-update-key
 {%- endif %}
 
