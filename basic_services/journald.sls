@@ -27,7 +27,7 @@ systemd-journal-remote:
   file.managed:
     - contents: |
           [Upload]
-          URL={{ pillar.journal.remote_server }}
+          URL={{ pillar.journal.url }}
           ServerKeyFile=/etc/ssl/private/journal-privkey.pem
           ServerCertificateFile=/etc/ssl/certs/journal-cert.pem
           TrustedCertificateFile=/etc/ssl/ca/CA_Icatu.pem
