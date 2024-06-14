@@ -15,6 +15,7 @@ python3-{{pkg_data.python3.yaml}}:
     - mode: 400
     - contents: |
         {{ domain }}:
+           algorithm: {{ pillar.bind[domain]['algorithm'] }}
            name: {{ pillar.bind[domain]['name'] }}
            secret: {{ pillar.bind[domain]['secret'] }}
 
