@@ -4,7 +4,7 @@
 {%- for zone_name in pillar.named.zones | default([]) %}
 {%- set zone = pillar.named.zones[zone_name] %}
 {%- if zone.type == 'primary' %} #primary zone
-{%- set tsig_key = salt.cmd.run('tsig-keygen -a hmac-sha512 ' + zone_name + '-transfer-key') %}
+{%- set tsig_key = salt.cmd.run('tsig-keygen ' + zone_name + '-transfer-key') %}
 {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key:
   file.managed:
     - user: {{ pkg_data.named.user }}
@@ -12,7 +12,6 @@
     - mode: 0640
     - contents: | 
        {{ tsig_key | indent(8) }} 
-    - unless: test -f {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key
 {%- if zone.allow_updates | default(True) %}
 {{pkg_data.named.conf_dir}}/{{zone_name}}-update-key:
   file.managed:
@@ -20,11 +19,10 @@
     - group: {{ pkg_data.named.group }}
     - mode: 0640
     - contents: | 
-        key "{{ zone.update_key.name }}-update-key " {
+        key "{{ zone.update_key.name }}" {
             algorithm "{{ zone.update_key.algorithm }}";
             secret "{{ zone.update_key.secret }}";
         };
-    - unless: test -f {{pkg_data.named.conf_dir}}/{{zone_name}}-update-key
 {%- endif %}
 
 "{{ pkg_data.named.conf_dir }}/{{zone_name}}-def.zone":
@@ -37,6 +35,9 @@
              type master;
              file "data/primary/{{ zone_name }}.dns";
              allow-transfer { key {{zone_name}}-transfer-key; };
+{%- if zone.allow_updates | default(True) %}
+             allow-update { key {{zone_name}}-update-key; };
+{%- endif %}
         };
     
 /var/named/data/primary/{{zone_name}}.dns:

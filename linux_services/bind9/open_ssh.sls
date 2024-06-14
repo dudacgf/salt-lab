@@ -15,7 +15,7 @@ match {{ secondary }} create:
 {%- endfor %}
 open ssh restart service:
   cmd.run:
-    - name: 'systemctl restart sshd'
+    - name: 'systemctl reload sshd'
 {%- elif 'named' in pillar and pillar.named.type | default('primary') | lower == 'secondary' %}
 {{ pkg_data.python3.pip_version }} install scp: cmd.run
 open ssh send privkey:
