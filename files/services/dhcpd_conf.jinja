@@ -1,3 +1,4 @@
+{%- import_yaml "maps/services/bind9/" + pillar.bind_map | default("bind9") + ".yaml" as b9 %}
 #
 option domain-name "{{ pillar['internal_domain'] | default('local') }}";
 default-lease-time 3600;
@@ -19,4 +20,18 @@ subnet {{ ip4_subnet }} netmask {{ ip4_mask }} {
   range  {{ ip4_range_start }}  {{ ip4_range_end }};
 }
 
+{%- endfor %}
+
+{%- for zone_name in b9.zones | default([]) %}
+{%- set zone = b9.zones[zone_name] %}
+{%- if zone.allow_updates | default(True) %}
+key {{ zone.update_key.name }} {
+    algorithm {{ zone.update_key.algorithm }};
+    secret {{ zone.update_key.secret }};
+}
+zone {{ zone_name }} {
+    primary {{ salt.dnsutil.A(zone.master)[0] }};
+    key {{ zone.update_key.name }};
+}
+{%- endif %}
 {%- endfor %}
