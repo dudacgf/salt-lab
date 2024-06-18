@@ -28,6 +28,17 @@ options {
         secroots-file   "/var/named/data/named.secroots";
         recursing-file  "/var/named/data/named.recursing";
         allow-query { {{ 'query_allowed' if 'localnets' in b9 | default(False) else 'any' }}; };
+        blackhole {
+{{ '                !query_allowed;' if 'localnets' in b9 | default(False) else '' }}
+                // Private RFC 1918 addresses
+                10.0/9; 192.168/16; 172.16/12;
+                // Multicast
+                224/8;
+                // Link Local
+                169.254/16;
+        };
+
+{{ '        allow-recursion { query_allowed; };' if 'localnets' in b9 else '' }}
         recursion {{ 'yes' if b9.recursion | default(False) else 'no' }};
 
         dnssec-validation {{ 'yes' if b9.dnssec_validation | default(False) else 'no' }};
@@ -51,6 +62,7 @@ logging {
     category queries { default_syslog; };
     category resolver { default_syslog; };
     category client { default_syslog; };
+    category update { default_syslog; };
     category lame-servers {    null; };
 };
 
