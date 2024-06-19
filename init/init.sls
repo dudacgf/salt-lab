@@ -43,6 +43,7 @@
     - pillar: {'minion': {{ mname }}, 'usb_devices': {{ minion.usb_devices | default(None) }}}
 
 ### redefines interfaces, if needed
+{% if minion.redefine_interfaces | default(False) %}
 {{ mname }} redefine interfaces:
   salt.state:
     - sls: init.redefine_interfaces
@@ -57,9 +58,10 @@
     - timeout: 90
     - require:
       - salt: {{ mname }} redefine interfaces
+{% endif %}
 
 # create a snapshot before configuring anything
-{% if minion.take_snapshot | default(True) %}
+{% if minion.take_snapshots | default(True) %}
 {{ mname }} create pre-config snapshot:
   salt.function:
     - name: virt.snapshot
