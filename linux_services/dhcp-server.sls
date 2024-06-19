@@ -35,12 +35,7 @@
 isc_dhcp_leases:
   pip.installed
 
-/usr/local/bin/dhcpd_leases:
+/usr/local/etc/oui.txt:
   file.managed:
-    - source: salt://files/scripts/dhcpd_leases.py
-    - user: root
-    - group: root
-    - mode: 0755
-    - require:
-      - pip: isc_dhcp_leases
-
+     - source: http://standards-oui.ieee.org/oui.txt
+     - skip_verify: True
