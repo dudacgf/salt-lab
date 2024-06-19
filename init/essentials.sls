@@ -29,6 +29,8 @@ minimal:
       - {{ pkg_data.python3.version }}-{{ pkg_data.python3.devel }}
       - {{ pkg_data.python3.version }}-wheel
       - {{ pkg_data.python3.version }}-scp
+      - {{ pkg_data.python3.version }}-{{ pkg_data.python3.dnspython }}
+      - {{ pkg_data.python3.version }}-{{ pkg_data.python3.yaml }}
     - refresh: True
     - allow_updates: True
 {% endif %}
@@ -41,7 +43,7 @@ prepara-pip:
 {% set proxy = '--proxy ' + pillar.proxy if pillar.proxy else '' %}
 minimal salt-minion:
   cmd.run:
-    - name: '{{ pkg_data.python3.pip_version }} {{ proxy }} -q install keystore pyjks m2crypto==0.38.0 nmcli scp'
+    - name: '{{ pkg_data.python3.pip_version }} {{ proxy }} -q install pip keystore pyjks m2crypto==0.38.0 nmcli scp dnspython pyyaml --upgrade'
 
 {% if not pillar['keep_gcc'] | default(False) %}
 prepara-pip_remove:
