@@ -8,10 +8,11 @@
 //
 
 {%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
+{%- import_yaml "maps/services/bind9/" + pillar.bind_map | default('bind9') + ".yaml" as b9 %}
 
-{%- if 'localnets' in pillar.named %}
+{%- if 'localnets' in b9 %}
 acl query_allowed {
-{%- for network in pillar.named.localnets %}
+{%- for network in b9.localnets %}
     {{ network }};
 {%- endfor %}
 };
@@ -26,10 +27,21 @@ options {
         memstatistics-file "/var/named/data/named_mem_stats.txt";
         secroots-file   "/var/named/data/named.secroots";
         recursing-file  "/var/named/data/named.recursing";
-        allow-query { {{ 'query_allowed' if 'localnets' in pillar.named | default(False) else 'any' }}; };
-        recursion {{ 'yes' if pillar.named.recursion | default(False) else 'no' }};
+        allow-query { {{ 'query_allowed' if 'localnets' in b9 | default(False) else 'any' }}; };
+        blackhole {
+{{ '                !query_allowed;' if 'localnets' in b9 | default(False) else '' }}
+                // Private RFC 1918 addresses
+                10.0/9; 192.168/16; 172.16/12;
+                // Multicast
+                224/8;
+                // Link Local
+                169.254/16;
+        };
 
-        dnssec-validation {{ 'yes' if pillar.named.dnssec_validation | default(False) else 'no' }};
+{{ '        allow-recursion { query_allowed; };' if 'localnets' in b9 else '' }}
+        recursion {{ 'yes' if b9.recursion | default(False) else 'no' }};
+
+        dnssec-validation {{ 'yes' if b9.dnssec_validation | default(False) else 'no' }};
 
         managed-keys-directory "/var/named/dynamic";
         geoip-directory "/usr/share/GeoIP";
@@ -39,17 +51,18 @@ options {
 
         /* https://fedoraproject.org/wiki/Changes/CryptoPolicy */
         include "/etc/crypto-policies/back-ends/bind.config";
-};      
+};
 
 // heavy logging
 logging {
     channel default_syslog {
         syslog local7;
-        severity info;
+        severity {{ b9.log_level if 'loglevel' in b9 | default(False) else 'info' }};
     };
     category queries { default_syslog; };
     category resolver { default_syslog; };
     category client { default_syslog; };
+    category update { default_syslog; };
     category lame-servers {    null; };
 };
 
@@ -61,17 +74,17 @@ zone "." IN {
 include "/etc/named.rfc1912.zones";
 include "/etc/named.root.key";
 
-{% if 'named' in pillar %}
-  {%- for zone_name in pillar.named.zones %}
-    {%- set zone = pillar.named.zones[zone_name] %}
-    {%- if zone.type | default('primary') | lower in ['primary', 'secondary'] %}
+{% if 'zones' in pillar.named %}
+{%- for zone_name in pillar.named.zones | default([]) %}
+{%- set zone = b9.zones[zone_name] | default({'role': 'forwarder'}) %}
+{%- if zone.role | default('master') | lower in ['master', 'slave'] %}
 include "{{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key";
-    {%- endif %}
-    {%- if zone.type | default('primary') | lower == 'primary' and
-           'allow_updates' in zone and zone.allow_updates | default(False) -%}
+{%- endif %}
+{%- if zone.role | default('master') | lower == 'master' and
+       'allow_updates' in zone and zone.allow_updates | default(False) %}
 include "{{pkg_data.named.conf_dir}}/{{zone_name}}-update-key";
-    {%- endif %}
+{%- endif %}
 include "{{pkg_data.named.conf_dir}}/{{zone_name}}-def.zone";
-  {% endfor %}
+{% endfor %}
 {%- endif %}
 

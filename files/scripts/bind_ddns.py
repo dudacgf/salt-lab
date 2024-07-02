@@ -106,7 +106,7 @@ keyring = dns.tsigkeyring.from_text({
 })
 
 # initialize updateMessage object
-message = dns.update.UpdateMessage(args.zone, keyring=keyring)
+message = dns.update.UpdateMessage(args.zone, keyring=keyring, keyalgorithm=keyread[args.zone]['algorithm'])
 if args.action in ['u', 'update']:
     message.replace(args.domain_name, 300, args.record_type, args.info)
 else:
@@ -116,6 +116,9 @@ else:
 try:
     response = dns.query.udp(message, dns_server)
 except dns.tsig.PeerBadKey as exc:
+    print(exc)
+    sys.exit(1)
+except dns.tsig.PeerBadSignature as exc:
     print(exc)
     sys.exit(1)
 except ValueError as exc:

@@ -128,7 +128,9 @@ dhcp-server: pkg.purged
 {% endif %}
 
 ## 2.2.5 Ensure DNS Server is not installed 
+{% if not 'bind9' in pillar['services'] | default(False) %}
 bind: pkg.purged
+{% endif %}
 
 ## 2.2.6 Ensure VSFTP Server is not installed
 vsftpd: pkg.purged

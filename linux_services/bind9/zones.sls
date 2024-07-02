@@ -1,18 +1,39 @@
 {%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
+{%- import_yaml "maps/services/bind9/" + pillar.bind_map | default('bind9') + ".yaml" as b9 %}
 
-{%- if 'named' in pillar %}
+{% if 'zones' in pillar.named %}
 {%- for zone_name in pillar.named.zones | default([]) %}
-{%- set zone = pillar.named.zones[zone_name] %}
-{%- if zone.type == 'primary' %} #primary zone
-{%- set tsig_key = salt.cmd.run('tsig-keygen -a hmac-sha512 ' + zone_name + '-transfer-key') %}
+{%- set zone = b9.zones[zone_name] %}
+
+{%- if pillar.named.zones[zone_name].role == 'forwarder' %}
+"{{ pkg_data.named.conf_dir }}/{{zone_name}}-def.zone":
+  file.managed:
+    - user: {{ pkg_data.named.user }}
+    - group: {{ pkg_data.named.group }}
+    - mode: 0640
+    - contents: |
+        zone "{{ zone_name }}" {
+            type forward;
+            forwarders {
+{%- for s in pillar.named.zones[zone_name].forwarders %}
+                 {{ s }};
+{%- endfor %}
+            };
+        };
+
+{% else %}
+
+# master and slaves transfer and update keys (if used)
 {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key:
   file.managed:
     - user: {{ pkg_data.named.user }}
     - group: {{ pkg_data.named.group }}
     - mode: 0640
     - contents: | 
-       {{ tsig_key | indent(8) }} 
-    - unless: test -f {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key
+        key "{{ zone.transfer_key.name }}" {
+            algorithm "{{ zone.transfer_key.algorithm }}";
+            secret "{{ zone.transfer_key.secret }}";
+        };
 {%- if zone.allow_updates | default(True) %}
 {{pkg_data.named.conf_dir}}/{{zone_name}}-update-key:
   file.managed:
@@ -20,13 +41,13 @@
     - group: {{ pkg_data.named.group }}
     - mode: 0640
     - contents: | 
-        key "{{ zone.update_key.name }}-update-key " {
+        key "{{ zone.update_key.name }}" {
             algorithm "{{ zone.update_key.algorithm }}";
             secret "{{ zone.update_key.secret }}";
         };
-    - unless: test -f {{pkg_data.named.conf_dir}}/{{zone_name}}-update-key
 {%- endif %}
 
+{%- if pillar.named.zones[zone_name].role == 'master' %} #primary zone
 "{{ pkg_data.named.conf_dir }}/{{zone_name}}-def.zone":
   file.managed:
     - user: {{ pkg_data.named.user }}
@@ -37,8 +58,11 @@
              type master;
              file "data/primary/{{ zone_name }}.dns";
              allow-transfer { key {{zone_name}}-transfer-key; };
+{%- if zone.allow_updates | default(True) %}
+             allow-update { key {{zone_name}}-update-key; };
+{%- endif %}
         };
-    
+ 
 /var/named/data/primary/{{zone_name}}.dns:
   file.managed:
     - user: {{ pkg_data.named.user }}
@@ -57,12 +81,12 @@
             1d         ; minimum (1 day)
         )
                              NS {{ grains.fqdn }}
-              {%- for z in zone['secondaries'] %}
+              {%- for z in pillar.named.zones[zone_name].secondaries %}
                              NS {{ z['name'] }}
               {%- endfor %}
     - unless: test -f /var/named/data/primary/{{zone_name}}.dns
 
-{%- elif zone.type == 'secondary' %}
+{%- elif pillar.named.zones[zone_name].role == 'slave' %}
 "{{ pkg_data.named.conf_dir }}/{{zone_name}}-def.zone":
   file.managed:
     - user: {{ pkg_data.named.user }}
@@ -73,26 +97,9 @@
              type slave;
              file "data/secondary/{{ zone_name }}.dns";
              masters { 
-                  {{ zone['primary'] }} key {{zone_name}}-transfer-key;
+                  {{pillar.named.zones[zone_name].primary}} key {{zone_name}}-transfer-key;
              };
         };
-
-{{ zone_name}} scp transfer-key from primary:
-  module.run:
-    - scp.get:
-      - hostname: {{ zone.primary }}
-      - remote_path: {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key
-      - local_path: {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key
-      - key_filename: /root/.ssh/salt_vg_ed25519
-      - allow_agent: False
-      - auto_add_policy: True
-
-{{ zone_name }} set key permissions:
-  file.managed:
-    - name: {{pkg_data.named.conf_dir}}/{{zone_name}}-transfer-key
-    - user: {{ pkg_data.named.user }}
-    - group: {{ pkg_data.named.group }}
-    - mode: 640
 
 {{ zone_name }} create secondary data dir:
   file.directory:
@@ -101,24 +108,9 @@
     - group: {{ pkg_data.named.group }}
     - mode: 750
 
-{%- elif zone.type == 'forwarder' %}
-"{{ pkg_data.named.conf_dir }}/{{zone_name}}-def.zone":
-  file.managed:
-    - user: {{ pkg_data.named.user }}
-    - group: {{ pkg_data.named.group }}
-    - mode: 0640
-    - contents: |
-        zone "{{ zone_name }}" {
-            type forward;
-            forwarders {
-{%- for s in zone['forwarders'] %}
-                 {{ s }};
-{%- endfor %}
-            };
-        };
-
 {%- endif %} {# zone is primary #}
+{%- endif %} {# zone is forwarder #}
 {%- endfor %}
 {%- else %}
-"--- no info found: 'pillar.named' not found": test.nop
+'-- no zones defined in bind map': test.nop
 {%- endif %}

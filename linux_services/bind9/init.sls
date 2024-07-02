@@ -6,6 +6,5 @@
 
 include:
   - linux_services.bind9.install
-  - linux_services.bind9.open_ssh
   - linux_services.bind9.zones
   - linux_services.bind9.config

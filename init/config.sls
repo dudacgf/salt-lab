@@ -80,7 +80,7 @@
   test.nop
 
 # create a snapshot before the highstate
-{% if minion.take_snapshot | default(True) %}
+{% if minion.take_snapshots | default(True) %}
 {{ mname }} create pre-highstate snapshot:
   salt.function:
     - name: virt.snapshot
@@ -126,7 +126,7 @@
     - tgt: {{ mname }}
 
 # create a snapshot before enforcing cis-benchmark
-{% if minion.take_snapshot | default(True) %}
+{% if minion.take_snapshots | default(True) %}
 {{ mname }} create pre-cis snapshot:
   salt.function:
     - name: virt.snapshot

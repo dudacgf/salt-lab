@@ -1,12 +1,8 @@
-{%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
 # register a minion in bind9 dns server
-python3-{{pkg_data.python3.dnspython}}:
-  pkg.installed
-
-python3-{{pkg_data.python3.yaml}}:
-  pkg.installed
-
-{% set domain = pillar[pillar.location + '_domain'] %}
+{%- import_yaml "maps/pkg_data/" + grains.os_family | lower + ".yaml" as pkg_data %}
+{%- import_yaml "maps/services/bind9/" + pillar.bind_map | default('bind9') + ".yaml" as b9 %}
+{%- set last_zone = b9.zones | last %}
+{%- set first_zones = b9.zones | difference(last_zone) | default([]) %}
 /root/.bind/credentials:
   file.managed:
     - makedirs: True
@@ -14,30 +10,22 @@ python3-{{pkg_data.python3.yaml}}:
     - group: root
     - mode: 400
     - contents: |
-        {{ domain }}:
-           name: {{ pillar.bind[domain]['name'] }}
-           secret: {{ pillar.bind[domain]['secret'] }}
+        { 
+{%- for zone_name in first_zones %}
+{%- set zone = b9.zones[zone_name] %}
+            "{{ zone.update_key.name }}.": "{{ zone.update_key.secret }}",
+{%- endfor %}
+{%- set zone = b9.zones[last_zone] %}
+            "{{ zone.update_key.name }}.": "{{ zone.update_key.secret }}"
+        }
 
-/usr/local/bin/bind_ddns.py:
-  file.managed:
-    - source: salt://files/scripts/bind_ddns.py
-    - user: root
-    - group: root
-    - mode: 0755
-
-register host:
-  cmd.run:
-    - name: /usr/local/bin/bind_ddns.py -k /root/.bind/credentials -t A -z {{domain}} -d {{grains.id.split('.')[0]}} -i {{grains.ipv4 | difference('127.0.0.1') | first}} -s {{pillar.bind[domain]['primary']}}
-    - require:
-      - file: /root/.bind/credentials
-      - file: /usr/local/bin/bind_ddns.py
-
-delete_secrets:
-  cmd.run:
-    - name: rm /root/.bind/credentials
-    - require:
-      - file: /root/.bind/credentials
-    - onchanges:
-      - cmd: register host
-    - order: 100020
-
+{%- set zone = b9.zones[grains.domain] %}
+{{ grains.host }} register dns:
+  ddns.present:
+    - zone: {{ grains.domain }}
+    - ttl: 60
+    - data: {{ grains.ipv4 | difference(['127.0.0.1']) | first }}
+    - nameserver: {{ salt.dig.A(zone.master) | first }}
+    - keyfile: /root/.bind/credentials
+    - keyname: {{ zone.update_key.name }}
+    - keyalgorithm: {{ zone.update_key.algorithm }}
