@@ -24,10 +24,19 @@ install vim-packages:
 {{ user }} deploy vimrc:
   file.managed:
     - name: '{{ homedir }}/.vimrc'
-    - source: salt://files/users/vimrc.jinja
-    - template: jinja
+    - source: salt://files/users/vimrc
     - user: {{ user }}
     - mode: 640
+
+{{ user }} deploy runtime pathogen:
+  file.managed:
+    - name: '{{ homedir }}/.vim/pathogen'
+    - user: {{ user }}
+    - mode: 640
+    - contents: |
+        " pathogen
+        execute pathogen#infect()
+        filetype plugin indent on
 
 {{ user }} deploy salt-vim:
   git.latest: 
