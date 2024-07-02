@@ -34,7 +34,6 @@ install vim-packages:
     - user: {{ user }}
     - mode: 640
     - contents: |
-        " pathogen
         execute pathogen#infect()
         filetype plugin indent on
 
