@@ -9,7 +9,6 @@ install cinnamon:
     - failhard: True
 {% endif %}
 
-
 {% for user in salt.lusers.sys_accounts() | difference(['root']) %}
 /var/lib/AccountSettings/user/{{ user }}:
   file.managed:
