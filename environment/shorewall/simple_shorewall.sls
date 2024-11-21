@@ -14,6 +14,7 @@ configura shorewall.conf:
   file.managed:
     - name: /etc/shorewall/shorewall.conf
     - source: salt://files/services/shorewall/shorewall.conf
+    - template: jinja
     - require:
       - instala shorewall
 
