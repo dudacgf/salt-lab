@@ -15,7 +15,7 @@ docker_repo:
     - file: /etc/apt/sources.list.d/docker-ce.list
     - key_url: https://download.docker.com/linux/debian/gpg
 
-{% elif grains['os'] == 'Ubuntu' %}
+{% elif grains['os'] in ['Ubuntu', 'Mint'] %}
 
 docker_repo:
   pkgrepo.managed:
