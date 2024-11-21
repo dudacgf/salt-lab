@@ -1,7 +1,7 @@
 {% if grains['os_family'] == 'Debian' %}
 /tmp/nomachine.deb:
   file.managed:
-    - source: https://download.nomachine.com/download/8.5/Linux/nomachine_8.5.3_1_amd64.deb
+    - source: https://download.nomachine.com/download/8.14/Linux/nomachine_8.14.2_1_amd64.deb
     - skip_verify: True
     - verify_ssl: False
 
@@ -19,7 +19,7 @@ python packages:
 
 /tmp/nomachine.rpm:
   file.managed:
-    - source: https://download.nomachine.com/download/8.5/Linux/nomachine_8.5.3_1_x86_64.rpm
+    - source: https://download.nomachine.com/download/8.5/Linux/nomachine_8.14.2_1_x86_64.rpm
     - skip_verify: True
 
 instala nomachine:
