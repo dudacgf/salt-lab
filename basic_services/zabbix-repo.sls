@@ -10,7 +10,7 @@
 {% set osmr = '12' if grains['os'] == 'Mint' else grains['osmajorrelease'] %}
 download repo deb:
   cmd.run: 
-    - name: {{ proxy }} wget https://repo.zabbix.com/zabbix/6.5/debian/pool/main/z/zabbix-release/zabbix-release_6.5-1+debian{{ osmr }}_all.deb -O /tmp/zabbix-release.deb
+    - name: {{ proxy }} wget https://repo.zabbix.com/zabbix/7.2/release/debian/pool/main/z/zabbix-release/zabbix-release_latest%2Bdebian{{ osmr }}_all.deb -O /tmp/zabbix-release.deb
 
 zabbix repo:
   cmd.run:
@@ -21,7 +21,7 @@ zabbix repo:
 
 download repo deb:
   cmd.run:
-    - name:  {{ proxy }} wget https://repo.zabbix.com/zabbix/6.5/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.5-1+ubuntu{{ grains['osrelease'] }}_all.deb -O /tmp/zabbix-release.deb 
+    - name:  {{ proxy }} wget https://repo.zabbix.com/zabbix/7.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest%2Bubuntu22.04_all.deb -O /tmp/zabbix-release.deb
 
 zabbix repo:
   cmd.run:
@@ -32,7 +32,7 @@ zabbix repo:
 {% elif grains['os_family'] == 'RedHat' %}
 zabbix repo:
   cmd.run:
-    - name:  {{ proxy }} rpm -Uvh https://repo.zabbix.com/zabbix/6.5/rhel/{{ grains['osmajorrelease'] }}/x86_64/zabbix-release-6.5-1.el{{ grains['osmajorrelease'] }}.noarch.rpm
+    - name:  {{ proxy }} rpm -Uvh https://repo.zabbix.com/zabbix/7.0/rocky/{{ grains.osmajorrelease }}/x86_64/zabbix-release-latest.el9.noarch.rpm
     - unless: grep -qs 'baseurl=https://repo.zabbix.com/zabbix/6.5/rhel/' /etc/yum.repos.d/zabbix.repo 
 
 exclude zabbix from epel:
