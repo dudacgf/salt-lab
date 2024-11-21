@@ -3,22 +3,24 @@
 #
 
 {% if grains['os_family'] == 'Debian' %}
+/etc/apt/sources.list.d/salt.list:
+  file.absent
 add salt repo:
   pkgrepo.managed:
-    - name: deb https://repo.saltproject.io/salt/py3/ubuntu/22.04/amd64/latest {{ grains['oscodename'] }} main
+    - name: deb [arch=amd64] https://packages.broadcom.com/artifactory/saltproject-deb/ stable main
     - humanname: Salt 2023 repo
     - file: /etc/apt/sources.list.d/salt.list
     - comps: main
-    - key_url: https://repo.saltproject.io/salt/py3/ubuntu/22.04/amd64/SALT-PROJECT-GPG-PUBKEY-2023.gpg
+    - key_url: https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public
 {% elif grains['os_family'] == 'RedHat' %}
 {% set osmr = grains['osmajorrelease'] %}
 add salt repo:
   pkgrepo.managed:
     - name: salt
     - enabled: True
-    - baseurl: https://repo.saltproject.io/salt/py3/redhat/{{ osmr }}/x86_64/latest
+    - baseurl: https://packages.broadcom.com/artifactory/saltproject-rpm/
     - gpgcheck: 1
-    - gpgkey: https://repo.saltproject.io/salt/py3/redhat/{{ osmr }}/x86_64/SALT-PROJECT-GPG-PUBKEY-2023.pub
+    - gpgkey: https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public
 {% else %}
 failure:
   test.fail_without_changes:
