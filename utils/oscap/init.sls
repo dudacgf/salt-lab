@@ -5,11 +5,8 @@
 
 {% set minion = pillar.minion %}
 {% set os_grain = salt.cmd.run('salt ' + minion + ' grains.item os --out yaml') | load_yaml%}
-"{{ os_grain }}": test.nop
-{#
 {% set os_minion = os_grain[minion]['os'] | lower %}
 
-"{{ os_minion }}": test.nop
 run oscap:
   salt.state:
     - sls: utils.oscap.{{ os_minion }}
@@ -38,4 +35,3 @@ send oscap report:
     - pillar: {'minion': {{ minion }} } 
      
 python3 /srv/salt/utils/oscap/get_oscap_score.py --file /var/cache/salt/master/minions/{{ minion }}/files/tmp/scan_results.xml: cmd.run
-#}
