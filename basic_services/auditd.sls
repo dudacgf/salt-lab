@@ -93,7 +93,14 @@ grubby --update-kernel ALL --args 'audit_backlog_limit=8192': cmd.run
     - user: root
     - group: adm
 
-
+# log rotation cron job
+/etc/cron.daily/auditd.cron:
+  file.managed:
+    - source: {{ pkg_data.audit.cron_file }}
+    - user: root
+    - group: root
+    - mode: 755
+ 
 # ajusta o serviço auditd
 auditd.enabled:
   service.enabled:
