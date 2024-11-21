@@ -18,6 +18,8 @@ install_prereqs:
       - libbsd-dev 
       - libcurl4-gnutls-dev 
       - libgcrypt20-dev 
+      - libcjson1
+      - libcjson-dev
       - libglib2.0-dev 
       - libgnutls28-dev 
       - libgpgme-dev 

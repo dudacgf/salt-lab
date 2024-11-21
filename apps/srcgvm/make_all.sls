@@ -1,15 +1,15 @@
 {% set version = {
-        "GVM_LIBS_VERSION": "22.9.1", 
-        "GVMD_VERSION": "23.6.2", 
+        "GVM_LIBS_VERSION": "22.12.2", 
+        "GVMD_VERSION": "23.10.0", 
         "PG_GVM_VERSION": "22.6.5", 
-        "GSA_VERSION": "23.0.0", 
+        "GSA_VERSION": "23.3.0", 
         "GSAD_VERSION": "22.9.1", 
         "OPENVAS_SMB_VERSION": "22.5.6", 
-        "OPENVAS_SCANNER_VERSION": "23.3.1", 
+        "OPENVAS_SCANNER_VERSION": "23.9.0", 
+        "NOTUS_SCANNER_VERSION": "22.6.3",
         "OSPD_OPENVAS_VERSION": "22.7.1", 
         "OPENVAS_DAEMON": "23.3.1", 
-        "NOTUS_SCANNER_VERSION": "22.6.3",
-        "RUST": "1.78.0",
+        "RUST": "1.78.0"
        }
 %}
 
@@ -70,6 +70,8 @@ install pg-gvm:
     - name: "cp -rv /var/lib/builder/install/pg-gvm/* /"
     - require:
       - cmd: make install pg-gvm
+
+mkdir -p /usr/local/share/gvm/gsad/web: cmd.run
 
 install gsa:
   cmd.run:
@@ -167,8 +169,8 @@ install openvasd scannerctl:
 
 make notus-scanner:
   cmd.run: 
-    - name "python3 -m pip install --root=/var/lib/builder/install/notus-scanner --no-warn-script-location ."
-    - cwd: /var/lib/builder/source/notus-scanner{{ version.NOTUS_SCANNER_VERSION }}
+    - name: "python3 -m pip install --root=/var/lib/builder/install/notus-scanner --no-warn-script-location ."
+    - cwd: /var/lib/builder/source/notus-scanner-{{ version.NOTUS_SCANNER_VERSION }}
     - run_as: builder
 
 install notus-scanner:
