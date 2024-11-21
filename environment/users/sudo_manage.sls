@@ -11,7 +11,7 @@
 sudo:
   pkg.installed
 
-{## CIS doesn't like this
+## CIS doesn't like this
 
 # I'll keep on using this insecure config bellow for wheel/sudo groups
 00-pkg_app_{{ osf.sudo_group }}:
@@ -28,7 +28,7 @@ sudo:
         {% for pkg_app in osf.pkg_apps -%}
         %{{ osf.sudo_group }}  ALL=(ALL)   NOPASSWD: {{ pkg_app }}
         {% endfor %}
-#}
+#
 
 {% if grains['os_family'] == 'RedHat' %}
 /etc/sudoers.d/10-add-root:
@@ -91,4 +91,9 @@ sugroup:
   file.replace:
     - pattern: '^# auth(\s)+required(\s)+pam_wheel.so$'
     - repl: 'auth\1required\2pam_wheel.so use_uid group=sugroup'
+{% if grains['os'] == 'Mint' %}
+/etc/sudoers.d/0pwfeedback.disabled:
+  file.rename:
+    - source: /etc/sudoers.d/0pwfeedback
+{% endif %}
 {% endif %}
