@@ -12,6 +12,7 @@ add salt repo:
     - file: /etc/apt/sources.list.d/salt.list
     - comps: main
     - key_url: https://packages.broadcom.com/artifactory/api/security/keypair/SaltProjectKey/public
+    - apt_key: False
 {% elif grains['os_family'] == 'RedHat' %}
 {% set osmr = grains['osmajorrelease'] %}
 add salt repo:
