@@ -22,7 +22,7 @@ tcp_outgoing_address {{ pillar['interfaces']['virbr1']['ip4_address'] }}
 http_port 3128
 {%- endif %}
 
-{%- if pillar['proxy'] | default('none') != 'none' %}
+{%- if pillar['proxy'] | default(False) %}
 {%- set proxy_host = pillar['proxy'] | regex_replace('^.*://(.*):.*', '\\1') %}
 {%- set proxy_port = pillar['proxy'] | regex_replace('.*:(.*)$', '\\1') %}
 cache_peer {{ proxy_host }} parent {{ proxy_port }} 0 no-query no-digest
